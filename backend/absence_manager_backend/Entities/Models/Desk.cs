@@ -7,5 +7,9 @@
         public string Name { get; set; }
         public Room Room { get; set; }
         public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+        public Desk()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
     }
 }
