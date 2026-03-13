@@ -6,17 +6,17 @@ labels: ["frontend"]
 assignees: []
 ---
 
-# Leírás
+## Leírás
 Röviden írd le a feladatot.
 
 ---
 
-# Cél
+## Cél
 Miért van szükség erre a feladatra?
 
 ---
 
-# Elvárt működés
+## Elvárt működés
 
 - A backend endpoint elérhető legyen
 - A kérés validálása megtörténjen
