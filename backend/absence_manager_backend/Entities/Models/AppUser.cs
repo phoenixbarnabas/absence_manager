@@ -1,0 +1,13 @@
+﻿namespace Entities.Models
+{
+    public class AppUser
+    {
+        public string Id { get; set; }
+        public string EntraObjectId { get; set; }
+        public string? TenantId { get; set; }
+        public string DisplayName { get; set; }
+        public string? Email { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+}
