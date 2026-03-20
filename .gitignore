@@ -28,4 +28,6 @@ Thumbs.db
 # Environment / local config
 .env
 .env.local
-appsettings.Development.json
+
+# Ignore all Development configs in any project
+**/appsettings.Development.json
