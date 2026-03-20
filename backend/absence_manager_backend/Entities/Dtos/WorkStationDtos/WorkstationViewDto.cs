@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Entities.Dtos.WorkStationDtos
 {
-    public class WorkstationDto
+    public class WorkstationViewDto
     {
         public int Id { get; set; }
         public int OfficeId { get; set; }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Entities.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,9 +7,13 @@ using System.Threading.Tasks;
 
 namespace Entities.Models
 {
-    public class OfficeBooking
+    public class OfficeBooking : IIdEntity
     {
-        public int Id { get; set; }
+        public OfficeBooking()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
+        public string Id { get; set; }
 
         public int WorkstationId { get; set; }
         public string AppUserId { get; set; } = null!;

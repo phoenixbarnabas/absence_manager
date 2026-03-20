@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Entities.Dtos.LocationDtos
+namespace Entities.Dtos.OfficeDtos
 {
-    public class LocationDto
+    public class OfficeViewDto
     {
         public int Id { get; set; }
+        public int LocationId { get; set; }
         public string Name { get; set; } = null!;
+        public string? Description { get; set; }
         public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }
     }

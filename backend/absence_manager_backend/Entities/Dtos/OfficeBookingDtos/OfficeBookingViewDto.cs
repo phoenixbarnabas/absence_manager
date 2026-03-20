@@ -4,13 +4,13 @@ using System.Text;
 
 namespace Entities.Dtos.OfficeBooking
 {
-    public class OfficeBookingDto
+    public class OfficeBookingViewDto
     {
         public int Id { get; set; }
         public DateOnly BookingDate { get; set; }
 
         public string AppUserId { get; set; } = null!;
-        public string AppUserDisplayName { get; set; } = null!;
+        public string AppUserName { get; set; } = null!;
 
         public int WorkstationId { get; set; }
         public string WorkstationCode { get; set; } = null!;

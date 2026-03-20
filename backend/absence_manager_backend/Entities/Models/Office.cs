@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Entities.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,9 +7,13 @@ using System.Threading.Tasks;
 
 namespace Entities.Models
 {
-    public class Office
+    public class Office : IIdEntity
     {
-        public int Id { get; set; }
+        public Office()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
+        public string Id { get; set; }
         public int LocationId { get; set; }
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
