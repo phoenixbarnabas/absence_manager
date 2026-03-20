@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="absence_manager_backend/absence_manager_backend.csproj" />
+  <Project Path="Data/Data.csproj" Id="b993b3b0-86bd-4274-85c1-40d13d37016b" />
+  <Project Path="Entities/Entities.csproj" Id="25183abe-b128-410c-a8a3-c9d12131e952" />
+  <Project Path="Logic/Logic.csproj" Id="47634d41-3711-4160-a61a-a11d700a8e89" />
 </Solution>
