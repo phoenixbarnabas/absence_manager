@@ -1,0 +1,6 @@
+@absence_manager_backend_HostAddress = http://localhost:5182
+
+GET {{absence_manager_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
