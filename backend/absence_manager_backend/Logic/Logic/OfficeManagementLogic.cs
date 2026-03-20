@@ -6,7 +6,7 @@ using Entities.Models;
 using Logic.Helper;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Logic.Logic
 {
@@ -42,7 +42,7 @@ namespace Logic.Logic
                 .Select(x => _dtoProvider.Mapper.Map<LocationViewDto>(x));
         }
 
-        public IEnumerable<OfficeViewDto> GetOfficesByLocation(int locationId, bool activeOnly = false)
+        public IEnumerable<OfficeViewDto> GetOfficesByLocation(string locationId, bool activeOnly = false)
         {
             var query = _officeRepository.GetAll()
                 .Where(x => x.LocationId == locationId);
@@ -56,7 +56,7 @@ namespace Logic.Logic
                 .Select(x => _dtoProvider.Mapper.Map<OfficeViewDto>(x));
         }
 
-        public IEnumerable<WorkstationViewDto> GetWorkstationsByOffice(int officeId, bool activeOnly = false)
+        public IEnumerable<WorkstationViewDto> GetWorkstationsByOffice(string officeId, bool activeOnly = false)
         {
             var query = _workstationRepository.GetAll()
                 .Where(x => x.OfficeId == officeId);
@@ -70,7 +70,7 @@ namespace Logic.Logic
                 .Select(x => _dtoProvider.Mapper.Map<WorkstationViewDto>(x));
         }
 
-        public WorkstationViewDto GetWorkstationById(int workstationId)
+        public WorkstationViewDto GetWorkstationById(string workstationId)
         {
             var workstation = _workstationRepository.FindById(workstationId);
             if (workstation == null)

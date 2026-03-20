@@ -8,10 +8,10 @@ namespace Entities.Dtos.Availability
     {
         public DateOnly BookingDate { get; set; }
 
-        public int LocationId { get; set; }
+        public string LocationId { get; set; }
         public string LocationName { get; set; } = null!;
 
-        public int OfficeId { get; set; }
+        public string OfficeId { get; set; }
         public string OfficeName { get; set; } = null!;
 
         public int TotalWorkstations { get; set; }
@@ -19,8 +19,8 @@ namespace Entities.Dtos.Availability
         public int FreeWorkstations { get; set; }
 
         public bool CurrentUserHasBooking { get; set; }
-        public int? CurrentUserBookingId { get; set; }
-        public int? CurrentUserWorkstationId { get; set; }
+        public string? CurrentUserBookingId { get; set; }
+        public string? CurrentUserWorkstationId { get; set; }
 
         public List<WorkstationAvailabilityDto> Workstations { get; set; } = new();
     }

@@ -6,7 +6,7 @@ namespace Entities.Dtos.OfficeBooking
 {
     public class CreateOfficeBookingDto
     {
-        public int WorkstationId { get; set; }
+        public string WorkstationId { get; set; }
         public DateOnly BookingDate { get; set; }
     }
 }

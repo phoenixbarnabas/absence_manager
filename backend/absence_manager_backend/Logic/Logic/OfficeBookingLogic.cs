@@ -4,9 +4,10 @@ using Entities.Dtos.Helpers;
 using Entities.Dtos.OfficeBooking;
 using Entities.Models;
 using Logic.Helper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Logic.Logic
 {
@@ -35,7 +36,7 @@ namespace Logic.Logic
             _dtoProvider = dtoProvider;
         }
 
-        public OfficeDayAvailabilityDto GetOfficeDayAvailability(int officeId, DateOnly date, string currentUserId)
+        public OfficeDayAvailabilityDto GetOfficeDayAvailability(string officeId, DateOnly date, string currentUserId)
         {
             ValidateBookingDate(date);
 
@@ -78,17 +79,17 @@ namespace Logic.Logic
                         DisplayOrder = w.DisplayOrder,
                         IsActive = w.IsActive,
                         IsBooked = booking != null,
-                        IsBookedByCurrentUser = booking != null && booking.UserId == currentUserId,
+                        IsBookedByCurrentUser = booking != null && booking.AppUserId == currentUserId,
                         BookingId = booking?.Id,
-                        BookedByUserId = booking?.UserId,
-                        BookedByUserName = booking?.UserName,
+                        BookedByUserId = booking?.AppUserId,
+                        BookedByUserName = booking?.AppUser?.DisplayName,
                         PositionX = w.PositionX,
                         PositionY = w.PositionY
                     };
                 })
                 .ToList();
 
-            var currentUserBooking = bookings.FirstOrDefault(b => b.UserId == currentUserId);
+            var currentUserBooking = bookings.FirstOrDefault(b => b.AppUserId == currentUserId);
 
             return new OfficeDayAvailabilityDto
             {
@@ -107,7 +108,7 @@ namespace Logic.Logic
             };
         }
 
-        public IEnumerable<DaySummaryDto> GetOfficeDaySummaries(int officeId, DateOnly fromDate, DateOnly toDate, string currentUserId)
+        public IEnumerable<DaySummaryDto> GetOfficeDaySummaries(string officeId, DateOnly fromDate, DateOnly toDate, string currentUserId)
         {
             if (toDate < fromDate)
                 throw new ArgumentException("toDate cannot be earlier than fromDate.");
@@ -143,7 +144,7 @@ namespace Logic.Logic
                     TotalWorkstations = totalWorkstations,
                     BookedWorkstations = dayBookings.Count,
                     FreeWorkstations = totalWorkstations - dayBookings.Count,
-                    CurrentUserHasBooking = dayBookings.Any(b => b.UserId == currentUserId)
+                    CurrentUserHasBooking = dayBookings.Any(b => b.AppUserId == currentUserId)
                 });
             }
 
@@ -179,7 +180,7 @@ namespace Logic.Logic
                 throw new InvalidOperationException("Location is not active.");
 
             var userAlreadyHasBooking = _officeBookingRepository.GetAll()
-                .Any(b => b.UserId == currentUserId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
+                .Any(b => b.AppUserId == currentUserId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
 
             if (userAlreadyHasBooking)
                 throw new InvalidOperationException("The user already has a booking for this date.");
@@ -192,8 +193,7 @@ namespace Logic.Logic
 
             var booking = _dtoProvider.Mapper.Map<OfficeBooking>(dto);
 
-            booking.UserId = user.Id;
-            booking.UserName = user.DisplayName;
+            booking.AppUserId = user.Id;
             booking.CreatedAtUtc = DateTime.UtcNow;
             booking.CreatedByUserId = currentUserId;
             booking.IsCancelled = false;
@@ -204,6 +204,7 @@ namespace Logic.Logic
                 .Include(b => b.Workstation)
                 .ThenInclude(w => w.Office)
                 .ThenInclude(o => o.Location)
+                .Include(b => b.AppUser)
                 .FirstOrDefault(b => b.Id == booking.Id);
 
             if (createdBooking == null)
@@ -218,7 +219,8 @@ namespace Logic.Logic
                 .Include(b => b.Workstation)
                 .ThenInclude(w => w.Office)
                 .ThenInclude(o => o.Location)
-                .Where(b => b.UserId == currentUserId && !b.IsCancelled);
+                .Include(b => b.AppUser)
+                .Where(b => b.AppUserId == currentUserId && !b.IsCancelled);
 
             if (fromDate.HasValue)
                 query = query.Where(b => b.BookingDate >= fromDate.Value);
@@ -232,7 +234,7 @@ namespace Logic.Logic
                 .Select(b => _dtoProvider.Mapper.Map<OfficeBookingViewDto>(b));
         }
 
-        public void CancelBooking(int bookingId, string currentUserId, bool isAdmin = false)
+        public void CancelBooking(string bookingId, string currentUserId, bool isAdmin = false)
         {
             var booking = _officeBookingRepository.GetAll()
                 .Include(b => b.Workstation)
@@ -244,7 +246,7 @@ namespace Logic.Logic
             if (booking.IsCancelled)
                 throw new InvalidOperationException("Booking is already cancelled.");
 
-            if (!isAdmin && booking.UserId != currentUserId)
+            if (!isAdmin && booking.AppUserId != currentUserId)
                 throw new UnauthorizedAccessException("You can only cancel your own booking.");
 
             var today = DateOnly.FromDateTime(DateTime.Today);

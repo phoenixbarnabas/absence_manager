@@ -15,7 +15,7 @@ namespace Entities.Models
         }
 
         public string Id { get; set; }
-        public int OfficeId { get; set; }
+        public string OfficeId { get; set; }
 
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;

@@ -15,7 +15,7 @@ namespace Entities.Models
         }
         public string Id { get; set; }
 
-        public int WorkstationId { get; set; }
+        public string WorkstationId { get; set; }
         public string AppUserId { get; set; } = null!;
 
         public DateOnly BookingDate { get; set; }
