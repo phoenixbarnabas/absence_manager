@@ -6,7 +6,7 @@ namespace Entities.Dtos.Availability
 {
     public class WorkstationAvailabilityDto
     {
-        public int WorkstationId { get; set; }
+        public string WorkstationId { get; set; }
         public string WorkstationCode { get; set; } = null!;
         public string WorkstationName { get; set; } = null!;
         public int DisplayOrder { get; set; }
@@ -20,5 +20,7 @@ namespace Entities.Dtos.Availability
 
         public decimal? PositionX { get; set; }
         public decimal? PositionY { get; set; }
+        public string? BookingId { get; set; }
+        public string? BookedByUserName { get; set; }
     }
 }

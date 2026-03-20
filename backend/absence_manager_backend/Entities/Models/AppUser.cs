@@ -1,6 +1,8 @@
-﻿namespace Entities.Models
+﻿using Entities.Helpers;
+
+namespace Entities.Models
 {
-    public class AppUser
+    public class AppUser : IIdEntity
     {
         public string Id { get; set; }
         public string EntraObjectId { get; set; }
