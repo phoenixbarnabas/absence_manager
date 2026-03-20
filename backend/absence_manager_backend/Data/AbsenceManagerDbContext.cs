@@ -55,7 +55,7 @@ namespace Data
 
                 entity.HasIndex(x => new { x.EntraObjectId, x.TenantId })
                     .IsUnique()
-                    .HasFilter("[TenantId] IS NOT NULL");
+                    .HasFilter("\"TenantId\" IS NOT NULL");
             });
 
             // -------------------------

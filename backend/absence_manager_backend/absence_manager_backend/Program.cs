@@ -33,6 +33,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+builder.Services.AddDbContext<AbsenceManagerDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
