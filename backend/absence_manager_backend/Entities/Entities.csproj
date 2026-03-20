@@ -8,11 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Folder Include="Dtos\User\" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.3" />
+	  <Folder Include="Dtos\" />
 	</ItemGroup>
 
 </Project>

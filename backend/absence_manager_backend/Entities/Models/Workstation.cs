@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Entities.Models
+{
+    public class Workstation
+    {
+        public int Id { get; set; }
+        public int OfficeId { get; set; }
+
+        public string Code { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public bool IsActive { get; set; }
+        public int DisplayOrder { get; set; }
+
+        public decimal? PositionX { get; set; }
+        public decimal? PositionY { get; set; }
+
+        public Office Office { get; set; } = null!;
+        public ICollection<OfficeBooking> Bookings { get; set; } = new List<OfficeBooking>();
+    }
+}

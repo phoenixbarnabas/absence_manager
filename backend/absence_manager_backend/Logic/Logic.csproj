@@ -16,5 +16,10 @@
 		<ProjectReference Include="..\Entities\Entities.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Logic\" />
+	  <Folder Include="Helper\" />
+	</ItemGroup>
+
 
 </Project>
