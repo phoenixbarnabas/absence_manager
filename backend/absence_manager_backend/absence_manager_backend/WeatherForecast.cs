@@ -1,4 +1,4 @@
-namespace AbsenceManagerApi
+namespace absence_manager_backend
 {
     public class WeatherForecast
     {
