@@ -7,9 +7,9 @@ namespace Data
 {
     public class Repository<T> where T : class, IIdEntity
     {
-        RepositoryContext ctx;
+        AbsenceManagerDbContext ctx;
 
-        public Repository(RepositoryContext ctx)
+        public Repository(AbsenceManagerDbContext ctx)
         {
             this.ctx = ctx;
         }

@@ -6,30 +6,32 @@ namespace Data
     public class AbsenceManagerDbContext : DbContext
     {
         public DbSet<AppUser> AppUsers => Set<AppUser>();
-        public DbSet<Room> Rooms => Set<Room>();
-        public DbSet<Desk> Desks => Set<Desk>();
-        public DbSet<Reservation> Reservations => Set<Reservation>();
+        public DbSet<Location> Locations => Set<Location>();
+        public DbSet<Office> Offices => Set<Office>();
+        public DbSet<Workstation> Workstations => Set<Workstation>();
+        public DbSet<OfficeBooking> OfficeBookings => Set<OfficeBooking>();
 
-        public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options) : base(options) { }
-
-
+        public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options)
+            : base(options)
+        {
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            var roomId = "11111111-1111-1111-1111-111111111111";
+            base.OnModelCreating(modelBuilder);
 
+            // -------------------------
+            // AppUser
+            // -------------------------
             modelBuilder.Entity<AppUser>(entity =>
             {
                 entity.ToTable("AppUsers");
 
                 entity.HasKey(x => x.Id);
 
-                entity.Property(x => x.DisplayName)
-                    .HasMaxLength(200)
+                entity.Property(x => x.Id)
+                    .HasMaxLength(50)
                     .IsRequired();
-
-                entity.Property(x => x.Email)
-                    .HasMaxLength(320);
 
                 entity.Property(x => x.EntraObjectId)
                     .HasMaxLength(100)
@@ -38,81 +40,195 @@ namespace Data
                 entity.Property(x => x.TenantId)
                     .HasMaxLength(100);
 
+                entity.Property(x => x.DisplayName)
+                    .HasMaxLength(200)
+                    .IsRequired();
+
+                entity.Property(x => x.Email)
+                    .HasMaxLength(320);
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.Property(x => x.CreatedAt)
+                    .IsRequired();
+
                 entity.HasIndex(x => new { x.EntraObjectId, x.TenantId })
-                    .IsUnique();
+                    .IsUnique()
+                    .HasFilter("[TenantId] IS NOT NULL");
             });
 
-            modelBuilder.Entity<Room>(entity =>
+            // -------------------------
+            // Location
+            // -------------------------
+            modelBuilder.Entity<Location>(entity =>
             {
-                entity.ToTable("Rooms");
+                entity.ToTable("Locations");
 
                 entity.HasKey(x => x.Id);
 
                 entity.Property(x => x.Name)
                     .HasMaxLength(100)
                     .IsRequired();
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.Property(x => x.DisplayOrder)
+                    .IsRequired();
+
+                entity.HasIndex(x => x.Name)
+                    .IsUnique();
             });
 
-            modelBuilder.Entity<Desk>(entity =>
+            // -------------------------
+            // Office
+            // -------------------------
+            modelBuilder.Entity<Office>(entity =>
             {
-                entity.ToTable("Desks");
+                entity.ToTable("Offices");
 
                 entity.HasKey(x => x.Id);
 
                 entity.Property(x => x.Name)
-                    .HasMaxLength(50)
+                    .HasMaxLength(100)
                     .IsRequired();
 
-                entity.HasOne(x => x.Room)
-                    .WithMany(x => x.Desks)
-                    .HasForeignKey(x => x.RoomId)
+                entity.Property(x => x.Description)
+                    .HasMaxLength(500);
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.Property(x => x.DisplayOrder)
+                    .IsRequired();
+
+                entity.HasOne(x => x.Location)
+                    .WithMany(x => x.Offices)
+                    .HasForeignKey(x => x.LocationId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(x => new { x.RoomId, x.Name })
+                entity.HasIndex(x => new { x.LocationId, x.Name })
                     .IsUnique();
             });
 
-            modelBuilder.Entity<Reservation>(entity =>
+            // -------------------------
+            // Workstation
+            // -------------------------
+            modelBuilder.Entity<Workstation>(entity =>
             {
-                entity.ToTable("Reservations");
+                entity.ToTable("Workstations");
 
                 entity.HasKey(x => x.Id);
 
-                entity.Property(x => x.Date)
+                entity.Property(x => x.Code)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.Name)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.Property(x => x.DisplayOrder)
+                    .IsRequired();
+
+                entity.Property(x => x.PositionX)
+                    .HasColumnType("decimal(10,2)");
+
+                entity.Property(x => x.PositionY)
+                    .HasColumnType("decimal(10,2)");
+
+                entity.HasOne(x => x.Office)
+                    .WithMany(x => x.Workstations)
+                    .HasForeignKey(x => x.OfficeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => new { x.OfficeId, x.Code })
+                    .IsUnique();
+
+                entity.HasIndex(x => new { x.OfficeId, x.Name })
+                    .IsUnique();
+            });
+
+            // -------------------------
+            // OfficeBooking
+            // -------------------------
+            modelBuilder.Entity<OfficeBooking>(entity =>
+            {
+                entity.ToTable("OfficeBookings");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.BookingDate)
                     .IsRequired();
 
                 entity.Property(x => x.CreatedAtUtc)
                     .IsRequired();
 
-                entity.HasOne(x => x.User)
-                    .WithMany(x => x.Reservations)
-                    .HasForeignKey(x => x.UserId)
+                entity.Property(x => x.CreatedByUserId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.CancelledByUserId)
+                    .HasMaxLength(50);
+
+                entity.Property(x => x.IsCancelled)
+                    .IsRequired();
+
+                entity.HasOne(x => x.Workstation)
+                    .WithMany(x => x.Bookings)
+                    .HasForeignKey(x => x.WorkstationId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(x => x.Desk)
-                    .WithMany(x => x.Reservations)
-                    .HasForeignKey(x => x.DeskId)
+                entity.HasOne(x => x.AppUser)
+                    .WithMany(x => x.OfficeBookings)
+                    .HasForeignKey(x => x.AppUserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(x => new { x.DeskId, x.Date })
-                    .IsUnique();
+                // Egy workstation egy adott napra csak egyszer foglalható
+                entity.HasIndex(x => new { x.WorkstationId, x.BookingDate, x.IsCancelled })
+                    .HasDatabaseName("IX_OfficeBookings_Workstation_BookingDate_IsCancelled");
 
-                entity.HasIndex(x => new { x.UserId, x.Date })
-                    .IsUnique();
+                // Egy user egy adott napra csak egy aktív foglalással rendelkezhet
+                entity.HasIndex(x => new { x.AppUserId, x.BookingDate, x.IsCancelled })
+                    .HasDatabaseName("IX_OfficeBookings_AppUser_BookingDate_IsCancelled");
             });
 
-            modelBuilder.Entity<Room>().HasData(
-                new Room { Id = roomId, Name = "Iroda 1" });
+            // -------------------------
+            // Seed data
+            // -------------------------
+            modelBuilder.Entity<Location>().HasData(
+                new Location
+                {
+                    Id = 1,
+                    Name = "Budapest",
+                    IsActive = true,
+                    DisplayOrder = 1
+                }
+            );
 
+            modelBuilder.Entity<Office>().HasData(
+                new Office
+                {
+                    Id = 1,
+                    LocationId = 1,
+                    Name = "Iroda 1",
+                    Description = "Alapértelmezett iroda",
+                    IsActive = true,
+                    DisplayOrder = 1
+                }
+            );
 
-
-            modelBuilder.Entity<Desk>().HasData(
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000001", RoomId = roomId, Name = "A1" },
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000002", RoomId = roomId, Name = "A2" },
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000003", RoomId = roomId, Name = "A3" },
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000004", RoomId = roomId, Name = "A4" },
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000005", RoomId = roomId, Name = "A5" },
-                new Desk { Id = "aaaaaaaa-0000-0000-0000-000000000006", RoomId = roomId, Name = "A6" }
+            modelBuilder.Entity<Workstation>().HasData(
+                new Workstation { Id = 1, OfficeId = 1, Code = "WS-001", Name = "1. hely", IsActive = true, DisplayOrder = 1 },
+                new Workstation { Id = 2, OfficeId = 1, Code = "WS-002", Name = "2. hely", IsActive = true, DisplayOrder = 2 },
+                new Workstation { Id = 3, OfficeId = 1, Code = "WS-003", Name = "3. hely", IsActive = true, DisplayOrder = 3 },
+                new Workstation { Id = 4, OfficeId = 1, Code = "WS-004", Name = "4. hely", IsActive = true, DisplayOrder = 4 },
+                new Workstation { Id = 5, OfficeId = 1, Code = "WS-005", Name = "5. hely", IsActive = true, DisplayOrder = 5 },
+                new Workstation { Id = 6, OfficeId = 1, Code = "WS-006", Name = "6. hely", IsActive = true, DisplayOrder = 6 }
             );
         }
     }

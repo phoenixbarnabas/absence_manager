@@ -9,7 +9,9 @@
         public string? Email { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+
+        public ICollection<OfficeBooking> OfficeBookings { get; set; } = new List<OfficeBooking>();
+
         public AppUser()
         {
             Id = Guid.NewGuid().ToString();
