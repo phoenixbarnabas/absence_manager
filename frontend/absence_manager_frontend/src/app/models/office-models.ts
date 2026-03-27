@@ -1,6 +1,6 @@
 export interface OfficeViewDto {
-  id: number;
-  locationId: number;
+  id: string;
+  locationId: string;
   name: string;
   description?: string | null;
   isActive: boolean;

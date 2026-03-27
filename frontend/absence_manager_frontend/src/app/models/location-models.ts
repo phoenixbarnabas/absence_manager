@@ -4,14 +4,14 @@ export interface CreateLocationDto {
 }
 
 export interface LocationViewDto {
-  id: number;
+  id: string;
   name: string;
   isActive: boolean;
   displayOrder: number;
 }
 
 export interface UpdateLocationDto {
-  id: number;
+  id: string;
   name: string;
   isActive: boolean;
   displayOrder: number;

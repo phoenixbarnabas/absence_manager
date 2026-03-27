@@ -1,5 +1,5 @@
 export interface CancelOfficeBookingDto {
-  bookingId: number;
+  bookingId: string;
 }
 
 export interface CreateOfficeBookingDto {
@@ -8,16 +8,16 @@ export interface CreateOfficeBookingDto {
 }
 
 export interface OfficeBookingViewDto {
-  id: number;
+  id: string;
   bookingDate: string;
   userId: string;
   userName: string;
-  workstationId: number;
+  workstationId: string;
   workstationCode: string;
   workstationName: string;
-  officeId: number;
+  officeId: string;
   officeName: string;
-  locationId: number;
+  locationId: string;
   locationName: string;
   isCancelled: boolean;
   createdAtUtc: string;

@@ -1,6 +1,6 @@
 export interface WorkstationViewDto {
-  id: number;
-  officeId: number;
+  id: string;
+  officeId: string;
   code: string;
   name: string;
   isActive: boolean;

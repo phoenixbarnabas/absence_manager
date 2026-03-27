@@ -1,3 +1,5 @@
+import { OfficeBooking } from "./entity-models";
+
 export interface AppUser {
   id: string;
   entraObjectId: string;
