@@ -1,0 +1,18 @@
+@use '../../src/styles' as *
+
+.app-layout
+    display: flex
+    min-height: 100vh
+    background: $body-bg
+
+.content
+    flex: 1
+    padding: 1.5rem
+    overflow: auto
+
+@media (max-width: 768px)
+    .app-layout
+        flex-direction: column
+
+    .content
+        padding: 1rem
