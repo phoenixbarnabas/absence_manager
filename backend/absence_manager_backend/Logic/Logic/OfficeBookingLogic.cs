@@ -152,6 +152,7 @@ namespace Logic.Logic
             return result;
         }
 
+        //javitsd hogy a date formatumot is vizsgalja a create ha nem jo a formatum dobjon exceptiont
         public OfficeBookingViewDto CreateBooking(CreateOfficeBookingDto dto, string currentUserId)
         {
             ValidateBookingDate(dto.BookingDate);

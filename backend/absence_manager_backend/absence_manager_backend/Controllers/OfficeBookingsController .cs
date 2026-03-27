@@ -13,10 +13,9 @@ namespace Absence_Manager.Controllers
     {
         private readonly OfficeBookingLogic _officeBookingLogic;
         private readonly AbsenceManagerDbContext _ctx;
-        public OfficeBookingsController(OfficeBookingLogic officeBookingLogic, AbsenceManagerDbContext ctx)
+        public OfficeBookingsController(OfficeBookingLogic officeBookingLogic)
         {
             _officeBookingLogic = officeBookingLogic;
-            _ctx = ctx;
         }
 
         [HttpGet("availability")]
@@ -88,13 +87,17 @@ namespace Absence_Manager.Controllers
                 var result = _officeBookingLogic.CreateBooking(dto, currentUserId);
                 return Ok(result);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -123,7 +126,7 @@ namespace Absence_Manager.Controllers
 
         private string GetCurrentUserId()
         {
-            return _ctx.AppUsers.FirstOrDefault().Id;
+            return "user-1";
         }
     }
 }
