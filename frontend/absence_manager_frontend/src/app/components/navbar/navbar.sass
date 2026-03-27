@@ -1,0 +1,71 @@
+@use '../../../../src/styles' as *
+
+.sidebar
+    width: 270px
+    min-height: 100vh
+    background: white
+    border-right: 1px solid $border-color
+
+.sidebar-header
+    text-align: center
+    border-bottom: 1px solid $border-color
+    .logo
+        font-weight: 600
+        font-size: 1.4rem
+        color: $primary-500
+        text-align: center
+        
+
+.sidebar-nav
+    .nav-link
+        border-radius: 0.5rem
+        padding: 0.65rem 0.8rem
+        color: $dark
+        text-decoration: none
+        transition: background 0.15s ease, color 0.15s ease
+
+        i
+            font-size: 1.2rem
+            line-height: 1
+
+        &:hover
+            background: $light-100
+            color: $dark
+
+        &.active
+            background: $primary-500
+            color: $light-500
+            font-weight: 500
+
+        &.active:hover
+            background: $primary-500
+            color: $light-500
+
+.sidebar-user
+    border-top: 1px solid $border-color
+
+.avatar
+    width: 36px
+    height: 36px
+    border-radius: 50%
+    background: $primary-200
+    color: $primary-700
+    display: flex
+    align-items: center
+    justify-content: center
+    font-weight: 600
+    font-size: 0.85rem
+
+.user-meta
+    display: flex
+    flex-direction: column
+    line-height: 1.2
+
+.user-name
+    font-size: 0.9rem
+    font-weight: 600
+    color: $dark-900
+
+.user-dept
+    font-size: 0.8rem
+    color: $dark-700
