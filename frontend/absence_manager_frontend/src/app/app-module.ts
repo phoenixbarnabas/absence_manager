@@ -5,16 +5,20 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import {WelcomePage} from './components/landing/welcome-page/welcome-page';
 import { Navbar } from './components/navbar/navbar';
+import { DeskBooking } from './components/desk-booking/desk-booking';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
     App,
     WelcomePage,
-    Navbar
+    Navbar,
+    DeskBooking
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
