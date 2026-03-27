@@ -6,7 +6,7 @@ namespace Entities.Dtos.LocationDtos
 {
     public class LocationViewDto
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; } = null!;
         public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }

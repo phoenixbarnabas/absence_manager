@@ -6,6 +6,6 @@ namespace Entities.Dtos.OfficeBooking
 {
     public class CancelOfficeBookingDto
     {
-        public int BookingId { get; set; }
+        public string BookingId { get; set; }
     }
 }
