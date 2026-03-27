@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -9,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,8 +34,7 @@ namespace Data.Migrations
                 name: "Locations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     DisplayOrder = table.Column<int>(type: "integer", nullable: false)
@@ -50,9 +48,8 @@ namespace Data.Migrations
                 name: "Offices",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    LocationId = table.Column<int>(type: "integer", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    LocationId = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
@@ -73,9 +70,8 @@ namespace Data.Migrations
                 name: "Workstations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OfficeId = table.Column<int>(type: "integer", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    OfficeId = table.Column<string>(type: "text", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
@@ -98,10 +94,9 @@ namespace Data.Migrations
                 name: "OfficeBookings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    WorkstationId = table.Column<int>(type: "integer", nullable: false),
-                    AppUserId = table.Column<string>(type: "character varying(50)", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    WorkstationId = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "character varying(50)", nullable: false),
                     BookingDate = table.Column<DateOnly>(type: "date", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
@@ -113,8 +108,8 @@ namespace Data.Migrations
                 {
                     table.PrimaryKey("PK_OfficeBookings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_OfficeBookings_AppUsers_AppUserId",
-                        column: x => x.AppUserId,
+                        name: "FK_OfficeBookings_AppUsers_UserId",
+                        column: x => x.UserId,
                         principalTable: "AppUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -127,26 +122,46 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "AppUsers",
+                columns: new[] { "Id", "CreatedAt", "DisplayName", "Email", "EntraObjectId", "IsActive", "TenantId" },
+                values: new object[,]
+                {
+                    { "user-1", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "András Bátori", "batori@email.com", "entra-1", true, "tenant-1" },
+                    { "user-2", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "Fenyvesi Péter", "fenyvesi@email.com", "entra-2", true, "tenant-1" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Locations",
                 columns: new[] { "Id", "DisplayOrder", "IsActive", "Name" },
-                values: new object[] { 1, 1, true, "Budapest" });
+                values: new object[] { "loc-budapest", 1, true, "Budapest HQ" });
 
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[] { 1, "Alapértelmezett iroda", 1, true, 1, "Iroda 1" });
+                values: new object[,]
+                {
+                    { "office-bp-1", "Main open office area", 1, true, "loc-budapest", "Open Office - 1st Floor" },
+                    { "office-bp-2", "Silent workspace", 2, true, "loc-budapest", "Quiet Room" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
                 columns: new[] { "Id", "Code", "DisplayOrder", "IsActive", "Name", "OfficeId", "PositionX", "PositionY" },
                 values: new object[,]
                 {
-                    { 1, "WS-001", 1, true, "1. hely", 1, null, null },
-                    { 2, "WS-002", 2, true, "2. hely", 1, null, null },
-                    { 3, "WS-003", 3, true, "3. hely", 1, null, null },
-                    { 4, "WS-004", 4, true, "4. hely", 1, null, null },
-                    { 5, "WS-005", 5, true, "5. hely", 1, null, null },
-                    { 6, "WS-006", 6, true, "6. hely", 1, null, null }
+                    { "ws-1", "A1", 1, true, "Desk A1", "office-bp-1", 1m, 1m },
+                    { "ws-2", "A2", 2, true, "Desk A2", "office-bp-1", 2m, 1m },
+                    { "ws-3", "A3", 3, true, "Desk A3", "office-bp-1", 3m, 1m },
+                    { "ws-4", "Q1", 1, true, "Quiet Desk 1", "office-bp-2", 1m, 1m }
+                });
+
+            migrationBuilder.InsertData(
+                table: "OfficeBookings",
+                columns: new[] { "Id", "BookingDate", "CancelledAtUtc", "CancelledByUserId", "CreatedAtUtc", "CreatedByUserId", "IsCancelled", "UserId", "WorkstationId" },
+                values: new object[,]
+                {
+                    { "booking-1", new DateOnly(2026, 3, 30), null, null, new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "user-1", false, "user-1", "ws-1" },
+                    { "booking-2", new DateOnly(2026, 3, 30), null, null, new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "user-2", false, "user-2", "ws-2" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -165,7 +180,7 @@ namespace Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_OfficeBookings_AppUser_BookingDate_IsCancelled",
                 table: "OfficeBookings",
-                columns: new[] { "AppUserId", "BookingDate", "IsCancelled" });
+                columns: new[] { "UserId", "BookingDate", "IsCancelled" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OfficeBookings_Workstation_BookingDate_IsCancelled",

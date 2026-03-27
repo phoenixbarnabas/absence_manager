@@ -60,6 +60,7 @@ namespace Logic.Logic
 
             var bookings = _officeBookingRepository.GetAll()
                 .Include(b => b.Workstation)
+                .Include(b=>b.User)
                 .Where(b =>
                     b.Workstation.OfficeId == officeId &&
                     b.BookingDate == date &&
@@ -79,17 +80,17 @@ namespace Logic.Logic
                         DisplayOrder = w.DisplayOrder,
                         IsActive = w.IsActive,
                         IsBooked = booking != null,
-                        IsBookedByCurrentUser = booking != null && booking.AppUserId == currentUserId,
+                        IsBookedByCurrentUser = booking != null && booking.UserId == currentUserId,
                         BookingId = booking?.Id,
-                        BookedByUserId = booking?.AppUserId,
-                        BookedByUserName = booking?.AppUser?.DisplayName,
+                        BookedByUserId = booking?.UserId,
+                        BookedByUserName = booking?.User?.DisplayName,
                         PositionX = w.PositionX,
                         PositionY = w.PositionY
                     };
                 })
                 .ToList();
 
-            var currentUserBooking = bookings.FirstOrDefault(b => b.AppUserId == currentUserId);
+            var currentUserBooking = bookings.FirstOrDefault(b => b.UserId == currentUserId);
 
             return new OfficeDayAvailabilityDto
             {
@@ -144,7 +145,7 @@ namespace Logic.Logic
                     TotalWorkstations = totalWorkstations,
                     BookedWorkstations = dayBookings.Count,
                     FreeWorkstations = totalWorkstations - dayBookings.Count,
-                    CurrentUserHasBooking = dayBookings.Any(b => b.AppUserId == currentUserId)
+                    CurrentUserHasBooking = dayBookings.Any(b => b.UserId == currentUserId)
                 });
             }
 
@@ -180,7 +181,7 @@ namespace Logic.Logic
                 throw new InvalidOperationException("Location is not active.");
 
             var userAlreadyHasBooking = _officeBookingRepository.GetAll()
-                .Any(b => b.AppUserId == currentUserId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
+                .Any(b => b.UserId == currentUserId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
 
             if (userAlreadyHasBooking)
                 throw new InvalidOperationException("The user already has a booking for this date.");
@@ -193,7 +194,7 @@ namespace Logic.Logic
 
             var booking = _dtoProvider.Mapper.Map<OfficeBooking>(dto);
 
-            booking.AppUserId = user.Id;
+            booking.UserId = user.Id;
             booking.CreatedAtUtc = DateTime.UtcNow;
             booking.CreatedByUserId = currentUserId;
             booking.IsCancelled = false;
@@ -204,11 +205,15 @@ namespace Logic.Logic
                 .Include(b => b.Workstation)
                 .ThenInclude(w => w.Office)
                 .ThenInclude(o => o.Location)
-                .Include(b => b.AppUser)
+                .Include(b => b.User)
                 .FirstOrDefault(b => b.Id == booking.Id);
 
             if (createdBooking == null)
                 throw new InvalidOperationException("Created booking could not be loaded.");
+
+            Console.WriteLine($"Booking Id: {createdBooking.Id}");
+            Console.WriteLine($"WorkstationId: {createdBooking.WorkstationId}");
+            Console.WriteLine($"UserId: {createdBooking.UserId}");
 
             return _dtoProvider.Mapper.Map<OfficeBookingViewDto>(createdBooking);
         }
@@ -219,8 +224,8 @@ namespace Logic.Logic
                 .Include(b => b.Workstation)
                 .ThenInclude(w => w.Office)
                 .ThenInclude(o => o.Location)
-                .Include(b => b.AppUser)
-                .Where(b => b.AppUserId == currentUserId && !b.IsCancelled);
+                .Include(b => b.User)
+                .Where(b => b.UserId == currentUserId && !b.IsCancelled);
 
             if (fromDate.HasValue)
                 query = query.Where(b => b.BookingDate >= fromDate.Value);
@@ -246,7 +251,7 @@ namespace Logic.Logic
             if (booking.IsCancelled)
                 throw new InvalidOperationException("Booking is already cancelled.");
 
-            if (!isAdmin && booking.AppUserId != currentUserId)
+            if (!isAdmin && booking.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You can only cancel your own booking.");
 
             var today = DateOnly.FromDateTime(DateTime.Today);

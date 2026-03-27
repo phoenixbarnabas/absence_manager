@@ -1,9 +1,11 @@
 ﻿using Entities.Helpers;
+using System.ComponentModel.DataAnnotations;
 
 namespace Entities.Models
 {
     public class AppUser : IIdEntity
     {
+        [Key]
         public string Id { get; set; }
         public string EntraObjectId { get; set; }
         public string? TenantId { get; set; }

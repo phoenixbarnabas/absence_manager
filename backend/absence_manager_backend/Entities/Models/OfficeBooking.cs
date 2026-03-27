@@ -1,6 +1,7 @@
 ﻿using Entities.Helpers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,10 +14,11 @@ namespace Entities.Models
         {
             Id = Guid.NewGuid().ToString();
         }
+        [Key]
         public string Id { get; set; }
 
         public string WorkstationId { get; set; }
-        public string AppUserId { get; set; } = null!;
+        public string UserId { get; set; } = null!;
 
         public DateOnly BookingDate { get; set; }
 
@@ -28,6 +30,6 @@ namespace Entities.Models
         public bool IsCancelled { get; set; }
 
         public Workstation Workstation { get; set; } = null!;
-        public AppUser AppUser { get; set; } = null!;
+        public AppUser User { get; set; } = null!;
     }
 }

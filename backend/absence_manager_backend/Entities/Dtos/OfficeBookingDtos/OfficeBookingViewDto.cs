@@ -9,8 +9,8 @@ namespace Entities.Dtos.OfficeBooking
         public int Id { get; set; }
         public DateOnly BookingDate { get; set; }
 
-        public string AppUserId { get; set; } = null!;
-        public string AppUserName { get; set; } = null!;
+        public string UserId { get; set; } = null!;
+        public string UserName { get; set; } = null!;
 
         public int WorkstationId { get; set; }
         public string WorkstationCode { get; set; } = null!;
