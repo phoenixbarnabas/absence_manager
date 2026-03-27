@@ -21,7 +21,8 @@ Ez a dokumentum a PHOENIX vállalati arculati irányelvek alapján készült, é
 
 ## 3. Színrendszer
 
-## Primary (Corporate Green)
+## Primary 
+## Corporate Green
 ![#00927B](https://singlecolorimage.com/get/00927B/40x20) :`#00927B` a fő márkaszín
 
 | Szín | HEX | Name |
@@ -35,7 +36,7 @@ Ez a dokumentum a PHOENIX vállalati arculati irányelvek alapján készült, é
 
 ---
 
-## Secondary (Light Green)
+## Light Green
 ![#92D400](https://singlecolorimage.com/get/92D400/40x20) :`#92D400` kiegészítő kiemelőszín
 
 | Szín | HEX | Name |
@@ -49,7 +50,7 @@ Ez a dokumentum a PHOENIX vállalati arculati irányelvek alapján készült, é
 
 ---
 
-## Dark (Corporate Grey)
+## Corporate Grey
 ![#535353](https://singlecolorimage.com/get/535353/40x20) :`#535353` fő szövegszín
 
 | Szín | HEX | Name |
@@ -61,50 +62,57 @@ Ez a dokumentum a PHOENIX vállalati arculati irányelvek alapján készült, é
 | ![#8F8F8F](https://singlecolorimage.com/get/8F8F8F/40x20) | `#8f8f8f` | dark-600 |
 
 ---
+## Secondary
 
-## Light
-![#F8FAF9](https://singlecolorimage.com/get/F8FAF9/40x20) :`#F8FAF9` alap háttér
+## Violet
+![#993399](https://singlecolorimage.com/get/993399/40x20) :`#993399` secondary violet
 
 | Szín | HEX | Name |
 |------|-----|------|
-| ![#FFFFFF](https://singlecolorimage.com/get/FFFFFF/40x20) | `#ffffff` | light-50 |
-| ![#F8FAF9](https://singlecolorimage.com/get/F8FAF9/40x20) | `#f8faf9` | light-100 |
-| ![#E8EEEC](https://singlecolorimage.com/get/E8EEEC/40x20) | `#e8eeec` | light-200 |
-| ![#D5DDDA](https://singlecolorimage.com/get/D5DDDA/40x20) | `#d5ddda` | light-300 |
-| ![#B8C4C0](https://singlecolorimage.com/get/B8C4C0/40x20) | `#b8c4c0` | light-400 |
+| ![#993399](https://singlecolorimage.com/get/993399/40x20) | `#993399` | violet-100 |
+| ![#AD5CAD](https://singlecolorimage.com/get/AD5CAD/40x20) | `#ad5cad` | violet-80 |
+| ![#C285C2](https://singlecolorimage.com/get/C285C2/40x20) | `#c285c2` | violet-60 |
+| ![#D6ADD6](https://singlecolorimage.com/get/D6ADD6/40x20) | `#d6add6` | violet-40 |
+| ![#EBD6EB](https://singlecolorimage.com/get/EBD6EB/40x20) | `#ebd6eb` | violet-20 |
 
 ---
 
-## Success
-![#2E9E6F](https://singlecolorimage.com/get/2E9E6F/40x20) :`#2E9E6F` sikeres állapotok
+## Red
+![#D53F15](https://singlecolorimage.com/get/D53F15/40x20) :`#D53F15` secondary red
 
 | Szín | HEX | Name |
 |------|-----|------|
-| ![#247C57](https://singlecolorimage.com/get/247C57/40x20) | `#247c57` | success-600 |
-| ![#2E9E6F](https://singlecolorimage.com/get/2E9E6F/40x20) | `#2e9e6f` | success-500 |
-| ![#63BD95](https://singlecolorimage.com/get/63BD95/40x20) | `#63bd95` | success-400 |
+| ![#D53F15](https://singlecolorimage.com/get/D53F15/40x20) | `#d53f15` | red-100 |
+| ![#DD6544](https://singlecolorimage.com/get/DD6544/40x20) | `#dd6544` | red-80 |
+| ![#E68C73](https://singlecolorimage.com/get/E68C73/40x20) | `#e68c73` | red-60 |
+| ![#EEB2A1](https://singlecolorimage.com/get/EEB2A1/40x20) | `#eeb2a1` | red-40 |
+| ![#F7D9D0](https://singlecolorimage.com/get/F7D9D0/40x20) | `#f7d9d0` | red-20 |
 
 ---
 
-## Warning
-![#E39A1C](https://singlecolorimage.com/get/E39A1C/40x20) :`#E39A1C` figyelmeztetések
+## Yellow
+![#FBBA00](https://singlecolorimage.com/get/FBBA00/40x20) :`#FBBA00` secondary yellow
 
 | Szín | HEX | Name |
 |------|-----|------|
-| ![#B97812](https://singlecolorimage.com/get/B97812/40x20) | `#b97812` | warning-600 |
-| ![#E39A1C](https://singlecolorimage.com/get/E39A1C/40x20) | `#e39a1c` | warning-500 |
-| ![#F0BE63](https://singlecolorimage.com/get/F0BE63/40x20) | `#f0be63` | warning-400 |
+| ![#FBBA00](https://singlecolorimage.com/get/FBBA00/40x20) | `#fbba00` | yellow-100 |
+| ![#FCC833](https://singlecolorimage.com/get/FCC833/40x20) | `#fcc833` | yellow-80 |
+| ![#FDD666](https://singlecolorimage.com/get/FDD666/40x20) | `#fdd666` | yellow-60 |
+| ![#FDE399](https://singlecolorimage.com/get/FDE399/40x20) | `#fde399` | yellow-40 |
+| ![#FEF1CC](https://singlecolorimage.com/get/FEF1CC/40x20) | `#fef1cc` | yellow-20 |
 
 ---
 
-## Danger
-![#D64545](https://singlecolorimage.com/get/D64545/40x20) :`#D64545` hibák és elutasítások
+## Blue
+![#62C3D5](https://singlecolorimage.com/get/62C3D5/40x20) :`#62C3D5` secondary blue
 
 | Szín | HEX | Name |
 |------|-----|------|
-| ![#B93636](https://singlecolorimage.com/get/B93636/40x20) | `#b93636` | danger-600 |
-| ![#D64545](https://singlecolorimage.com/get/D64545/40x20) | `#d64545` | danger-500 |
-| ![#E57C7C](https://singlecolorimage.com/get/E57C7C/40x20) | `#e57c7c` | danger-400 |
+| ![#62C3D5](https://singlecolorimage.com/get/62C3D5/40x20) | `#62c3d5` | blue-100 |
+| ![#81CFDD](https://singlecolorimage.com/get/81CFDD/40x20) | `#81cfdd` | blue-80 |
+| ![#A1DBE6](https://singlecolorimage.com/get/A1DBE6/40x20) | `#a1dbe6` | blue-60 |
+| ![#C0E7EE](https://singlecolorimage.com/get/C0E7EE/40x20) | `#c0e7ee` | blue-40 |
+| ![#E0F3F7](https://singlecolorimage.com/get/E0F3F7/40x20) | `#e0f3f7` | blue-20 |
 
 ---
 
@@ -132,19 +140,86 @@ Ez a dokumentum a PHOENIX vállalati arculati irányelvek alapján készült, é
 
 ---
 
-## 5. SCSS Variables
+## 5. CSS Variables
 
-```scss
-$primary: #00927B;
-$secondary: #92D400;
+```css
+:root {
+  /* Primary */
+  --color-primary-700: #007a67;
+  --color-primary-600: #008872;
+  --color-primary-500: #00927b;
+  --color-primary-400: #33a895;
+  --color-primary-300: #80c9bd;
+  --color-primary-200: #cce9e4;
 
-$success: #2E9E6F;
-$warning: #E39A1C;
-$danger: #D64545;
-$info: #2C8CC9;
+  /* Secondary / Accent */
+  --color-secondary-700: #6fa300;
+  --color-secondary-600: #7fbc00;
+  --color-secondary-500: #92d400;
+  --color-secondary-400: #a8de33;
+  --color-secondary-300: #c8ea80;
+  --color-secondary-200: #e9f7cc;
 
-$body-bg: #F8FAF9;
-$body-color: #535353;
+  /* Dark / Text */
+  --color-dark-950: #2f2f2f;
+  --color-dark-900: #3f3f3f;
+  --color-dark-800: #535353;
+  --color-dark-700: #6f6f6f;
+  --color-dark-600: #8f8f8f;
+
+  /* Secondary palettes */
+  --color-violet-100: #993399;
+  --color-violet-80: #ad5cad;
+  --color-violet-60: #c285c2;
+  --color-violet-40: #d6add6;
+  --color-violet-20: #ebd6eb;
+
+  --color-red-100: #d53f15;
+  --color-red-80: #dd6544;
+  --color-red-60: #e68c73;
+  --color-red-40: #eeb2a1;
+  --color-red-20: #f7d9d0;
+
+  --color-yellow-100: #fbba00;
+  --color-yellow-80: #fcc833;
+  --color-yellow-60: #fdd666;
+  --color-yellow-40: #fde399;
+  --color-yellow-20: #fef1cc;
+
+  --color-blue-100: #62c3d5;
+  --color-blue-80: #81cfdd;
+  --color-blue-60: #a1dbe6;
+  --color-blue-40: #c0e7ee;
+  --color-blue-20: #e0f3f7;
+
+  /* Info */
+  --color-info-600: #1f6ea2;
+  --color-info-500: #2c8cc9;
+  --color-info-400: #6cb4dd;
+
+  /* Surfaces */
+  --color-white: #ffffff;
+  --color-background: #f8faf9;
+  --color-surface: #ffffff;
+  --color-border: #e8eeec;
+
+  /* Text */
+  --color-text-primary: var(--color-dark-800);
+  --color-text-secondary: var(--color-dark-700);
+
+  /* Semantic aliases */
+  --color-cta: var(--color-primary-500);
+  --color-cta-hover: var(--color-primary-600);
+  --color-accent: var(--color-secondary-500);
+
+  --color-success: var(--color-secondary-500);
+  --color-warning: var(--color-yellow-100);
+  --color-danger: var(--color-red-100);
+  --color-info: var(--color-info-500);
+
+  --color-selected: var(--color-info-500);
+  --color-highlight: var(--color-violet-100);
+}
 
 $card-bg: #FFFFFF;
 $border-color: #E8EEEC;
