@@ -1,0 +1,27 @@
+<div class="booking-card">
+  <div class="section-title">Munkaállomások</div>
+
+  <div *ngIf="visibleWorkstations.length === 0" class="empty-state">
+    Nincs elérhető munkaállomás ebben az irodában.
+  </div>
+
+  <div class="workstation-grid" *ngIf="visibleWorkstations.length > 0">
+    <button
+      type="button"
+      class="workstation-tile"
+      *ngFor="let workstation of visibleWorkstations"
+      [class.workstation-tile--selected]="isSelected(workstation.id)"
+      (click)="selectWorkstation(workstation.id)"
+    >
+      <i class="bi bi-laptop"></i>
+
+      <div class="workstation-name">
+        {{ workstation.name }}
+      </div>
+
+      <div class="workstation-code" *ngIf="workstation.code">
+        {{ workstation.code }}
+      </div>
+    </button>
+  </div>
+</div>

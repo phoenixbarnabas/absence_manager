@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LocationService } from '../../services/location-service';
 import { Observable, tap } from 'rxjs';
-import { Location, Office } from '../../models/entity-models';
+import { Location, Office, Workstation } from '../../models/entity-models';
 import { OfficeService } from '../../services/office-service';
-
-type DeskStatus = 'free' | 'selected' | 'occupied';
+import { WorkstationService } from '../../services/workstation-service';
 
 type CalendarDay = {
   date: Date;
@@ -20,23 +19,28 @@ type CalendarDay = {
   templateUrl: './desk-booking.html',
   styleUrl: './desk-booking.sass',
 })
+
 export class DeskBooking implements OnInit {
   calendarDays: CalendarDay[] = []
 
   locations$!: Observable<Location[]>
   offices$!: Observable<Office[]>
+  workstations$!: Observable<Workstation[]>;
 
   selectedLocationId!: string
   selectedOfficeId!: string
+  selectedWorkstationId!: string
 
   constructor(
     private locationService: LocationService,
-    private officeService: OfficeService
+    private officeService: OfficeService,
+    private workstationService: WorkstationService
   ) { }
 
   ngOnInit(): void {
     this.generateCalendarDays()
     this.loadLocations()
+    this.workstations$ = this.workstationService.workstations$;
   }
 
   loadLocations(): void {
@@ -55,6 +59,8 @@ export class DeskBooking implements OnInit {
     }
 
     this.selectedOfficeId = '';
+    this.selectedWorkstationId = '';
+    this.workstationService.clear();
 
     this.officeService.loadAllByLocationId(locationId).subscribe();
 
@@ -62,13 +68,23 @@ export class DeskBooking implements OnInit {
       tap(offices => {
         if (!this.selectedOfficeId && offices.length > 0) {
           this.selectedOfficeId = offices[0].id;
+          this.loadWorkstations(this.selectedOfficeId);
         }
       })
-    )
+    );
+  }
+
+  loadWorkstations(officeId: string): void {
+    if (!officeId) {
+      return;
+    }
+
+    this.selectedWorkstationId = '';
+    this.workstationService.loadAllByOfficeId(officeId).subscribe();
   }
 
   currentLocation$(locations: Location[]): Location | undefined {
-    return locations.find(l => l.id === this.selectedLocationId);
+    return locations.find(location => location.id === this.selectedLocationId);
   }
 
   currentOffice$(offices: Office[]): Office | undefined {
@@ -80,7 +96,11 @@ export class DeskBooking implements OnInit {
   }
 
   onOfficeChange(): void {
-    console.log('selectedOfficeId:', this.selectedOfficeId);
+    this.loadWorkstations(this.selectedOfficeId);
+  }
+
+  onWorkstationSelected(workstationId: string): void {
+    this.selectedWorkstationId = workstationId;
   }
 
   selectDay(selectedDay: CalendarDay): void {

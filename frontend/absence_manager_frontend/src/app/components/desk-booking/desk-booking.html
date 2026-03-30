@@ -8,13 +8,8 @@
 
   <div class="booking-card">
     <div class="calendar-row">
-      <button
-        type="button"
-        class="calendar-day"
-        *ngFor="let day of calendarDays"
-        [class.calendar-day--active]="day.isSelected"
-        (click)="selectDay(day)"
-      >
+      <button type="button" class="calendar-day" *ngFor="let day of calendarDays"
+        [class.calendar-day--active]="day.isSelected" (click)="selectDay(day)">
         <span class="calendar-day__label">{{ day.dayLabel }}</span>
         <span class="calendar-day__number">{{ day.dayNumber }}</span>
       </button>
@@ -25,16 +20,9 @@
     <div class="row g-3">
       <div class="col-12 col-md-6">
         <label for="locationSelect" class="form-label">Telephely</label>
-        <select
-          id="locationSelect"
-          class="form-select"
-          [(ngModel)]="selectedLocationId"
-          (ngModelChange)="onLocationChange()"
-        >
-          <option
-            *ngFor="let location of (locations$ | async)"
-            [value]="location.id"
-          >
+        <select id="locationSelect" class="form-select" [(ngModel)]="selectedLocationId"
+          (ngModelChange)="onLocationChange()">
+          <option *ngFor="let location of (locations$ | async)" [value]="location.id">
             {{ location.name }}
           </option>
         </select>
@@ -42,16 +30,8 @@
 
       <div class="col-12 col-md-6">
         <label for="officeSelect" class="form-label">Iroda</label>
-        <select
-          id="officeSelect"
-          class="form-select"
-          [(ngModel)]="selectedOfficeId"
-          (ngModelChange)="onOfficeChange()"
-        >
-          <option
-            *ngFor="let office of (offices$ | async)"
-            [value]="office.id"
-          >
+        <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId" (ngModelChange)="onOfficeChange()">
+          <option *ngFor="let office of (offices$ | async)" [value]="office.id">
             {{ office.name }}
           </option>
         </select>
@@ -71,7 +51,12 @@
     </div>
   </div>
 
-  <!--
-  Később ide jöhetnek az asztalok, ha már lesz backend hozzá.
-  -->
+  <app-workstation-list [workstations]="(workstations$ | async) ?? []" [selectedWorkstationId]="selectedWorkstationId"
+    (workstationSelected)="onWorkstationSelected($event)">
+    asd
+  </app-workstation-list>
+
+  <div class="booking-card" *ngIf="selectedWorkstationId">
+    <strong>Kiválasztott munkaállomás azonosító:</strong> {{ selectedWorkstationId }}
+  </div>
 </div>

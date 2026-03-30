@@ -1,0 +1,66 @@
+@use '../../../../src/styles' as *
+
+.section-title
+    font-size: 1.1rem
+    font-weight: 600
+    color: $dark-900
+    margin-bottom: 1rem
+
+.empty-state
+    padding: 1rem
+    border: 1px dashed $border-color
+    border-radius: 12px
+    color: $dark-700
+    background: $light-500
+
+.workstation-grid
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: 1rem
+
+.workstation-tile
+    min-height: 100px
+    border: 1px solid $border-color
+    background: $light-500
+    border-radius: 12px
+    padding: 1rem
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 0.5rem
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease
+    color: $dark-800
+
+    i
+        font-size: 1.25rem
+
+    &:hover
+        background: $light-200
+        transform: translateY(-1px)
+
+.workstation-tile--selected
+    background: $primary-500
+    border-color: $primary-500
+    color: $light-500
+
+    &:hover
+        background: $primary-500
+        color: $light-500
+
+.workstation-name
+    font-weight: 600
+    text-align: center
+
+.workstation-code
+    font-size: 0.85rem
+    opacity: 0.9
+    text-align: center
+
+@media (max-width: 992px)
+    .workstation-grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+
+@media (max-width: 576px)
+    .workstation-grid
+        grid-template-columns: 1fr
