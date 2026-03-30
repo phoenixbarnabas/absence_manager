@@ -1,98 +1,28 @@
-<div class="desk-booking-page">
-  <div class="page-header">
-    <h1 class="page-title d-flex align-items-center gap-2">
-      <i class="bi bi-grid-3x2-gap"></i>
-      <span>Helyfoglalás</span>
-    </h1>
-  </div>
+<div class="booking-card">
+  <div class="row g-3">
 
-  <div class="booking-card">
-    <div class="calendar-row">
-      <button
-        type="button"
-        class="calendar-day"
-        *ngFor="let day of calendarDays"
-        [class.calendar-day--active]="day.isSelected"
-        (click)="selectDay(day)"
+    <div class="col-12 col-md-6">
+      <label class="form-label">Telephely</label>
+
+      <select
+        class="form-select"
+        [(ngModel)]="selectedLocationId"
+        (ngModelChange)="onLocationChange()"
       >
-        <span class="calendar-day__label">{{ day.dayLabel }}</span>
-        <span class="calendar-day__number">{{ day.dayNumber }}</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="booking-card">
-    <div class="row g-3">
-      <div class="col-12 col-md-6">
-        <label for="locationSelect" class="form-label">Telephely</label>
-        <select
-          id="locationSelect"
-          class="form-select"
-          [(ngModel)]="selectedLocationId"
-          (ngModelChange)="onLocationChange()"
+        <option
+          *ngFor="let location of (locations$ | async)"
+          [value]="location.id"
         >
-          <option *ngFor="let location of locations" [ngValue]="location.id">
-            {{ location.name }}
-          </option>
-        </select>
-      </div>
-
-      <div class="col-12 col-md-6">
-        <label for="officeSelect" class="form-label">Iroda</label>
-        <select
-          id="officeSelect"
-          class="form-select"
-          [(ngModel)]="selectedOfficeId"
-        >
-          <option *ngFor="let office of offices" [ngValue]="office.id">
-            {{ office.name }}
-          </option>
-        </select>
-      </div>
+          {{ location.name }}
+        </option>
+      </select>
     </div>
+
   </div>
+</div>
 
-  <div class="booking-card">
-    <div class="section-title">Munkaállomások</div>
-
-    <div class="desk-grid">
-      <button
-        type="button"
-        class="desk-tile"
-        *ngFor="let desk of desks"
-        [ngClass]="{
-          'desk-tile--free': desk.status === 'free',
-          'desk-tile--selected': desk.status === 'selected',
-          'desk-tile--occupied': desk.status === 'occupied'
-        }"
-        (click)="selectDesk(desk)"
-      >
-        <i class="bi bi-laptop"></i>
-        <span>{{ desk.name }}</span>
-      </button>
-    </div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <span class="legend-color legend-color--free"></span>
-        <span>Szabad</span>
-      </div>
-
-      <div class="legend-item">
-        <span class="legend-color legend-color--selected"></span>
-        <span>Kiválasztva</span>
-      </div>
-
-      <div class="legend-item">
-        <span class="legend-color legend-color--occupied"></span>
-        <span>Foglalt</span>
-      </div>
-    </div>
-
-    <div class="booking-actions">
-      <button type="button" class="btn btn-primary" [disabled]="!desks.some(d => d.status === 'selected')">
-        Foglalás
-      </button>
-    </div>
+<div class="booking-card" *ngIf="(locations$ | async) as locations">
+  <div *ngIf="currentLocation$(locations) as loc">
+    <strong>Kiválasztott:</strong> {{ loc.name }}
   </div>
 </div>
