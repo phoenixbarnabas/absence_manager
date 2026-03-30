@@ -17,8 +17,14 @@ namespace Absence_Manager.Controllers
         [HttpGet("by-office/{officeId}")]
         public IActionResult GetByOffice(string officeId, [FromQuery] bool activeOnly = false)
         {
-            var result = _officeManagementLogic.GetWorkstationsByOffice(officeId, activeOnly);
-            return Ok(result);
+            try { 
+                var result = _officeManagementLogic.GetWorkstationsByOffice(officeId, activeOnly);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{workstationId}")]

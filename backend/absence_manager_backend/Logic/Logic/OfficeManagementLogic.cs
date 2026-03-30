@@ -44,6 +44,8 @@ namespace Logic.Logic
 
         public IEnumerable<OfficeViewDto> GetOfficesByLocation(string locationId, bool activeOnly = false)
         {
+            _locationRepository.FindById(locationId);
+
             var query = _officeRepository.GetAll()
                 .Where(x => x.LocationId == locationId);
 
@@ -58,6 +60,8 @@ namespace Logic.Logic
 
         public IEnumerable<WorkstationViewDto> GetWorkstationsByOffice(string officeId, bool activeOnly = false)
         {
+            _officeRepository.FindById(officeId);
+
             var query = _workstationRepository.GetAll()
                 .Where(x => x.OfficeId == officeId);
 
@@ -73,9 +77,6 @@ namespace Logic.Logic
         public WorkstationViewDto GetWorkstationById(string workstationId)
         {
             var workstation = _workstationRepository.FindById(workstationId);
-            if (workstation == null)
-                throw new KeyNotFoundException("Workstation not found.");
-
             return _dtoProvider.Mapper.Map<WorkstationViewDto>(workstation);
         }
     }

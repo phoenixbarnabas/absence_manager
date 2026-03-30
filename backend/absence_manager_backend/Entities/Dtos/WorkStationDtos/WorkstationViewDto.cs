@@ -6,8 +6,8 @@ namespace Entities.Dtos.WorkStationDtos
 {
     public class WorkstationViewDto
     {
-        public int Id { get; set; }
-        public int OfficeId { get; set; }
+        public string Id { get; set; }
+        public string OfficeId { get; set; }
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
         public bool IsActive { get; set; }
