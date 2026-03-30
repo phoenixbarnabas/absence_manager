@@ -11,6 +11,8 @@ namespace Entities.Models
         public string? TenantId { get; set; }
         public string DisplayName { get; set; }
         public string? Email { get; set; }
+        public string Department { get; set; }
+        public string JobTitle { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
 
