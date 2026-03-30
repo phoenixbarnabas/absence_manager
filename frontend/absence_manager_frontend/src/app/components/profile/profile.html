@@ -1,1 +1,90 @@
-<p>profile works!</p>
+<div class="profile-container" *ngIf="!loading">
+  <!-- Header -->
+  <div class="profile-header">
+    <h1 class="profile-title">Profilom</h1>
+    <button class="settings-btn" (click)="openSettings()">
+      <span class="settings-icon">⚙️</span>
+      Beállítások
+    </button>
+  </div>
+
+  <!-- User Info Card -->
+  <div class="user-card" *ngIf="userProfile">
+    <div class="user-avatar">{{ getInitials(userProfile.displayName) }}</div>
+    <div class="user-info">
+      <h2 class="user-name">{{ userProfile.displayName }}</h2>
+      <p class="user-email">{{ userProfile.email }}</p>
+      <div class="user-badges">
+        <span class="badge">{{ userProfile.department }}</span>
+        <span class="badge">{{ userProfile.jobTitle }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave Balance Section -->
+  <div class="leave-balance-card" *ngIf="leaveBalance">
+    <h3 class="section-title">Szabadság Egyenleg</h3>
+
+    <div class="balance-stats">
+      <div class="stat-item">
+        <p class="stat-label">Összes nap</p>
+        <p class="stat-value">{{ leaveBalance.totalDays }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Felhasznált</p>
+        <p class="stat-value used">{{ leaveBalance.usedDays }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Betegszabadság</p>
+        <p class="stat-value sick">{{ leaveBalance.sickLeaveDays }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Függőben</p>
+        <p class="stat-value pending">{{ leaveBalance.pendingDays }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Maradt</p>
+        <p class="stat-value remaining">{{ leaveBalance.remainingDays }}</p>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+      <p class="progress-text">{{ leaveBalance.usedDays }} / {{ leaveBalance.totalDays }} nap felhasználva</p>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert alert-warning" *ngIf="leaveBalance.sickLeaveDays > 0">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">{{ leaveBalance.sickLeaveDays }} nap betegszabadságot használnál fel idén</span>
+    </div>
+  </div>
+
+  <!-- Additional Data Section -->
+  <div class="additional-data-card" *ngIf="userProfile">
+    <h3 class="section-title">További Adatok</h3>
+
+    <div class="data-row">
+      <p class="data-label">Osztály</p>
+      <p class="data-value">{{ userProfile.department }}</p>
+    </div>
+    <div class="data-row">
+      <p class="data-label">Szervezet</p>
+      <p class="data-value">{{ userProfile.jobTitle }}</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-message" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+  <p>Betöltés...</p>
+</div>
+
