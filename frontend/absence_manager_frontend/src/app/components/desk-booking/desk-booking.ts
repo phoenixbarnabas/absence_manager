@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { LocationService } from '../../services/location-service';
 import { Observable, tap } from 'rxjs';
 import { Location, Office } from '../../models/entity-models';
+import { OfficeService } from '../../services/office-service';
 
 type DeskStatus = 'free' | 'selected' | 'occupied';
 
@@ -23,11 +24,15 @@ export class DeskBooking implements OnInit {
   calendarDays: CalendarDay[] = []
 
   locations$!: Observable<Location[]>
+  offices$!: Observable<Office[]>
 
   selectedLocationId!: string
   selectedOfficeId!: string
 
-  constructor(private locationService: LocationService) { }
+  constructor(
+    private locationService: LocationService,
+    private officeService: OfficeService
+  ) { }
 
   ngOnInit(): void {
     this.generateCalendarDays()
@@ -39,16 +44,43 @@ export class DeskBooking implements OnInit {
     this.locations$ = this.locationService.location$.pipe(tap(locations => {
       if (!this.selectedLocationId && locations.length > 0) {
         this.selectedLocationId = locations[0].id
+        this.loadOffices(this.selectedLocationId)
       }
     }))
+  }
+
+  loadOffices(locationId: string): void {
+    if (!locationId) {
+      return;
+    }
+
+    this.selectedOfficeId = '';
+
+    this.officeService.loadAllByLocationId(locationId).subscribe();
+
+    this.offices$ = this.officeService.offices$.pipe(
+      tap(offices => {
+        if (!this.selectedOfficeId && offices.length > 0) {
+          this.selectedOfficeId = offices[0].id;
+        }
+      })
+    )
   }
 
   currentLocation$(locations: Location[]): Location | undefined {
     return locations.find(l => l.id === this.selectedLocationId);
   }
 
+  currentOffice$(offices: Office[]): Office | undefined {
+    return offices.find(office => office.id === this.selectedOfficeId);
+  }
+
   onLocationChange(): void {
-    console.log(this.selectedLocationId);
+    this.loadOffices(this.selectedLocationId);
+  }
+
+  onOfficeChange(): void {
+    console.log('selectedOfficeId:', this.selectedOfficeId);
   }
 
   selectDay(selectedDay: CalendarDay): void {

@@ -1,28 +1,77 @@
-<div class="booking-card">
-  <div class="row g-3">
+<div class="desk-booking-page">
+  <div class="page-header">
+    <h1 class="page-title d-flex align-items-center gap-2">
+      <i class="bi bi-grid-3x2-gap"></i>
+      <span>Helyfoglalás</span>
+    </h1>
+  </div>
 
-    <div class="col-12 col-md-6">
-      <label class="form-label">Telephely</label>
-
-      <select
-        class="form-select"
-        [(ngModel)]="selectedLocationId"
-        (ngModelChange)="onLocationChange()"
+  <div class="booking-card">
+    <div class="calendar-row">
+      <button
+        type="button"
+        class="calendar-day"
+        *ngFor="let day of calendarDays"
+        [class.calendar-day--active]="day.isSelected"
+        (click)="selectDay(day)"
       >
-        <option
-          *ngFor="let location of (locations$ | async)"
-          [value]="location.id"
-        >
-          {{ location.name }}
-        </option>
-      </select>
+        <span class="calendar-day__label">{{ day.dayLabel }}</span>
+        <span class="calendar-day__number">{{ day.dayNumber }}</span>
+      </button>
     </div>
-
   </div>
-</div>
 
-<div class="booking-card" *ngIf="(locations$ | async) as locations">
-  <div *ngIf="currentLocation$(locations) as loc">
-    <strong>Kiválasztott:</strong> {{ loc.name }}
+  <div class="booking-card">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <label for="locationSelect" class="form-label">Telephely</label>
+        <select
+          id="locationSelect"
+          class="form-select"
+          [(ngModel)]="selectedLocationId"
+          (ngModelChange)="onLocationChange()"
+        >
+          <option
+            *ngFor="let location of (locations$ | async)"
+            [value]="location.id"
+          >
+            {{ location.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label for="officeSelect" class="form-label">Iroda</label>
+        <select
+          id="officeSelect"
+          class="form-select"
+          [(ngModel)]="selectedOfficeId"
+          (ngModelChange)="onOfficeChange()"
+        >
+          <option
+            *ngFor="let office of (offices$ | async)"
+            [value]="office.id"
+          >
+            {{ office.name }}
+          </option>
+        </select>
+      </div>
+    </div>
   </div>
+
+  <div class="booking-card" *ngIf="(locations$ | async) as locations">
+    <div *ngIf="currentLocation$(locations) as location">
+      <strong>Telephely:</strong> {{ location.name }}
+    </div>
+  </div>
+
+  <div class="booking-card" *ngIf="(offices$ | async) as offices">
+    <div *ngIf="currentOffice$(offices) as office">
+      <strong>Iroda:</strong> {{ office.name }}
+    </div>
+  </div>
+
+  <!--
+  Később ide jöhetnek az asztalok, ha már lesz backend hozzá.
+  -->
 </div>
