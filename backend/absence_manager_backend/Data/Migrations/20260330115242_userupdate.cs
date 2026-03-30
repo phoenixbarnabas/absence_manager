@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class initialCreate : Migration
+    public partial class userupdate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,6 +22,8 @@ namespace Data.Migrations
                     TenantId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     DisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: true),
+                    Department = table.Column<string>(type: "text", nullable: false),
+                    JobTitle = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -123,11 +125,11 @@ namespace Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "AppUsers",
-                columns: new[] { "Id", "CreatedAt", "DisplayName", "Email", "EntraObjectId", "IsActive", "TenantId" },
+                columns: new[] { "Id", "CreatedAt", "Department", "DisplayName", "Email", "EntraObjectId", "IsActive", "JobTitle", "TenantId" },
                 values: new object[,]
                 {
-                    { "user-1", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "András Bátori", "batori@email.com", "entra-1", true, "tenant-1" },
-                    { "user-2", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "Fenyvesi Péter", "fenyvesi@email.com", "entra-2", true, "tenant-1" }
+                    { "user-1", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "IT", "András Bátori", "batori@email.com", "entra-1", true, "Software Engineer", "tenant-1" },
+                    { "user-2", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "IT", "Fenyvesi Barnabás", "fenyvesi@email.com", "entra-2", true, "GYAKORNOK", "tenant-1" }
                 });
 
             migrationBuilder.InsertData(

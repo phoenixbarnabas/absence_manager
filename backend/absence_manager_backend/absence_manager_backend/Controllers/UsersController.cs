@@ -14,13 +14,21 @@ namespace Absence_Manager.Controllers
             _userLogic = userLogic;
         }
 
-        [HttpGet("{userId}/profile")]
-        public IActionResult GetUserProfile(string userId)
+        [HttpGet("{userId}")]
+        public IActionResult GetById(string userId)
         {
             try
             {
                 var result = _userLogic.GetUserProfile(userId);
                 return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (KeyNotFoundException ex)
             {

@@ -33,6 +33,8 @@ builder.Services.AddDbContext<AbsenceManagerDbContext>(options => options.UseNpg
 
 var app = builder.Build();
 
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

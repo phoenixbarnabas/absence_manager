@@ -317,6 +317,8 @@ namespace Data
                 TenantId = "tenant-1",
                 DisplayName = "András Bátori",
                 Email = "batori@email.com",
+                Department = "IT",
+                JobTitle = "Software Engineer",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc)
             };
@@ -326,8 +328,10 @@ namespace Data
                 Id = "user-2",
                 EntraObjectId = "entra-2",
                 TenantId = "tenant-1",
-                DisplayName = "Fenyvesi Péter",
+                DisplayName = "Fenyvesi Barnabás",
                 Email = "fenyvesi@email.com",
+                Department= "IT",
+                JobTitle = "GYAKORNOK",
                 IsActive = true,
                 CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc)
             };

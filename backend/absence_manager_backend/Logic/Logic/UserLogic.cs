@@ -1,5 +1,6 @@
 using Data;
 using Entities.Dtos.AppUserDtos;
+using Entities.Dtos.WorkStationDtos;
 using Entities.Models;
 using Logic.Helper;
 
@@ -20,14 +21,15 @@ namespace Logic.Logic
 
         public UserProfileDto GetUserProfile(string userId)
         {
-            return new UserProfileDto
-            {
-                Id = userId,
-                DisplayName = "Nagy Péter",
-                Email = "nagy.peter@phoenixhu",
-                Department = "IT",
-                JobTitle = "Vezetői"
-            };
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User id is required.", nameof(userId));
+
+            var user = _userRepository.FindById(userId);
+
+            if (!user.IsActive)
+                throw new InvalidOperationException("User is not active.");
+
+            return _dtoProvider.Mapper.Map<UserProfileDto>(user);
         }
     }
 }
