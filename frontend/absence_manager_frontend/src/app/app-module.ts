@@ -5,12 +5,14 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import {WelcomePage} from './components/landing/welcome-page/welcome-page';
 import { Navbar } from './components/navbar/navbar';
+import { Profile } from './components/profile/profile';
 
 @NgModule({
   declarations: [
     App,
     WelcomePage,
-    Navbar
+    Navbar,
+    Profile
   ],
   imports: [
     BrowserModule,
