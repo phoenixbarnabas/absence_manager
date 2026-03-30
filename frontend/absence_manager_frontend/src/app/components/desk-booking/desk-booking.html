@@ -22,6 +22,7 @@
         <label for="locationSelect" class="form-label">Telephely</label>
         <select id="locationSelect" class="form-select" [(ngModel)]="selectedLocationId"
           (ngModelChange)="onLocationChange($event)">
+          <option value="">Válassz telephelyet...</option>
           <option *ngFor="let location of (locations$ | async)" [value]="location.id">
             {{ location.name }}
           </option>
@@ -32,6 +33,7 @@
         <label for="officeSelect" class="form-label">Iroda</label>
         <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId"
           (ngModelChange)="onOfficeChange($event)">
+          <option value="">Válassz irodát...</option>
           <option *ngFor="let office of (offices$ | async)" [value]="office.id">
             {{ office.name }}
           </option>

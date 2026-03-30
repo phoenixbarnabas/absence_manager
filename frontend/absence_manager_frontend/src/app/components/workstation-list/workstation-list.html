@@ -1,18 +1,26 @@
 <div class="booking-card">
-    <h3>Munkaállomások</h3>
+    <h3 class="section-title">Munkaállomások</h3>
 
-    <div *ngIf="workstations.length === 0">
+    <div class="empty-state" *ngIf="workstations.length === 0">
         Nincs megjeleníthető munkaállomás.
     </div>
 
     <div class="workstation-grid" *ngIf="workstations.length > 0">
-        <button type="button" class="workstation-card" *ngFor="let workstation of workstations"
+        <button type="button" class="workstation-tile" *ngFor="let workstation of workstations"
             [disabled]="!isSelectable(workstation)"
-            [class.workstation-card--selected]="selectedWorkstationId === workstation.workstationId"
-            [class.workstation-card--booked]="workstation.isBooked && !workstation.isBookedByCurrentUser"
-            [class.workstation-card--mine]="workstation.isBookedByCurrentUser" (click)="selectWorkstation(workstation.workstationId)">
-            <div>{{ workstation.workstationCode }}</div>
-            <div>{{ workstation.workstationName }}</div>
+            [class.workstation-tile--selected]="selectedWorkstationId === workstation.workstationId"
+            [class.workstation-tile--booked]="workstation.isBooked && !workstation.isBookedByCurrentUser"
+            [class.workstation-tile--mine]="workstation.isBookedByCurrentUser"
+            (click)="selectWorkstation(workstation.workstationId)">
+            <i class="bi bi-pc-display"></i>
+
+            <div class="workstation-name">
+                {{ workstation.workstationName }}
+            </div>
+
+            <div class="workstation-code">
+                {{ workstation.workstationCode }}
+            </div>
 
             <small *ngIf="!workstation.isBooked">Szabad</small>
             <small *ngIf="workstation.isBookedByCurrentUser">A te foglalásod</small>
