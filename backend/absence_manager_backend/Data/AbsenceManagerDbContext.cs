@@ -197,39 +197,7 @@ namespace Data
                     .HasDatabaseName("IX_OfficeBookings_AppUser_BookingDate_IsCancelled");
             });
 
-            // -------------------------
-            // Seed data
-            // -------------------------
-            //modelBuilder.Entity<Location>().HasData(
-            //    new Location
-            //    {
-            //        Id = "1",
-            //        Name = "Budapest",
-            //        IsActive = true,
-            //        DisplayOrder = 1
-            //    }
-            //);
-
-            //modelBuilder.Entity<Office>().HasData(
-            //    new Office
-            //    {
-            //        Id = "1",
-            //        LocationId = "1",
-            //        Name = "Iroda 1",
-            //        Description = "Alapértelmezett iroda",
-            //        IsActive = true,
-            //        DisplayOrder = 1
-            //    }
-            //);
-
-            //modelBuilder.Entity<Workstation>().HasData(
-            //    new Workstation { Id = "1", OfficeId = "1", Code = "WS-001", Name = "1. hely", IsActive = true, DisplayOrder = 1 },
-            //    new Workstation { Id = "2", OfficeId = "1", Code = "WS-002", Name = "2. hely", IsActive = true, DisplayOrder = 2 },
-            //    new Workstation { Id = "3", OfficeId = "1", Code = "WS-003", Name = "3. hely", IsActive = true, DisplayOrder = 3 },
-            //    new Workstation { Id = "4", OfficeId = "1", Code = "WS-004", Name = "4. hely", IsActive = true, DisplayOrder = 4 },
-            //    new Workstation { Id = "5", OfficeId = "1", Code = "WS-005", Name = "5. hely", IsActive = true, DisplayOrder = 5 },
-            //    new Workstation { Id = "6", OfficeId = "1", Code = "WS-006", Name = "6. hely", IsActive = true, DisplayOrder = 6 }
-            //);
+            
 
             var location1 = new Location
             {
