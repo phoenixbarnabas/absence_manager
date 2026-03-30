@@ -20,7 +20,7 @@ export class Profile implements OnInit {
   }
 
   private loadProfileData(): void {
-    const userId = 'current-user'; // TODO: Get from auth service
+    const userId = '1'; // TODO: Get from auth service
 
     this.userService.getUserProfile(userId).subscribe({
       next: (profile) => {

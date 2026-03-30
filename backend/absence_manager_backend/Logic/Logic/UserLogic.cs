@@ -20,8 +20,14 @@ namespace Logic.Logic
 
         public UserProfileDto GetUserProfile(string userId)
         {
-            var user = _userRepository.FindById(userId);
-            return _dtoProvider.Mapper.Map<UserProfileDto>(user);
+            return new UserProfileDto
+            {
+                Id = userId,
+                DisplayName = "Nagy Péter",
+                Email = "nagy.peter@phoenixhu",
+                Department = "IT",
+                JobTitle = "Vezetői"
+            };
         }
     }
 }
