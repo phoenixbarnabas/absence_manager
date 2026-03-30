@@ -22,3 +22,11 @@ export interface OfficeBookingViewDto {
   isCancelled: boolean;
   createdAtUtc: string;
 }
+
+export interface DaySummaryDto {
+  date: Date
+  totalWorkstations: number
+  bookedWorkstations: number
+  freeWorkstations: number
+  currentUserHasBooking: boolean
+}
