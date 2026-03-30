@@ -16,6 +16,7 @@ builder.Services.AddSingleton<DtoProvider>();
 
 builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
+builder.Services.AddScoped<UserLogic>();
 
 builder.Services.AddCors(options =>
 {
