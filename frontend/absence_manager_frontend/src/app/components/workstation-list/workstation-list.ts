@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Workstation } from '../../models/entity-models';
+import { WorkstationAvailabilityDto } from '../../models/availability-models';
 
 @Component({
   selector: 'app-workstation-list',
@@ -8,8 +9,9 @@ import { Workstation } from '../../models/entity-models';
   styleUrl: './workstation-list.sass',
 })
 export class WorkstationList {
-  @Input() workstations: Workstation[] = [];
+  @Input() workstations: WorkstationAvailabilityDto[] = [];
   @Input() selectedWorkstationId: string = '';
+  @Input() currentUserHasBooking: boolean = false;
 
   @Output() workstationSelected = new EventEmitter<string>();
 
@@ -21,9 +23,15 @@ export class WorkstationList {
     return this.selectedWorkstationId === workstationId;
   }
 
-  get visibleWorkstations(): Workstation[] {
-    return this.workstations
-      .filter(workstation => workstation.isActive)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+  isSelectable(workstation: WorkstationAvailabilityDto): boolean {
+    if (!workstation.isActive) {
+      return false;
+    }
+
+    if (workstation.isBooked && !workstation.isBookedByCurrentUser) {
+      return false;
+    }
+
+    return true;
   }
 }

@@ -21,7 +21,7 @@
       <div class="col-12 col-md-6">
         <label for="locationSelect" class="form-label">Telephely</label>
         <select id="locationSelect" class="form-select" [(ngModel)]="selectedLocationId"
-          (ngModelChange)="onLocationChange()">
+          (ngModelChange)="onLocationChange($event)">
           <option *ngFor="let location of (locations$ | async)" [value]="location.id">
             {{ location.name }}
           </option>
@@ -30,7 +30,8 @@
 
       <div class="col-12 col-md-6">
         <label for="officeSelect" class="form-label">Iroda</label>
-        <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId" (ngModelChange)="onOfficeChange()">
+        <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId"
+          (ngModelChange)="onOfficeChange($event)">
           <option *ngFor="let office of (offices$ | async)" [value]="office.id">
             {{ office.name }}
           </option>
@@ -51,9 +52,10 @@
     </div>
   </div>
 
-  <app-workstation-list [workstations]="(workstations$ | async) ?? []" [selectedWorkstationId]="selectedWorkstationId"
+  <app-workstation-list [workstations]="availability?.workstations ?? []"
+    [selectedWorkstationId]="selectedWorkstationId"
+    [currentUserHasBooking]="availability?.currentUserHasBooking ?? false"
     (workstationSelected)="onWorkstationSelected($event)">
-    asd
   </app-workstation-list>
 
   <div class="booking-card" *ngIf="selectedWorkstationId">

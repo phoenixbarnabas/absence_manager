@@ -5,6 +5,8 @@ import { Observable, tap } from 'rxjs';
 import { Location, Office, Workstation } from '../../models/entity-models';
 import { OfficeService } from '../../services/office-service';
 import { WorkstationService } from '../../services/workstation-service';
+import { BookingService } from '../../services/booking-service';
+import { OfficeDayAvailabilityDto } from '../../models/availability-models';
 
 type CalendarDay = {
   date: Date;
@@ -31,10 +33,20 @@ export class DeskBooking implements OnInit {
   selectedOfficeId!: string
   selectedWorkstationId!: string
 
+  availability: OfficeDayAvailabilityDto | null = null;
+  selectedDate: Date = new Date();
+
+  isLoadingAvailability = false;
+  isLoadingMyBookings = false;
+  isSubmittingBooking = false;
+  errorMessage = '';
+  successMessage = '';
+
   constructor(
     private locationService: LocationService,
     private officeService: OfficeService,
-    private workstationService: WorkstationService
+    private workstationService: WorkstationService,
+    private bookingService: BookingService
   ) { }
 
   ngOnInit(): void {
@@ -69,6 +81,7 @@ export class DeskBooking implements OnInit {
         if (!this.selectedOfficeId && offices.length > 0) {
           this.selectedOfficeId = offices[0].id;
           this.loadWorkstations(this.selectedOfficeId);
+          this.loadAvailability();
         }
       })
     );
@@ -83,6 +96,32 @@ export class DeskBooking implements OnInit {
     this.workstationService.loadAllByOfficeId(officeId).subscribe();
   }
 
+  loadAvailability(): void {
+    if (!this.selectedOfficeId || !this.selectedDateString) {
+      this.availability = null;
+      this.workstationService.clear();
+      return;
+    }
+
+    this.isLoadingAvailability = true;
+    this.errorMessage = '';
+
+    this.bookingService.getAvailability(this.selectedOfficeId, this.selectedDateString)
+      .subscribe({
+        next: availability => {
+          this.availability = availability;
+          this.selectedWorkstationId = availability.currentUserWorkstationId ?? '';
+          this.isLoadingAvailability = false;
+        },
+        error: err => {
+          console.error(err);
+          this.availability = null;
+          this.isLoadingAvailability = false;
+          this.errorMessage = 'Nem sikerült betölteni az elérhetőségi adatokat.';
+        }
+      });
+  }
+
   currentLocation$(locations: Location[]): Location | undefined {
     return locations.find(location => location.id === this.selectedLocationId);
   }
@@ -91,12 +130,18 @@ export class DeskBooking implements OnInit {
     return offices.find(office => office.id === this.selectedOfficeId);
   }
 
-  onLocationChange(): void {
-    this.loadOffices(this.selectedLocationId);
+  onLocationChange(locationId: string): void {
+    this.selectedLocationId = locationId;
+    this.selectedOfficeId = '';
+    this.selectedWorkstationId = '';
+    this.availability = null;
+    this.loadOffices(locationId);
   }
 
-  onOfficeChange(): void {
-    this.loadWorkstations(this.selectedOfficeId);
+  onOfficeChange(officeId: string): void {
+    this.selectedOfficeId = officeId;
+    this.selectedWorkstationId = '';
+    this.loadAvailability();
   }
 
   onWorkstationSelected(workstationId: string): void {
@@ -104,10 +149,32 @@ export class DeskBooking implements OnInit {
   }
 
   selectDay(selectedDay: CalendarDay): void {
+    this.selectedDate = selectedDay.date;
+
     this.calendarDays = this.calendarDays.map(day => ({
       ...day,
       isSelected: day.date.getTime() === selectedDay.date.getTime()
     }));
+
+    this.selectedWorkstationId = '';
+    this.loadAvailability();
+  }
+
+  get selectedDateString(): string {
+    const date = this.selectedDate;
+    if (!date) {
+      return '';
+    }
+
+    return this.formatDateForApi(date);
+  }
+
+  private formatDateForApi(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private generateCalendarDays(): void {
