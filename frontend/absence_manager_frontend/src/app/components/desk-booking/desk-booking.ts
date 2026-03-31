@@ -55,6 +55,8 @@ export class DeskBooking implements OnInit {
   errorMessage = '';
   successMessage = '';
 
+  currentBookingId: string | null = null;
+
   constructor(
     private locationService: LocationService,
     private officeService: OfficeService,
@@ -231,6 +233,9 @@ export class DeskBooking implements OnInit {
             availability.currentUserWorkstationId
           ) {
             this.selectedWorkstationId = availability.currentUserWorkstationId;
+            this.loadMyBookingId();
+          } else {
+            this.currentBookingId = null;
           }
 
           this.isLoadingAvailability = false;
@@ -245,6 +250,54 @@ export class DeskBooking implements OnInit {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  private loadMyBookingId(): void {
+    const fromDate = this.selectedDateString;
+    const toDate = this.selectedDateString;
+
+    this.bookingService.getMyBookings(fromDate, toDate).subscribe({
+      next: bookings => {
+        const match = bookings.find(b => b.bookingDate === this.selectedDateString);
+        this.currentBookingId = match?.id ?? null;
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error(err);
+        this.currentBookingId = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cancelBooking(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.currentBookingId) {
+      this.errorMessage = 'Nincs lemondható foglalás.';
+      return;
+    }
+
+    this.isSubmittingBooking = true;
+
+    this.bookingService.cancelBooking(this.currentBookingId).subscribe({
+      next: () => {
+        this.successMessage = 'A foglalás sikeresen lemondva.';
+        this.isSubmittingBooking = false;
+        this.currentBookingId = null;
+        this.selectedWorkstationId = '';
+
+        this.loadAvailability();
+      },
+      error: err => {
+        console.error(err);
+        this.errorMessage =
+          err?.error?.message ?? 'Nem sikerült lemondani a foglalást.';
+        this.isSubmittingBooking = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   currentLocation$(locations: Location[]): Location | undefined {

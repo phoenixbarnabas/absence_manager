@@ -266,7 +266,7 @@ namespace Data
                 },
                 new Workstation
                 {
-                    Id = "ws-4",
+                    Id = "ws2-1",
                     OfficeId = office2.Id,
                     Code = "Q1",
                     Name = "Quiet Desk 1",
