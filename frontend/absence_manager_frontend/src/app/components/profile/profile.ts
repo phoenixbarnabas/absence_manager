@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/app-user-models';
+import { DevAuthService } from '../../services/dev-auth-service';
 
 @Component({
   selector: 'app-profile',
@@ -8,42 +9,50 @@ import { UserProfile } from '../../models/app-user-models';
   templateUrl: './profile.html',
   styleUrl: './profile.sass',
 })
-export class Profile implements OnInit, OnDestroy {
+export class Profile implements OnInit {
   userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
 
-  private readonly onDevUserChanged = () => {
-    this.loadProfileData();
-  };
-
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private devAuthService: DevAuthService) {}
 
   ngOnInit(): void {
+    this.loadFromCurrentDevUser();
     this.loadProfileData();
-    window.addEventListener('dev-user-changed', this.onDevUserChanged);
   }
 
-  ngOnDestroy(): void {
-    window.removeEventListener('dev-user-changed', this.onDevUserChanged);
+  private loadFromCurrentDevUser(): void {
+    const currentUser = this.devAuthService.getCurrentUser();
+
+    if (!currentUser) {
+      return;
+    }
+
+    this.userProfile = {
+      displayName: currentUser.displayName,
+      email: currentUser.email,
+      department: currentUser.department,
+      jobTitle: currentUser.jobTitle
+    };
+
+    this.loading = false;
   }
 
   private loadProfileData(): void {
-    console.log('PROFILE LOAD START');
-    console.log('LOCAL USER', localStorage.getItem('dev-auth-user'));
-    console.log('LOCAL TOKEN', localStorage.getItem('dev-auth-token'));
-    this.loading = true;
-    this.error = null;
-
     this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
         this.loading = false;
+        this.error = null;
       },
       error: (err) => {
-        this.error = 'Hiba a profil betöltése közben';
-        this.loading = false;
         console.error(err);
+
+        if (!this.userProfile) {
+          this.error = 'Hiba a profil betöltése közben';
+        }
+
+        this.loading = false;
       }
     });
   }
