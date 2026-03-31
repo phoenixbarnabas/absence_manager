@@ -6,6 +6,7 @@ import { OfficeService } from '../../services/office-service';
 import { WorkstationService } from '../../services/workstation-service';
 import { BookingService } from '../../services/booking-service';
 import { OfficeDayAvailabilityDto } from '../../models/availability-models';
+import { DevAuthService, DevSeedUser } from '../../services/dev-auth-service';
 
 type CalendarDay = {
   date: Date;
@@ -29,6 +30,11 @@ type DeskBookingState = {
 })
 export class DeskBooking implements OnInit {
   private readonly storageKey = 'desk-booking-state';
+
+  seedUsers: DevSeedUser[] = [];
+  selectedDevUserId = '';
+  currentDevUserName = '';
+  isLoggingInDevUser = false;
 
   calendarDays: CalendarDay[] = [];
 
@@ -54,14 +60,81 @@ export class DeskBooking implements OnInit {
     private officeService: OfficeService,
     private workstationService: WorkstationService,
     private bookingService: BookingService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private devAuthService: DevAuthService,
+    private cdr: ChangeDetectorRef,
+  ) { }
 
   ngOnInit(): void {
+    this.restoreDevUserState();
+    this.loadSeedUsers();
+
+
     this.generateCalendarDays();
     this.restoreState();
     this.bindStreams();
     this.loadLocations();
+  }
+
+  private restoreDevUserState(): void {
+    const currentUser = this.devAuthService.getCurrentUser();
+    if (currentUser) {
+      this.selectedDevUserId = currentUser.id;
+      this.currentDevUserName = currentUser.displayName;
+    }
+  }
+
+  loadSeedUsers(): void {
+    this.devAuthService.getSeedUsers().subscribe({
+      next: users => {
+        this.seedUsers = users;
+
+        if (!this.selectedDevUserId && users.length > 0) {
+          this.selectedDevUserId = users[0].id;
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error(err);
+        this.errorMessage = 'Nem sikerült betölteni a seedelt usereket.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  switchDevUser(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.selectedDevUserId) {
+      this.errorMessage = 'Válassz egy felhasználót.';
+      return;
+    }
+
+    this.isLoggingInDevUser = true;
+
+    this.devAuthService.loginAsUser(this.selectedDevUserId).subscribe({
+      next: response => {
+        console.log('DEV LOGIN SUCCESS, TOKEN SAVED');
+        this.currentDevUserName = response.user.displayName;
+        this.successMessage = `Aktív felhasználó: ${response.user.displayName}`;
+        this.isLoggingInDevUser = false;
+
+        setTimeout(() => {
+          if (this.selectedOfficeId) {
+            this.loadAvailability();
+          }
+        }, 0);
+
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error(err);
+        this.errorMessage = err?.error?.message ?? 'Nem sikerült a dev bejelentkezés.';
+        this.isLoggingInDevUser = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private bindStreams(): void {
@@ -328,5 +401,41 @@ export class DeskBooking implements OnInit {
     return first.getFullYear() === second.getFullYear()
       && first.getMonth() === second.getMonth()
       && first.getDate() === second.getDate();
+  }
+
+  submitBooking(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.selectedOfficeId) {
+      this.errorMessage = 'Előbb válassz irodát.';
+      return;
+    }
+
+    if (!this.selectedWorkstationId) {
+      this.errorMessage = 'Válassz egy munkaállomást.';
+      return;
+    }
+
+    this.isSubmittingBooking = true;
+
+    this.bookingService.createBooking(
+      this.selectedWorkstationId,
+      this.selectedDateString
+    ).subscribe({
+      next: () => {
+        this.successMessage = 'A foglalás sikeresen létrejött.';
+        this.isSubmittingBooking = false;
+
+        this.loadAvailability();
+      },
+      error: err => {
+        console.error(err);
+        this.errorMessage =
+          err?.error?.message ?? 'Nem sikerült létrehozni a foglalást.';
+        this.isSubmittingBooking = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }
