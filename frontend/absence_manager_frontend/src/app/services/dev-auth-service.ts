@@ -44,6 +44,7 @@ export class DevAuthService {
       tap(response => {
         localStorage.setItem(this.tokenKey, response.token);
         localStorage.setItem(this.userKey, JSON.stringify(response.user));
+        window.dispatchEvent(new Event('dev-user-changed'));
       })
     );
   }

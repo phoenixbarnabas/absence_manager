@@ -21,47 +21,6 @@
     </div>
   </div>
 
-  <!-- Leave Balance Section -->
-  <div class="leave-balance-card" *ngIf="leaveBalance">
-    <h3 class="section-title">Szabadság Egyenleg</h3>
-
-    <div class="balance-stats">
-      <div class="stat-item">
-        <p class="stat-label">Összes nap</p>
-        <p class="stat-value">{{ leaveBalance.totalDays }}</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-label">Felhasznált</p>
-        <p class="stat-value used">{{ leaveBalance.usedDays }}</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-label">Betegszabadság</p>
-        <p class="stat-value sick">{{ leaveBalance.sickLeaveDays }}</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-label">Függőben</p>
-        <p class="stat-value pending">{{ leaveBalance.pendingDays }}</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-label">Maradt</p>
-        <p class="stat-value remaining">{{ leaveBalance.remainingDays }}</p>
-      </div>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-container">
-      <div class="progress-bar">
-        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
-      </div>
-      <p class="progress-text">{{ leaveBalance.usedDays }} / {{ leaveBalance.totalDays }} nap felhasználva</p>
-    </div>
-
-    <!-- Alert -->
-    <div class="alert alert-warning" *ngIf="leaveBalance.sickLeaveDays > 0">
-      <span class="alert-icon">⚠️</span>
-      <span class="alert-text">{{ leaveBalance.sickLeaveDays }} nap betegszabadságot használnál fel idén</span>
-    </div>
-  </div>
 
   <!-- Additional Data Section -->
   <div class="additional-data-card" *ngIf="userProfile">

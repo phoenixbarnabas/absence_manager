@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { LeaveBalance, UserProfile, UserService } from '../../services/user.service';
+import { UserService } from '../../services/user.service';
+import { UserProfile } from '../../models/app-user-models';
+import { DevAuthService } from '../../services/dev-auth-service';
 
 @Component({
   selector: 'app-profile',
@@ -9,42 +11,48 @@ import { LeaveBalance, UserProfile, UserService } from '../../services/user.serv
 })
 export class Profile implements OnInit {
   userProfile: UserProfile | null = null;
-  leaveBalance: LeaveBalance | null = null;
   loading = true;
   error: string | null = null;
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService, private devAuthService: DevAuthService) {}
 
   ngOnInit(): void {
+    this.loadFromCurrentDevUser();
     this.loadProfileData();
   }
 
-  private loadProfileData(): void {
-    const userId = '1'; // TODO: Get from auth service
+  private loadFromCurrentDevUser(): void {
+    const currentUser = this.devAuthService.getCurrentUser();
 
-    this.userService.getUserProfile(userId).subscribe({
-      next: (profile) => {
-        this.userProfile = profile;
-        this.loadLeaveBalance(userId);
-      },
-      error: (err) => {
-        this.error = 'Hiba a profil betöltése közben';
-        this.loading = false;
-        console.error(err);
-      }
-    });
+    if (!currentUser) {
+      return;
+    }
+
+    this.userProfile = {
+      displayName: currentUser.displayName,
+      email: currentUser.email,
+      department: currentUser.department,
+      jobTitle: currentUser.jobTitle
+    };
+
+    this.loading = false;
   }
 
-  private loadLeaveBalance(userId: string): void {
-    this.userService.getUserLeaveBalance(userId).subscribe({
-      next: (balance) => {
-        this.leaveBalance = balance;
+  private loadProfileData(): void {
+    this.userService.getMe().subscribe({
+      next: (profile) => {
+        this.userProfile = profile;
         this.loading = false;
+        this.error = null;
       },
       error: (err) => {
-        this.error = 'Hiba a szabadság egyenleg betöltése közben';
-        this.loading = false;
         console.error(err);
+
+        if (!this.userProfile) {
+          this.error = 'Hiba a profil betöltése közben';
+        }
+
+        this.loading = false;
       }
     });
   }
@@ -57,14 +65,7 @@ export class Profile implements OnInit {
       .toUpperCase();
   }
 
-  getProgressPercentage(): number {
-    if (!this.leaveBalance) return 0;
-    return (this.leaveBalance.usedDays / this.leaveBalance.totalDays) * 100;
-  }
-
   openSettings(): void {
-    // TODO: Implement settings modal
     console.log('Open settings');
   }
 }
-
