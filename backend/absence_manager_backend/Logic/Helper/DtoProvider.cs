@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Entities.Dtos.AppUserDtos;
 using Entities.Dtos.LocationDtos;
 using Entities.Dtos.OfficeBooking;
 using Entities.Dtos.OfficeDtos;
@@ -26,6 +27,8 @@ namespace Logic.Helper
                 cfg.CreateMap<Office, OfficeViewDto>();
 
                 cfg.CreateMap<Workstation, WorkstationViewDto>();
+
+                cfg.CreateMap<AppUser, UserProfileDto>();
 
                 cfg.CreateMap<CreateOfficeBookingDto, OfficeBooking>()
                     .ForMember(d => d.Id, o => o.Ignore())

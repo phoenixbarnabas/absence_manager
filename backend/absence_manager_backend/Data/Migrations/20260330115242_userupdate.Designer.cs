@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260320141900_OfficeBookingModuleInit")]
-    partial class OfficeBookingModuleInit
+    [Migration("20260330115242_userupdate")]
+    partial class userupdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,10 @@ namespace Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -51,6 +55,10 @@ namespace Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("TenantId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -62,6 +70,32 @@ namespace Data.Migrations
                         .HasFilter("\"TenantId\" IS NOT NULL");
 
                     b.ToTable("AppUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "user-1",
+                            CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
+                            Department = "IT",
+                            DisplayName = "András Bátori",
+                            Email = "batori@email.com",
+                            EntraObjectId = "entra-1",
+                            IsActive = true,
+                            JobTitle = "Software Engineer",
+                            TenantId = "tenant-1"
+                        },
+                        new
+                        {
+                            Id = "user-2",
+                            CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
+                            Department = "IT",
+                            DisplayName = "Fenyvesi Barnabás",
+                            Email = "fenyvesi@email.com",
+                            EntraObjectId = "entra-2",
+                            IsActive = true,
+                            JobTitle = "GYAKORNOK",
+                            TenantId = "tenant-1"
+                        });
                 });
 
             modelBuilder.Entity("Entities.Models.Location", b =>
@@ -90,10 +124,10 @@ namespace Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "1",
+                            Id = "loc-budapest",
                             DisplayOrder = 1,
                             IsActive = true,
-                            Name = "Budapest"
+                            Name = "Budapest HQ"
                         });
                 });
 
@@ -131,12 +165,21 @@ namespace Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "1",
-                            Description = "Alapértelmezett iroda",
+                            Id = "office-bp-1",
+                            Description = "Main open office area",
                             DisplayOrder = 1,
                             IsActive = true,
-                            LocationId = "1",
-                            Name = "Iroda 1"
+                            LocationId = "loc-budapest",
+                            Name = "Open Office - 1st Floor"
+                        },
+                        new
+                        {
+                            Id = "office-bp-2",
+                            Description = "Silent workspace",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            LocationId = "loc-budapest",
+                            Name = "Quiet Room"
                         });
                 });
 
@@ -144,10 +187,6 @@ namespace Data.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
-
-                    b.Property<string>("AppUserId")
-                        .IsRequired()
-                        .HasColumnType("character varying(50)");
 
                     b.Property<DateOnly>("BookingDate")
                         .HasColumnType("date");
@@ -170,19 +209,45 @@ namespace Data.Migrations
                     b.Property<bool>("IsCancelled")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("WorkstationId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId", "BookingDate", "IsCancelled")
+                    b.HasIndex("UserId", "BookingDate", "IsCancelled")
                         .HasDatabaseName("IX_OfficeBookings_AppUser_BookingDate_IsCancelled");
 
                     b.HasIndex("WorkstationId", "BookingDate", "IsCancelled")
                         .HasDatabaseName("IX_OfficeBookings_Workstation_BookingDate_IsCancelled");
 
                     b.ToTable("OfficeBookings", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "booking-1",
+                            BookingDate = new DateOnly(2026, 3, 30),
+                            CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
+                            CreatedByUserId = "user-1",
+                            IsCancelled = false,
+                            UserId = "user-1",
+                            WorkstationId = "ws-1"
+                        },
+                        new
+                        {
+                            Id = "booking-2",
+                            BookingDate = new DateOnly(2026, 3, 30),
+                            CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
+                            CreatedByUserId = "user-2",
+                            IsCancelled = false,
+                            UserId = "user-2",
+                            WorkstationId = "ws-2"
+                        });
                 });
 
             modelBuilder.Entity("Entities.Models.Workstation", b =>
@@ -229,57 +294,47 @@ namespace Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "1",
-                            Code = "WS-001",
+                            Id = "ws-1",
+                            Code = "A1",
                             DisplayOrder = 1,
                             IsActive = true,
-                            Name = "1. hely",
-                            OfficeId = "1"
+                            Name = "Desk A1",
+                            OfficeId = "office-bp-1",
+                            PositionX = 1m,
+                            PositionY = 1m
                         },
                         new
                         {
-                            Id = "2",
-                            Code = "WS-002",
+                            Id = "ws-2",
+                            Code = "A2",
                             DisplayOrder = 2,
                             IsActive = true,
-                            Name = "2. hely",
-                            OfficeId = "1"
+                            Name = "Desk A2",
+                            OfficeId = "office-bp-1",
+                            PositionX = 2m,
+                            PositionY = 1m
                         },
                         new
                         {
-                            Id = "3",
-                            Code = "WS-003",
+                            Id = "ws-3",
+                            Code = "A3",
                             DisplayOrder = 3,
                             IsActive = true,
-                            Name = "3. hely",
-                            OfficeId = "1"
+                            Name = "Desk A3",
+                            OfficeId = "office-bp-1",
+                            PositionX = 3m,
+                            PositionY = 1m
                         },
                         new
                         {
-                            Id = "4",
-                            Code = "WS-004",
-                            DisplayOrder = 4,
+                            Id = "ws-4",
+                            Code = "Q1",
+                            DisplayOrder = 1,
                             IsActive = true,
-                            Name = "4. hely",
-                            OfficeId = "1"
-                        },
-                        new
-                        {
-                            Id = "5",
-                            Code = "WS-005",
-                            DisplayOrder = 5,
-                            IsActive = true,
-                            Name = "5. hely",
-                            OfficeId = "1"
-                        },
-                        new
-                        {
-                            Id = "6",
-                            Code = "WS-006",
-                            DisplayOrder = 6,
-                            IsActive = true,
-                            Name = "6. hely",
-                            OfficeId = "1"
+                            Name = "Quiet Desk 1",
+                            OfficeId = "office-bp-2",
+                            PositionX = 1m,
+                            PositionY = 1m
                         });
                 });
 
@@ -296,9 +351,9 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Models.OfficeBooking", b =>
                 {
-                    b.HasOne("Entities.Models.AppUser", "AppUser")
+                    b.HasOne("Entities.Models.AppUser", "User")
                         .WithMany("OfficeBookings")
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -308,7 +363,7 @@ namespace Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("User");
 
                     b.Navigation("Workstation");
                 });

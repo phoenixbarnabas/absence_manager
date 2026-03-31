@@ -1,7 +1,9 @@
 ﻿using Data;
 using Entities.Dtos.OfficeBooking;
 using Entities.Models;
+using Logic.Helper;
 using Logic.Logic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -9,13 +11,18 @@ namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/office-bookings")]
+    [Authorize]
     public class OfficeBookingsController : ControllerBase
     {
         private readonly OfficeBookingLogic _officeBookingLogic;
-        private readonly AbsenceManagerDbContext _ctx;
-        public OfficeBookingsController(OfficeBookingLogic officeBookingLogic)
+        private readonly ICurrentUserService _currentUserService;
+
+        public OfficeBookingsController(
+            OfficeBookingLogic officeBookingLogic,
+            ICurrentUserService currentUserService)
         {
             _officeBookingLogic = officeBookingLogic;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet("availability")]
@@ -23,7 +30,7 @@ namespace Absence_Manager.Controllers
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                var currentUserId = _currentUserService.GetUserId();
                 var result = _officeBookingLogic.GetOfficeDayAvailability(officeId, date, currentUserId);
                 return Ok(result);
             }
@@ -38,14 +45,11 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpGet("day-summaries")]
-        public IActionResult GetDaySummaries(
-            [FromQuery] string officeId,
-            [FromQuery] DateOnly fromDate,
-            [FromQuery] DateOnly toDate)
+        public IActionResult GetDaySummaries([FromQuery] string officeId, [FromQuery] DateOnly fromDate, [FromQuery] DateOnly toDate)
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                var currentUserId = _currentUserService.GetUserId();
                 var result = _officeBookingLogic.GetOfficeDaySummaries(officeId, fromDate, toDate, currentUserId);
                 return Ok(result);
             }
@@ -68,7 +72,7 @@ namespace Absence_Manager.Controllers
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                var currentUserId = _currentUserService.GetUserId();
                 var result = _officeBookingLogic.GetMyBookings(currentUserId, fromDate, toDate);
                 return Ok(result);
             }
@@ -83,7 +87,7 @@ namespace Absence_Manager.Controllers
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                var currentUserId = _currentUserService.GetUserId();
                 var result = _officeBookingLogic.CreateBooking(dto, currentUserId);
                 return Ok(result);
             }
@@ -106,7 +110,7 @@ namespace Absence_Manager.Controllers
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                var currentUserId = _currentUserService.GetUserId();
                 _officeBookingLogic.CancelBooking(bookingId, currentUserId, isAdmin: false);
                 return NoContent();
             }
@@ -116,17 +120,12 @@ namespace Absence_Manager.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        private string GetCurrentUserId()
-        {
-            return "user-1";
         }
     }
 }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260327085015_Initial")]
-    partial class Initial
+    [Migration("20260331094238_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,10 @@ namespace Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -50,6 +54,10 @@ namespace Data.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("TenantId")
                         .HasMaxLength(100)
@@ -68,20 +76,24 @@ namespace Data.Migrations
                         {
                             Id = "user-1",
                             CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
+                            Department = "IT",
                             DisplayName = "András Bátori",
                             Email = "batori@email.com",
                             EntraObjectId = "entra-1",
                             IsActive = true,
+                            JobTitle = "Software Engineer",
                             TenantId = "tenant-1"
                         },
                         new
                         {
                             Id = "user-2",
                             CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
-                            DisplayName = "Fenyvesi Péter",
+                            Department = "IT",
+                            DisplayName = "Fenyvesi Barnabás",
                             Email = "fenyvesi@email.com",
                             EntraObjectId = "entra-2",
                             IsActive = true,
+                            JobTitle = "GYAKORNOK",
                             TenantId = "tenant-1"
                         });
                 });
