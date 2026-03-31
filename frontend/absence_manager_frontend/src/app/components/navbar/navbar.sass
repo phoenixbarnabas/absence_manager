@@ -7,14 +7,14 @@
     border-right: 1px solid $border-color
 
 .sidebar-header
-    text-align: center
-    border-bottom: 1px solid $border-color
-    text-decoration: none
-    .logo
-        font-weight: 600
-        font-size: 1.4rem
-        color: $primary-500
-        text-align: center
+  display: flex
+  justify-content: center
+  align-items: center
+
+.navbar-logo
+  max-width: 160px
+  height: auto
+  display: block
         
 
 .sidebar-nav
@@ -45,28 +45,32 @@
 .sidebar-user
     border-top: 1px solid $border-color
 
+.sidebar-user
+  display: block
+  color: inherit
+  cursor: pointer
+
+  &.active
+    border-radius: 12px
+
 .avatar
-    width: 36px
-    height: 36px
-    border-radius: 50%
-    background: $primary-200
-    color: $primary-700
-    display: flex
-    align-items: center
-    justify-content: center
-    font-weight: 600
-    font-size: 0.85rem
+  width: 40px
+  height: 40px
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  font-weight: 700
 
 .user-meta
-    display: flex
-    flex-direction: column
-    line-height: 1.2
+  display: flex
+  flex-direction: column
+  min-width: 0
 
 .user-name
-    font-size: 0.9rem
-    font-weight: 600
-    color: $dark-900
+  font-weight: 600
+  line-height: 1.2
 
 .user-dept
-    font-size: 0.8rem
-    color: $dark-700
+  font-size: 0.875rem
+  opacity: 0.8

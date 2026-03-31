@@ -17,7 +17,6 @@ import { authInterceptor } from './interceptors/auth-interceptor';
   declarations: [
     App,
     WelcomePage,
-    Navbar,
     Profile,
     Navbar,
     WorkstationList,
