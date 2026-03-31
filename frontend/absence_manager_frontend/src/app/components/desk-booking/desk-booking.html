@@ -7,8 +7,8 @@
   </div>
 
   <div class="booking-card">
-    <div class="row g-3 align-items-end">
-      <div class="col-12 col-md-8">
+    <div class="form-row-inline form-row-inline--user">
+      <div class="form-field">
         <label for="devUserSelect" class="form-label">Fejlesztői felhasználó</label>
         <select id="devUserSelect" class="form-select" [(ngModel)]="selectedDevUserId">
           <option value="">Válassz felhasználót...</option>
@@ -18,7 +18,7 @@
         </select>
       </div>
 
-      <div class="col-12 col-md-4">
+      <div class="form-action">
         <button type="button" class="btn btn-outline-primary w-100"
           [disabled]="!selectedDevUserId || isLoggingInDevUser" (click)="switchDevUser()">
           <span *ngIf="!isLoggingInDevUser">Felhasználó aktiválása</span>
@@ -43,8 +43,8 @@
   </div>
 
   <div class="booking-card">
-    <div class="row g-3">
-      <div class="col-12 col-md-6">
+    <div class="form-row-inline">
+      <div class="form-field">
         <label for="locationSelect" class="form-label">Telephely</label>
         <select id="locationSelect" class="form-select" [(ngModel)]="selectedLocationId"
           (ngModelChange)="onLocationChange($event)">
@@ -55,7 +55,7 @@
         </select>
       </div>
 
-      <div class="col-12 col-md-6">
+      <div class="form-field">
         <label for="officeSelect" class="form-label">Iroda</label>
         <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId"
           (ngModelChange)="onOfficeChange($event)">
@@ -68,41 +68,44 @@
     </div>
   </div>
 
-  <div class="booking-card" *ngIf="(locations$ | async) as locations">
-    <div *ngIf="currentLocation$(locations) as location">
-      <strong>Telephely:</strong> {{ location.name }}
-    </div>
-  </div>
-
-  <div class="booking-card" *ngIf="(offices$ | async) as offices">
-    <div *ngIf="currentOffice$(offices) as office">
-      <strong>Iroda:</strong> {{ office.name }}
-    </div>
-  </div>
-
   <app-workstation-list [workstations]="availability?.workstations ?? []"
     [selectedWorkstationId]="selectedWorkstationId"
     [currentUserHasBooking]="availability?.currentUserHasBooking ?? false"
     (workstationSelected)="onWorkstationSelected($event)">
   </app-workstation-list>
 
-  <div class="booking-card" *ngIf="selectedWorkstationId">
-    <strong>Kiválasztott munkaállomás azonosító:</strong> {{ selectedWorkstationId }}
-  </div>
+  <div class="booking-card booking-actions-card">
+    <div class="booking-actions-row">
+      <button *ngIf="!currentBookingId" type="button" class="btn booking-btn booking-btn--primary"
+        [disabled]="!selectedWorkstationId || isSubmittingBooking || !!currentBookingId" (click)="submitBooking()">
+        <i class="bi bi-check2-circle"></i>
+        <span *ngIf="!isSubmittingBooking">Foglalás mentése</span>
+        <span *ngIf="isSubmittingBooking">Mentés...</span>
+      </button>
 
-  <div class="booking-card">
-    <button type="button" class="btn btn-primary" [disabled]="!selectedWorkstationId || isSubmittingBooking"
-      (click)="submitBooking()">
-      <span *ngIf="!isSubmittingBooking">Foglalás mentése</span>
-      <span *ngIf="isSubmittingBooking">Mentés...</span>
-    </button>
-  </div>
+      <button type="button" class="btn booking-btn booking-btn--danger" *ngIf="currentBookingId"
+        [disabled]="isSubmittingBooking" (click)="cancelBooking()">
+        <i class="bi bi-x-circle"></i>
+        <span>Foglalás lemondása</span>
+      </button>
+    </div>
+</div>
 
-  <div class="alert alert-danger mt-3" *ngIf="errorMessage">
+<div class="feedback-messages">
+  <div class="alert alert-danger" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
 
-  <div class="alert alert-success mt-3" *ngIf="successMessage">
+  <div class="alert alert-success" *ngIf="successMessage">
     {{ successMessage }}
   </div>
+</div>
+
+<div class="alert alert-danger mt-3" *ngIf="errorMessage">
+  {{ errorMessage }}
+</div>
+
+<div class="alert alert-success mt-3" *ngIf="successMessage">
+  {{ successMessage }}
+</div>
 </div>

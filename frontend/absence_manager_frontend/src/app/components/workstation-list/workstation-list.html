@@ -1,5 +1,7 @@
-<div class="booking-card">
-    <h3 class="section-title">Munkaállomások</h3>
+<div class="booking-card workstation-section">
+    <div class="section-header">
+        <h3 class="section-title mb-0">Munkaállomások</h3>
+    </div>
 
     <div class="empty-state" *ngIf="workstations.length === 0">
         Nincs megjeleníthető munkaállomás.
@@ -22,11 +24,34 @@
                 {{ workstation.workstationCode }}
             </div>
 
-            <small *ngIf="!workstation.isBooked">Szabad</small>
-            <small *ngIf="workstation.isBookedByCurrentUser">A te foglalásod</small>
-            <small *ngIf="workstation.isBooked && !workstation.isBookedByCurrentUser">
-                Foglalt
+            <small class="workstation-status" *ngIf="!workstation.isBooked">
+                Szabad
+            </small>
+
+            <small class="workstation-status" *ngIf="workstation.isBookedByCurrentUser">
+                A te foglalásod
+            </small>
+
+            <small class="workstation-status" *ngIf="workstation.isBooked && !workstation.isBookedByCurrentUser">
+                Foglalt — {{ workstation.bookedByDisplayName || workstation.bookedByUserName || 'Ismeretlen' }}
             </small>
         </button>
+    </div>
+
+    <div class="desk-legend" *ngIf="workstations.length > 0">
+        <div class="desk-legend__item">
+            <span class="desk-legend__color desk-legend__color--free"></span>
+            <span>Szabad</span>
+        </div>
+
+        <div class="desk-legend__item">
+            <span class="desk-legend__color desk-legend__color--mine"></span>
+            <span>Kiválasztva / általad foglalva</span>
+        </div>
+
+        <div class="desk-legend__item">
+            <span class="desk-legend__color desk-legend__color--booked"></span>
+            <span>Más által foglalva</span>
+        </div>
     </div>
 </div>

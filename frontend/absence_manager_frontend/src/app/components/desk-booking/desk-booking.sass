@@ -2,44 +2,51 @@
 
 .desk-booking-page
     max-width: 1100px
-    margin: auto
+    margin: 0 auto
+    padding: 1.5rem 1rem 2rem
+
+.page-header
+    margin-bottom: 1.25rem
+
+.page-title
+    margin: 0
+    font-size: 1.75rem
+    font-weight: 700
+    color: $dark-900
 
 .booking-card
     background: $light-500
     border: 1px solid $border-color
     border-radius: 16px
-    padding: 1rem
+    padding: 1.25rem
     margin-bottom: 1rem
-
-.section-title
-    font-size: 1.1rem
-    font-weight: 600
-    color: $dark-900
-    margin-bottom: 1rem
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04)
 
 .calendar-row
     display: flex
     gap: 0.75rem
     overflow-x: auto
-    padding-bottom: 0.25rem
+    padding: 0.25rem 0
+    justify-content: center
 
 .calendar-day
     border: none
     background: transparent
     border-radius: 12px
-    min-width: 52px
-    height: 72px
+    min-width: 56px
+    height: 76px
     display: flex
     flex-direction: column
     align-items: center
     justify-content: center
     gap: 0.3rem
     color: $dark-800
-    transition: background 0.15s ease, color 0.15s ease
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease
     flex-shrink: 0
 
     &:hover
         background: $light-200
+        transform: translateY(-1px)
 
 .calendar-day__label
     font-size: 0.75rem
@@ -47,7 +54,7 @@
 
 .calendar-day__number
     font-size: 1rem
-    font-weight: 600
+    font-weight: 700
 
 .calendar-day--active
     background: $primary-500
@@ -56,86 +63,100 @@
     .calendar-day__label
         color: $light-500
 
-.desk-grid
-    display: grid
-    grid-template-columns: repeat(3, minmax(0, 1fr))
+.form-row-inline
+    display: flex
     gap: 1rem
-    margin-bottom: 1.5rem
+    align-items: end
 
-.desk-tile
-    min-height: 88px
-    border: none
+.form-row-inline--user
+    .form-field
+        flex: 1 1 auto
+
+    .form-action
+        flex: 0 0 240px
+
+.form-field
+    flex: 1 1 0
+
+.form-label
+    margin-bottom: 0.45rem
+    font-weight: 600
+    color: $dark-800
+
+.form-action
+    display: flex
+    align-items: end
+
+    .btn
+        width: 100%
+
+.booking-actions-card
+    padding-top: 1rem
+    padding-bottom: 1rem
+
+.booking-actions-row
+    display: flex
+    gap: 0.75rem
+    justify-content: center
+    align-items: center
+    flex-wrap: wrap
+
+.booking-btn
+    min-width: 220px
+    min-height: 44px
+    padding: 0.7rem 1.1rem
     border-radius: 12px
+    font-weight: 600
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: 0.5rem
+    transition: transform 0.15s ease, box-shadow 0.15s ease
+
+    &:hover:not(:disabled)
+        transform: translateY(-1px)
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08)
+
+.booking-btn--primary
+    background: $primary-500
+    border-color: $primary-500
+    color: $light-500
+
+.booking-btn--danger
+    background: transparent
+    border: 1px solid #dc3545
+    color: #dc3545
+
+    &:hover:not(:disabled)
+        background: rgba(220, 53, 69, 0.08)
+
+.feedback-messages
     display: flex
     flex-direction: column
-    align-items: center
-    justify-content: center
-    gap: 0.5rem
-    font-weight: 600
-    transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, color 0.15s ease
+    gap: 0.75rem
 
-    i
-        font-size: 1.25rem
-
-    &:hover
-        transform: translateY(-1px)
-
-.desk-tile--free
-    background: $primary-500
-    color: $light-500
-
-.desk-tile--selected
-    background: $info-500
-    color: $light-500
-
-.desk-tile--occupied
-    background: $light-200
-    color: $dark-600
-    cursor: not-allowed
-
-    &:hover
-        transform: none
-
-.legend
-    display: flex
-    align-items: center
-    gap: 1.25rem
-    flex-wrap: wrap
-    margin-bottom: 1.5rem
-
-.legend-item
-    display: flex
-    align-items: center
-    gap: 0.5rem
-    font-size: 0.9rem
-    color: $dark-700
-
-.legend-color
-    width: 12px
-    height: 12px
-    border-radius: 4px
-    display: inline-block
-
-.legend-color--free
-    background: $primary-500
-
-.legend-color--selected
-    background: $info-500
-
-.legend-color--occupied
-    background: $light-300
-
-.booking-actions
-    display: flex
-    justify-content: center
-
-.btn-primary
-    min-width: 140px
-
-@media (max-width: 992px)
-    .desk-grid
-        grid-template-columns: repeat(2, minmax(0, 1fr))
+.alert
+    margin-bottom: 0
 
 @media (max-width: 576px)
-    .desk-grid
-        grid-template-columns: 1fr
+    .desk-booking-page
+        padding: 1rem 0.75rem 1.5rem
+
+    .booking-card
+        padding: 1rem
+
+    .form-row-inline
+        flex-direction: column
+        align-items: stretch
+
+    .form-row-inline--user
+        .form-action
+            flex: 1 1 auto
+
+    .booking-actions-row
+        flex-direction: column
+        align-items: stretch
+
+    .booking-btn
+        width: 100%
+        min-width: 0
