@@ -1,0 +1,141 @@
+@use '../../../../src/styles' as *
+
+.desk-booking-page
+    max-width: 1100px
+    margin: auto
+
+.booking-card
+    background: $light-500
+    border: 1px solid $border-color
+    border-radius: 16px
+    padding: 1rem
+    margin-bottom: 1rem
+
+.section-title
+    font-size: 1.1rem
+    font-weight: 600
+    color: $dark-900
+    margin-bottom: 1rem
+
+.calendar-row
+    display: flex
+    gap: 0.75rem
+    overflow-x: auto
+    padding-bottom: 0.25rem
+
+.calendar-day
+    border: none
+    background: transparent
+    border-radius: 12px
+    min-width: 52px
+    height: 72px
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 0.3rem
+    color: $dark-800
+    transition: background 0.15s ease, color 0.15s ease
+    flex-shrink: 0
+
+    &:hover
+        background: $light-200
+
+.calendar-day__label
+    font-size: 0.75rem
+    color: $dark-700
+
+.calendar-day__number
+    font-size: 1rem
+    font-weight: 600
+
+.calendar-day--active
+    background: $primary-500
+    color: $light-500
+
+    .calendar-day__label
+        color: $light-500
+
+.desk-grid
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: 1rem
+    margin-bottom: 1.5rem
+
+.desk-tile
+    min-height: 88px
+    border: none
+    border-radius: 12px
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 0.5rem
+    font-weight: 600
+    transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, color 0.15s ease
+
+    i
+        font-size: 1.25rem
+
+    &:hover
+        transform: translateY(-1px)
+
+.desk-tile--free
+    background: $primary-500
+    color: $light-500
+
+.desk-tile--selected
+    background: $info-500
+    color: $light-500
+
+.desk-tile--occupied
+    background: $light-200
+    color: $dark-600
+    cursor: not-allowed
+
+    &:hover
+        transform: none
+
+.legend
+    display: flex
+    align-items: center
+    gap: 1.25rem
+    flex-wrap: wrap
+    margin-bottom: 1.5rem
+
+.legend-item
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    font-size: 0.9rem
+    color: $dark-700
+
+.legend-color
+    width: 12px
+    height: 12px
+    border-radius: 4px
+    display: inline-block
+
+.legend-color--free
+    background: $primary-500
+
+.legend-color--selected
+    background: $info-500
+
+.legend-color--occupied
+    background: $light-300
+
+.booking-actions
+    display: flex
+    justify-content: center
+
+.btn-primary
+    min-width: 140px
+
+@media (max-width: 992px)
+    .desk-grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+
+@media (max-width: 576px)
+    .desk-grid
+        grid-template-columns: 1fr
