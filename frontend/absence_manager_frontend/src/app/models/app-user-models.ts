@@ -10,3 +10,10 @@ export interface AppUser {
   createdAt: string;
   officeBookings: OfficeBooking[];
 }
+
+export interface UserProfile {
+  displayName: string;
+  email: string;
+  department: string;
+  jobTitle: string;
+}

@@ -1,20 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.development';
+import { UserProfile } from '../models/app-user-models';
 
-export interface UserProfile {
-  id: string;
-  displayName: string;
-  email: string;
-  department: string;
-  jobTitle: string;
-}
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private readonly apiUrl = 'http://localhost:5000/api/users';
+  private readonly apiUrl = `${environment.apiUrl}/users`;
 
   constructor(private http: HttpClient) {}
 
