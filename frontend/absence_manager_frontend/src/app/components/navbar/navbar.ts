@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { UserProfile } from '../../models/app-user-models';
 import { UserService } from '../../services/user.service';
 import { DevAuthService } from '../../services/dev-auth-service';
@@ -9,28 +9,25 @@ import { DevAuthService } from '../../services/dev-auth-service';
   templateUrl: './navbar.html',
   styleUrl: './navbar.sass',
 })
-export class Navbar implements OnInit, OnDestroy {
+export class Navbar implements OnInit {
   userProfile: UserProfile | null = null;
-
-  private readonly onDevUserChanged = () => {
-    this.loadFromCurrentDevUser();
-    this.loadProfileData();
-  };
 
   constructor(
     private userService: UserService,
-    private devAuthService: DevAuthService
+    private devAuthService: DevAuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadFromCurrentDevUser();
     this.loadProfileData();
-
-    window.addEventListener('dev-user-changed', this.onDevUserChanged);
   }
 
-  ngOnDestroy(): void {
-    window.removeEventListener('dev-user-changed', this.onDevUserChanged);
+  @HostListener('window:dev-user-changed')
+  onDevUserChanged(): void {
+    this.loadFromCurrentDevUser();
+    this.loadProfileData();
+    this.cdr.detectChanges();
   }
 
   private loadFromCurrentDevUser(): void {
@@ -38,6 +35,7 @@ export class Navbar implements OnInit, OnDestroy {
 
     if (!currentUser) {
       this.userProfile = null;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -47,15 +45,19 @@ export class Navbar implements OnInit, OnDestroy {
       department: currentUser.department,
       jobTitle: currentUser.jobTitle
     };
+
+    this.cdr.detectChanges();
   }
 
   private loadProfileData(): void {
     this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
+        this.cdr.detectChanges();
       }
     });
   }
