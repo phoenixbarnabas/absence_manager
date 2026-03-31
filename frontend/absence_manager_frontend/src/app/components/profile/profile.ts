@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LeaveBalance, UserProfile, UserService } from '../../services/user.service';
+import { UserProfile, UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-profile',
@@ -9,40 +9,23 @@ import { LeaveBalance, UserProfile, UserService } from '../../services/user.serv
 })
 export class Profile implements OnInit {
   userProfile: UserProfile | null = null;
-  leaveBalance: LeaveBalance | null = null;
   loading = true;
   error: string | null = null;
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService) {}
 
   ngOnInit(): void {
     this.loadProfileData();
   }
 
   private loadProfileData(): void {
-    const userId = '1'; // TODO: Get from auth service
-
-    this.userService.getUserProfile(userId).subscribe({
+    this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
-        this.loadLeaveBalance(userId);
+        this.loading = false;
       },
       error: (err) => {
         this.error = 'Hiba a profil betöltése közben';
-        this.loading = false;
-        console.error(err);
-      }
-    });
-  }
-
-  private loadLeaveBalance(userId: string): void {
-    this.userService.getUserLeaveBalance(userId).subscribe({
-      next: (balance) => {
-        this.leaveBalance = balance;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Hiba a szabadság egyenleg betöltése közben';
         this.loading = false;
         console.error(err);
       }
@@ -57,14 +40,7 @@ export class Profile implements OnInit {
       .toUpperCase();
   }
 
-  getProgressPercentage(): number {
-    if (!this.leaveBalance) return 0;
-    return (this.leaveBalance.usedDays / this.leaveBalance.totalDays) * 100;
-  }
-
   openSettings(): void {
-    // TODO: Implement settings modal
     console.log('Open settings');
   }
 }
-
