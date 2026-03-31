@@ -15,6 +15,7 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getMe(): Observable<UserProfile> {
+    console.log('GET ME CALLED');
     return this.http.get<UserProfile>(`${this.apiUrl}/me`);
   }
 }
