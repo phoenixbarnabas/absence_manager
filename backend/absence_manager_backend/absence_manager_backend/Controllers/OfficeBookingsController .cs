@@ -1,17 +1,16 @@
-﻿using Data;
-using Entities.Dtos.OfficeBooking;
-using Entities.Models;
+﻿using Entities.Dtos.OfficeBooking;
 using Logic.Helper;
 using Logic.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Microsoft.Identity.Web.Resource;
 
 namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/office-bookings")]
     [Authorize]
+    [RequiredScope("user_impersonation")]
     public class OfficeBookingsController : ControllerBase
     {
         private readonly OfficeBookingLogic _officeBookingLogic;
@@ -26,11 +25,14 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpGet("availability")]
-        public IActionResult GetAvailability([FromQuery] string officeId, [FromQuery] DateOnly date)
+        public async Task<IActionResult> GetAvailability(
+            [FromQuery] string officeId,
+            [FromQuery] DateOnly date,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var currentUserId = _currentUserService.GetUserId();
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
                 var result = _officeBookingLogic.GetOfficeDayAvailability(officeId, date, currentUserId);
                 return Ok(result);
             }
@@ -45,11 +47,15 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpGet("day-summaries")]
-        public IActionResult GetDaySummaries([FromQuery] string officeId, [FromQuery] DateOnly fromDate, [FromQuery] DateOnly toDate)
+        public async Task<IActionResult> GetDaySummaries(
+            [FromQuery] string officeId,
+            [FromQuery] DateOnly fromDate,
+            [FromQuery] DateOnly toDate,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var currentUserId = _currentUserService.GetUserId();
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
                 var result = _officeBookingLogic.GetOfficeDaySummaries(officeId, fromDate, toDate, currentUserId);
                 return Ok(result);
             }
@@ -68,11 +74,14 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpGet("my")]
-        public IActionResult GetMyBookings([FromQuery] DateOnly? fromDate, [FromQuery] DateOnly? toDate)
+        public async Task<IActionResult> GetMyBookings(
+            [FromQuery] DateOnly? fromDate,
+            [FromQuery] DateOnly? toDate,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var currentUserId = _currentUserService.GetUserId();
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
                 var result = _officeBookingLogic.GetMyBookings(currentUserId, fromDate, toDate);
                 return Ok(result);
             }
@@ -83,11 +92,13 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateBooking([FromBody] CreateOfficeBookingDto dto)
+        public async Task<IActionResult> CreateBooking(
+            [FromBody] CreateOfficeBookingDto dto,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var currentUserId = _currentUserService.GetUserId();
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
                 var result = _officeBookingLogic.CreateBooking(dto, currentUserId);
                 return Ok(result);
             }
@@ -106,11 +117,13 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpDelete("{bookingId}")]
-        public IActionResult CancelBooking(string bookingId)
+        public async Task<IActionResult> CancelBooking(
+            string bookingId,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var currentUserId = _currentUserService.GetUserId();
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
                 _officeBookingLogic.CancelBooking(bookingId, currentUserId, isAdmin: false);
                 return NoContent();
             }
@@ -118,7 +131,7 @@ namespace Absence_Manager.Controllers
             {
                 return NotFound(ex.Message);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }

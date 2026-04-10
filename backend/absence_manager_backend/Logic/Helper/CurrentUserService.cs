@@ -5,7 +5,7 @@ namespace Logic.Helper;
 
 public interface ICurrentUserService
 {
-    string GetUserId();
+    Task<string> GetUserIdAsync(CancellationToken cancellationToken = default);
     string? GetEntraObjectId();
     string? GetTenantId();
 }
@@ -13,25 +13,32 @@ public interface ICurrentUserService
 public class CurrentUserService : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IAppUserResolver _appUserResolver;
 
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    public CurrentUserService(
+        IHttpContextAccessor httpContextAccessor,
+        IAppUserResolver appUserResolver)
     {
         _httpContextAccessor = httpContextAccessor;
+        _appUserResolver = appUserResolver;
     }
 
-    public string GetUserId()
+    public async Task<string> GetUserIdAsync(CancellationToken cancellationToken = default)
     {
-        return _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
-               ?? throw new UnauthorizedAccessException("Missing user id claim.");
+        var principal = _httpContextAccessor.HttpContext?.User
+            ?? throw new UnauthorizedAccessException("Missing HttpContext user.");
+
+        var user = await _appUserResolver.ResolveCurrentUserAsync(principal, cancellationToken);
+        return user.Id;
     }
 
     public string? GetEntraObjectId()
     {
-        return _httpContextAccessor.HttpContext?.User.FindFirst("entra_oid")?.Value;
+        return _httpContextAccessor.HttpContext?.User.FindFirst("oid")?.Value;
     }
 
     public string? GetTenantId()
     {
-        return _httpContextAccessor.HttpContext?.User.FindFirst("tenant_id")?.Value;
+        return _httpContextAccessor.HttpContext?.User.FindFirst("tid")?.Value;
     }
 }
