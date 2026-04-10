@@ -201,8 +201,8 @@ namespace Data
 
             var location1 = new Location
             {
-                Id = "loc-budapest",
-                Name = "Budapest HQ",
+                Id = "loc-Fót",
+                Name = "Fót",
                 IsActive = true,
                 DisplayOrder = 1
             };
@@ -210,22 +210,12 @@ namespace Data
             // ===== OFFICE =====
             var office1 = new Office
             {
-                Id = "office-bp-1",
+                Id = "office-ft-1",
                 LocationId = location1.Id,
-                Name = "Open Office - 1st Floor",
-                Description = "Main open office area",
+                Name = "IT Office",
+                Description = "IT fejlesztés",
                 IsActive = true,
                 DisplayOrder = 1
-            };
-
-            var office2 = new Office
-            {
-                Id = "office-bp-2",
-                LocationId = location1.Id,
-                Name = "Quiet Room",
-                Description = "Silent workspace",
-                IsActive = true,
-                DisplayOrder = 2
             };
 
             // ===== WORKSTATIONS =====
@@ -264,17 +254,39 @@ namespace Data
                     PositionX = 3,
                     PositionY = 1
                 },
+                new Workstation{
+                    Id = "ws-4",
+                    OfficeId = office1.Id,
+                    Code = "B1",
+                    Name = "Desk B1",
+                    IsActive = true,
+                    DisplayOrder = 4,
+                    PositionX = 1,
+                    PositionY = 2
+                },
                 new Workstation
                 {
-                    Id = "ws2-1",
-                    OfficeId = office2.Id,
-                    Code = "Q1",
-                    Name = "Quiet Desk 1",
+                    Id = "ws-5",
+                    OfficeId = office1.Id,
+                    Code = "B2",
+                    Name = "Desk B2",
                     IsActive = true,
-                    DisplayOrder = 1,
-                    PositionX = 1,
-                    PositionY = 1
+                    DisplayOrder = 5,
+                    PositionX = 2,
+                    PositionY = 2
+                },
+                new Workstation
+                {
+                    Id = "ws-6",
+                    OfficeId = office1.Id,
+                    Code = "B3",
+                    Name = "Desk B3",
+                    IsActive = true,
+                    DisplayOrder = 6,
+                    PositionX = 3,
+                    PositionY = 2
                 }
+
             };
 
             // ===== USERS =====
@@ -328,7 +340,7 @@ namespace Data
             };
 
             modelBuilder.Entity<Location>().HasData(location1);
-            modelBuilder.Entity<Office>().HasData(office1, office2);
+            modelBuilder.Entity<Office>().HasData(office1);
             modelBuilder.Entity<Workstation>().HasData(workstations);
             modelBuilder.Entity<AppUser>().HasData(user1, user2);
             modelBuilder.Entity<OfficeBooking>().HasData(booking1, booking2);

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class userupdate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -135,26 +135,24 @@ namespace Data.Migrations
             migrationBuilder.InsertData(
                 table: "Locations",
                 columns: new[] { "Id", "DisplayOrder", "IsActive", "Name" },
-                values: new object[] { "loc-budapest", 1, true, "Budapest HQ" });
+                values: new object[] { "loc-Fót", 1, true, "Fót" });
 
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[,]
-                {
-                    { "office-bp-1", "Main open office area", 1, true, "loc-budapest", "Open Office - 1st Floor" },
-                    { "office-bp-2", "Silent workspace", 2, true, "loc-budapest", "Quiet Room" }
-                });
+                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "IT Office" });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
                 columns: new[] { "Id", "Code", "DisplayOrder", "IsActive", "Name", "OfficeId", "PositionX", "PositionY" },
                 values: new object[,]
                 {
-                    { "ws-1", "A1", 1, true, "Desk A1", "office-bp-1", 1m, 1m },
-                    { "ws-2", "A2", 2, true, "Desk A2", "office-bp-1", 2m, 1m },
-                    { "ws-3", "A3", 3, true, "Desk A3", "office-bp-1", 3m, 1m },
-                    { "ws-4", "Q1", 1, true, "Quiet Desk 1", "office-bp-2", 1m, 1m }
+                    { "ws-1", "A1", 1, true, "Desk A1", "office-ft-1", 1m, 1m },
+                    { "ws-2", "A2", 2, true, "Desk A2", "office-ft-1", 2m, 1m },
+                    { "ws-3", "A3", 3, true, "Desk A3", "office-ft-1", 3m, 1m },
+                    { "ws-4", "B1", 4, true, "Desk B1", "office-ft-1", 1m, 2m },
+                    { "ws-5", "B2", 5, true, "Desk B2", "office-ft-1", 2m, 2m },
+                    { "ws-6", "B3", 6, true, "Desk B3", "office-ft-1", 3m, 2m }
                 });
 
             migrationBuilder.InsertData(

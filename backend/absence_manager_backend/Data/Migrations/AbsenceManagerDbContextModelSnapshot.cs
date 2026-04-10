@@ -121,10 +121,10 @@ namespace Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "loc-budapest",
+                            Id = "loc-Fót",
                             DisplayOrder = 1,
                             IsActive = true,
-                            Name = "Budapest HQ"
+                            Name = "Fót"
                         });
                 });
 
@@ -162,21 +162,12 @@ namespace Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "office-bp-1",
-                            Description = "Main open office area",
+                            Id = "office-ft-1",
+                            Description = "IT fejlesztés",
                             DisplayOrder = 1,
                             IsActive = true,
-                            LocationId = "loc-budapest",
-                            Name = "Open Office - 1st Floor"
-                        },
-                        new
-                        {
-                            Id = "office-bp-2",
-                            Description = "Silent workspace",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            LocationId = "loc-budapest",
-                            Name = "Quiet Room"
+                            LocationId = "loc-Fót",
+                            Name = "IT Office"
                         });
                 });
 
@@ -296,7 +287,7 @@ namespace Data.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             Name = "Desk A1",
-                            OfficeId = "office-bp-1",
+                            OfficeId = "office-ft-1",
                             PositionX = 1m,
                             PositionY = 1m
                         },
@@ -307,7 +298,7 @@ namespace Data.Migrations
                             DisplayOrder = 2,
                             IsActive = true,
                             Name = "Desk A2",
-                            OfficeId = "office-bp-1",
+                            OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 1m
                         },
@@ -318,20 +309,42 @@ namespace Data.Migrations
                             DisplayOrder = 3,
                             IsActive = true,
                             Name = "Desk A3",
-                            OfficeId = "office-bp-1",
+                            OfficeId = "office-ft-1",
                             PositionX = 3m,
                             PositionY = 1m
                         },
                         new
                         {
                             Id = "ws-4",
-                            Code = "Q1",
-                            DisplayOrder = 1,
+                            Code = "B1",
+                            DisplayOrder = 4,
                             IsActive = true,
-                            Name = "Quiet Desk 1",
-                            OfficeId = "office-bp-2",
+                            Name = "Desk B1",
+                            OfficeId = "office-ft-1",
                             PositionX = 1m,
-                            PositionY = 1m
+                            PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-5",
+                            Code = "B2",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            Name = "Desk B2",
+                            OfficeId = "office-ft-1",
+                            PositionX = 2m,
+                            PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-6",
+                            Code = "B3",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            Name = "Desk B3",
+                            OfficeId = "office-ft-1",
+                            PositionX = 3m,
+                            PositionY = 2m
                         });
                 });
 
