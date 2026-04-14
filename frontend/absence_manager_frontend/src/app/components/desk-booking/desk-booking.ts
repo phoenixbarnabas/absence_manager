@@ -31,11 +31,6 @@ type DeskBookingState = {
 export class DeskBooking implements OnInit {
   private readonly storageKey = 'desk-booking-state';
 
-  seedUsers: DevSeedUser[] = [];
-  selectedDevUserId = '';
-  currentDevUserName = '';
-  isLoggingInDevUser = false;
-
   calendarDays: CalendarDay[] = [];
 
   locations$!: Observable<Location[]>;
@@ -62,81 +57,13 @@ export class DeskBooking implements OnInit {
     private officeService: OfficeService,
     private workstationService: WorkstationService,
     private bookingService: BookingService,
-    private devAuthService: DevAuthService,
-    private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
-    this.restoreDevUserState();
-    this.loadSeedUsers();
-
-
     this.generateCalendarDays();
     this.restoreState();
     this.bindStreams();
     this.loadLocations();
-  }
-
-  private restoreDevUserState(): void {
-    const currentUser = this.devAuthService.getCurrentUser();
-    if (currentUser) {
-      this.selectedDevUserId = currentUser.id;
-      this.currentDevUserName = currentUser.displayName;
-    }
-  }
-
-  loadSeedUsers(): void {
-    this.devAuthService.getSeedUsers().subscribe({
-      next: users => {
-        this.seedUsers = users;
-
-        if (!this.selectedDevUserId && users.length > 0) {
-          this.selectedDevUserId = users[0].id;
-        }
-
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = 'Nem sikerült betölteni a seedelt usereket.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  switchDevUser(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!this.selectedDevUserId) {
-      this.errorMessage = 'Válassz egy felhasználót.';
-      return;
-    }
-
-    this.isLoggingInDevUser = true;
-
-    this.devAuthService.loginAsUser(this.selectedDevUserId).subscribe({
-      next: response => {
-        console.log('DEV LOGIN SUCCESS, TOKEN SAVED');
-        this.currentDevUserName = response.user.displayName;
-        this.successMessage = `Aktív felhasználó: ${response.user.displayName}`;
-        this.isLoggingInDevUser = false;
-
-        setTimeout(() => {
-          if (this.selectedOfficeId) {
-            this.loadAvailability();
-          }
-        }, 0);
-
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = err?.error?.message ?? 'Nem sikerült a dev bejelentkezés.';
-        this.isLoggingInDevUser = false;
-        this.cdr.detectChanges();
-      }
-    });
   }
 
   private bindStreams(): void {
@@ -215,6 +142,7 @@ export class DeskBooking implements OnInit {
 
     this.isLoadingAvailability = true;
     this.errorMessage = '';
+    this.successMessage = '';
 
     this.bookingService.getAvailability(this.selectedOfficeId, this.selectedDateString)
       .subscribe({
@@ -240,14 +168,12 @@ export class DeskBooking implements OnInit {
 
           this.isLoadingAvailability = false;
           this.saveState();
-          this.cdr.detectChanges();
         },
         error: err => {
           console.error(err);
           this.availability = null;
           this.isLoadingAvailability = false;
           this.errorMessage = 'Nem sikerült betölteni az elérhetőségi adatokat.';
-          this.cdr.detectChanges();
         }
       });
   }
@@ -260,12 +186,10 @@ export class DeskBooking implements OnInit {
       next: bookings => {
         const match = bookings.find(b => b.bookingDate === this.selectedDateString);
         this.currentBookingId = match?.id ?? null;
-        this.cdr.detectChanges();
       },
       error: err => {
         console.error(err);
         this.currentBookingId = null;
-        this.cdr.detectChanges();
       }
     });
   }
@@ -295,17 +219,8 @@ export class DeskBooking implements OnInit {
         this.errorMessage =
           err?.error?.message ?? 'Nem sikerült lemondani a foglalást.';
         this.isSubmittingBooking = false;
-        this.cdr.detectChanges();
       }
     });
-  }
-
-  currentLocation$(locations: Location[]): Location | undefined {
-    return locations.find(location => location.id === this.selectedLocationId);
-  }
-
-  currentOffice$(offices: Office[]): Office | undefined {
-    return offices.find(office => office.id === this.selectedOfficeId);
   }
 
   onLocationChange(locationId: string): void {
@@ -487,7 +402,6 @@ export class DeskBooking implements OnInit {
         this.errorMessage =
           err?.error?.message ?? 'Nem sikerült létrehozni a foglalást.';
         this.isSubmittingBooking = false;
-        this.cdr.detectChanges();
       }
     });
   }

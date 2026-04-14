@@ -32,7 +32,6 @@ export class Navbar implements OnInit {
           return;
         }
 
-        // azonnali megjelenítés
         this.userProfile = {
           displayName: account.name || account.username || 'Ismeretlen felhasználó',
           email: account.username || '',
@@ -42,7 +41,6 @@ export class Navbar implements OnInit {
 
         this.loading = false;
 
-        // backend profil ráfrissítés
         this.loadProfileData();
       });
   }

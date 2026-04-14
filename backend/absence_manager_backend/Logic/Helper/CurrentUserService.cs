@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Identity.Web;
 using System.Security.Claims;
 
 namespace Logic.Helper;
@@ -34,11 +35,17 @@ public class CurrentUserService : ICurrentUserService
 
     public string? GetEntraObjectId()
     {
-        return _httpContextAccessor.HttpContext?.User.FindFirst("oid")?.Value;
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.FindFirstValue("oid")
+            ?? user?.FindFirstValue(ClaimConstants.ObjectId)
+            ?? user?.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
     }
 
     public string? GetTenantId()
     {
-        return _httpContextAccessor.HttpContext?.User.FindFirst("tid")?.Value;
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.FindFirstValue("tid")
+            ?? user?.FindFirstValue(ClaimConstants.TenantId)
+            ?? user?.FindFirstValue("http://schemas.microsoft.com/identity/claims/tenantid");
     }
 }
