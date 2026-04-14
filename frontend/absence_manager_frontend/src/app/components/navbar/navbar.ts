@@ -1,7 +1,9 @@
-import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UserProfile } from '../../models/app-user-models';
 import { UserService } from '../../services/user.service';
 import { DevAuthService } from '../../services/dev-auth-service';
+import { AuthService } from '../../auth/auth-service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -11,53 +13,52 @@ import { DevAuthService } from '../../services/dev-auth-service';
 })
 export class Navbar implements OnInit {
   userProfile: UserProfile | null = null;
+  loading = true;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private userService: UserService,
-    private devAuthService: DevAuthService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    public authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.loadFromCurrentDevUser();
-    this.loadProfileData();
+    this.authService.account$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((account) => {
+        if (!account) {
+          this.userProfile = null;
+          this.loading = false;
+          return;
+        }
+
+        // azonnali megjelenítés
+        this.userProfile = {
+          displayName: account.name || account.username || 'Ismeretlen felhasználó',
+          email: account.username || '',
+          department: '',
+          jobTitle: ''
+        };
+
+        this.loading = false;
+
+        // backend profil ráfrissítés
+        this.loadProfileData();
+      });
   }
 
-  @HostListener('window:dev-user-changed')
-  onDevUserChanged(): void {
-    this.loadFromCurrentDevUser();
-    this.loadProfileData();
-    this.cdr.detectChanges();
-  }
-
-  private loadFromCurrentDevUser(): void {
-    const currentUser = this.devAuthService.getCurrentUser();
-
-    if (!currentUser) {
-      this.userProfile = null;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.userProfile = {
-      displayName: currentUser.displayName,
-      email: currentUser.email,
-      department: currentUser.department,
-      jobTitle: currentUser.jobTitle
-    };
-
-    this.cdr.detectChanges();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadProfileData(): void {
     this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
-        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-        this.cdr.detectChanges();
       }
     });
   }
@@ -69,5 +70,9 @@ export class Navbar implements OnInit {
       .map(name => name[0])
       .join('')
       .toUpperCase();
+  }
+
+  async logout(): Promise<void> {
+    await this.authService.logout();
   }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.Resource;
 using System.Security.Claims;
 
@@ -14,16 +15,31 @@ namespace Absence_Manager.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
+            string? Find(params string[] claimTypes)
+            {
+                foreach (var type in claimTypes)
+                {
+                    var value = User.FindFirstValue(type);
+                    if (!string.IsNullOrWhiteSpace(value))
+                        return value;
+                }
+                return null;
+            }
+
             return Ok(new
             {
-                oid = User.FindFirstValue("oid"),
-                tid = User.FindFirstValue("tid"),
-                name = User.FindFirstValue("name"),
-                preferred_username = User.FindFirstValue("preferred_username"),
-                email = User.FindFirstValue("email"),
-                upn = User.FindFirstValue("upn"),
-                scp = User.FindFirstValue("scp"),
-                roles = User.FindAll("roles").Select(x => x.Value).ToList()
+                oid = Find("oid", ClaimConstants.ObjectId),
+                tid = Find("tid", ClaimConstants.TenantId),
+                name = Find("name", ClaimConstants.Name),
+                preferred_username = Find("preferred_username", ClaimConstants.PreferredUserName),
+                email = Find("email", ClaimTypes.Email),
+                upn = Find("upn"),
+                scp = Find("scp", ClaimConstants.Scp, ClaimConstants.Scope),
+                roles = User.FindAll("roles")
+                            .Concat(User.FindAll(ClaimConstants.Role))
+                            .Select(x => x.Value)
+                            .Distinct()
+                            .ToList()
             });
         }
 
