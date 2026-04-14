@@ -1,6 +1,7 @@
 ﻿using Data;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using System.Security.Claims;
 
 namespace Logic.Helper;
@@ -21,21 +22,72 @@ public class AppUserResolver : IAppUserResolver
 
     public async Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
-        var entraObjectId = principal.FindFirstValue("oid")
-            ?? throw new UnauthorizedAccessException("Missing 'oid' claim.");
+        if (principal?.Identity?.IsAuthenticated != true)
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
 
-        var tenantId = principal.FindFirstValue("tid")
-            ?? throw new UnauthorizedAccessException("Missing 'tid' claim.");
+        string? FindClaim(params string[] claimTypes)
+        {
+            foreach (var claimType in claimTypes)
+            {
+                var value = principal.FindFirstValue(claimType);
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return value;
+                }
+            }
 
-        var displayName =
-            principal.FindFirstValue("name") ??
-            principal.FindFirstValue(ClaimTypes.Name) ??
-            "Unknown user";
+            return null;
+        }
 
-        var email =
-            principal.FindFirstValue("preferred_username") ??
-            principal.FindFirstValue(ClaimTypes.Email) ??
-            principal.FindFirstValue("email");
+        var entraObjectId = FindClaim(
+            "oid",
+            ClaimConstants.ObjectId,
+            "http://schemas.microsoft.com/identity/claims/objectidentifier"
+        );
+
+        if (string.IsNullOrWhiteSpace(entraObjectId))
+        {
+            var availableClaims = string.Join(
+                ", ",
+                principal.Claims.Select(c => $"{c.Type}={c.Value}")
+            );
+
+            throw new UnauthorizedAccessException(
+                $"Missing 'oid' claim. Available claims: {availableClaims}");
+        }
+
+        var tenantId = FindClaim(
+            "tid",
+            ClaimConstants.TenantId,
+            "http://schemas.microsoft.com/identity/claims/tenantid"
+        );
+
+        if (string.IsNullOrWhiteSpace(tenantId))
+        {
+            var availableClaims = string.Join(
+                ", ",
+                principal.Claims.Select(c => $"{c.Type}={c.Value}")
+            );
+
+            throw new UnauthorizedAccessException(
+                $"Missing 'tid' claim. Available claims: {availableClaims}");
+        }
+
+        var displayName = FindClaim(
+            "name",
+            ClaimConstants.Name,
+            ClaimTypes.Name
+        ) ?? "Unknown user";
+
+        var email = FindClaim(
+            "preferred_username",
+            ClaimConstants.PreferredUserName,
+            ClaimTypes.Email,
+            "email",
+            "upn"
+        );
 
         var user = await _dbContext.AppUsers
             .FirstOrDefaultAsync(
