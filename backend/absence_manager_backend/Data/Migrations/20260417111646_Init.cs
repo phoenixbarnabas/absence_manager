@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -124,15 +124,6 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "AppUsers",
-                columns: new[] { "Id", "CreatedAt", "Department", "DisplayName", "Email", "EntraObjectId", "IsActive", "JobTitle", "TenantId" },
-                values: new object[,]
-                {
-                    { "user-1", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "IT", "András Bátori", "batori@email.com", "entra-1", true, "Software Engineer", "tenant-1" },
-                    { "user-2", new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "IT", "Fenyvesi Barnabás", "fenyvesi@email.com", "entra-2", true, "GYAKORNOK", "tenant-1" }
-                });
-
-            migrationBuilder.InsertData(
                 table: "Locations",
                 columns: new[] { "Id", "DisplayOrder", "IsActive", "Name" },
                 values: new object[] { "loc-Fót", 1, true, "Fót" });
@@ -140,28 +131,20 @@ namespace Data.Migrations
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "IT Office" });
+                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "113 - IT Office" });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
                 columns: new[] { "Id", "Code", "DisplayOrder", "IsActive", "Name", "OfficeId", "PositionX", "PositionY" },
                 values: new object[,]
                 {
-                    { "ws-1", "A1", 1, true, "Desk A1", "office-ft-1", 1m, 1m },
-                    { "ws-2", "A2", 2, true, "Desk A2", "office-ft-1", 2m, 1m },
-                    { "ws-3", "A3", 3, true, "Desk A3", "office-ft-1", 3m, 1m },
-                    { "ws-4", "B1", 4, true, "Desk B1", "office-ft-1", 1m, 2m },
-                    { "ws-5", "B2", 5, true, "Desk B2", "office-ft-1", 2m, 2m },
-                    { "ws-6", "B3", 6, true, "Desk B3", "office-ft-1", 3m, 2m }
-                });
-
-            migrationBuilder.InsertData(
-                table: "OfficeBookings",
-                columns: new[] { "Id", "BookingDate", "CancelledAtUtc", "CancelledByUserId", "CreatedAtUtc", "CreatedByUserId", "IsCancelled", "UserId", "WorkstationId" },
-                values: new object[,]
-                {
-                    { "booking-1", new DateOnly(2026, 3, 30), null, null, new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "user-1", false, "user-1", "ws-1" },
-                    { "booking-2", new DateOnly(2026, 3, 30), null, null, new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc), "user-2", false, "user-2", "ws-2" }
+                    { "ws-1", "KL", 1, true, "1", "office-ft-1", 1m, 1m },
+                    { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
+                    { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },
+                    { "ws-4", "PB", 4, true, "4", "office-ft-1", 1m, 2m },
+                    { "ws-5", "F1", 5, true, "5", "office-ft-1", 2m, 2m },
+                    { "ws-6", "Szp", 6, true, "6", "office-ft-1", 3m, 2m },
+                    { "ws-7", "F2", 7, true, "7", "office-ft-1", 2m, 3m }
                 });
 
             migrationBuilder.CreateIndex(

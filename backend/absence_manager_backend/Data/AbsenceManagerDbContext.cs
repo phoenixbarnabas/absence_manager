@@ -268,7 +268,7 @@ namespace Data
                 {
                     Id = "ws-5",
                     OfficeId = office1.Id,
-                    Code = "F",
+                    Code = "F1",
                     Name = "5",
                     IsActive = true,
                     DisplayOrder = 5,
@@ -285,7 +285,18 @@ namespace Data
                     DisplayOrder = 6,
                     PositionX = 3,
                     PositionY = 2
-                }
+                },
+                new Workstation
+                {
+                    Id = "ws-7",
+                    OfficeId = office1.Id,
+                    Code = "F2",
+                    Name = "7",
+                    IsActive = true,
+                    DisplayOrder = 7,
+                    PositionX = 2,
+                    PositionY = 3
+                },
 
             };
 
