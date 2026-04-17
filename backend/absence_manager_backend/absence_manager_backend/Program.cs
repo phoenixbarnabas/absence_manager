@@ -41,6 +41,7 @@ builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
 builder.Services.AddScoped<UserLogic>();
 builder.Services.AddScoped<IAppUserResolver, AppUserResolver>();
+builder.Services.AddScoped<IMsGraphLogic,MsGraphLogic>();
 
 builder.Services.AddCors(options =>
 {
@@ -55,13 +56,20 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AbsenceManagerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//builder.Services
+//    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        options.Authority = "https://login.microsoftonline.com/1878a48b-63d6-4d12-a900-07d4267f6762/v2.0";
+//        options.Audience = "cacb868f-e5d8-4113-acde-780f810c824d";
+//    });
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = "https://login.microsoftonline.com/1878a48b-63d6-4d12-a900-07d4267f6762/v2.0";
-        options.Audience = "cacb868f-e5d8-4113-acde-780f810c824d";
-    });
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddMicrosoftGraph(builder.Configuration.GetSection("Graph"))
+    .AddInMemoryTokenCaches();
 
 builder.Services.AddAuthorizationBuilder();
 builder.Services.AddHttpContextAccessor();
