@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, distinctUntilChanged, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Location, Office, Workstation } from '../../models/entity-models';
 import { LocationService } from '../../services/location-service';
 import { OfficeService } from '../../services/office-service';
@@ -31,241 +31,215 @@ type DeskBookingState = {
 export class DeskBooking implements OnInit {
   private readonly storageKey = 'desk-booking-state';
 
-  seedUsers: DevSeedUser[] = [];
-  selectedDevUserId = '';
-  currentDevUserName = '';
-  isLoggingInDevUser = false;
-
   calendarDays: CalendarDay[] = [];
-
-  locations$!: Observable<Location[]>;
-  offices$!: Observable<Office[]>;
-  workstations$!: Observable<Workstation[]>;
 
   selectedLocationId = '';
   selectedOfficeId = '';
   selectedWorkstationId = '';
-
-  availability: OfficeDayAvailabilityDto | null = null;
   selectedDate: Date = new Date();
 
-  isLoadingAvailability = false;
-  isLoadingMyBookings = false;
   isSubmittingBooking = false;
   errorMessage = '';
   successMessage = '';
-
   currentBookingId: string | null = null;
+
+  private availabilityRefreshSubject = new BehaviorSubject<number>(0);
+  readonly availabilityRefresh$ = this.availabilityRefreshSubject.asObservable();
+
+  private selectedLocationIdSubject = new BehaviorSubject<string>('');
+  private selectedOfficeIdSubject = new BehaviorSubject<string>('');
+  private selectedDateSubject = new BehaviorSubject<string>(this.formatDateForApi(new Date()));
+
+  readonly selectedLocationId$ = this.selectedLocationIdSubject.asObservable();
+  readonly selectedOfficeId$ = this.selectedOfficeIdSubject.asObservable();
+  readonly selectedDate$ = this.selectedDateSubject.asObservable();
+
+  locations$!: Observable<Location[]>;
+  offices$!: Observable<Office[]>;
+  availability$!: Observable<OfficeDayAvailabilityDto | null>;
 
   constructor(
     private locationService: LocationService,
     private officeService: OfficeService,
-    private workstationService: WorkstationService,
     private bookingService: BookingService,
-    private devAuthService: DevAuthService,
-    private cdr: ChangeDetectorRef,
   ) { }
 
   ngOnInit(): void {
-    this.restoreDevUserState();
-    this.loadSeedUsers();
-
-
     this.generateCalendarDays();
     this.restoreState();
-    this.bindStreams();
-    this.loadLocations();
-  }
 
-  private restoreDevUserState(): void {
-    const currentUser = this.devAuthService.getCurrentUser();
-    if (currentUser) {
-      this.selectedDevUserId = currentUser.id;
-      this.currentDevUserName = currentUser.displayName;
-    }
-  }
+    this.locations$ = this.locationService.loadAll().pipe(
+      catchError(err => {
+        console.error(err);
+        this.errorMessage = 'Nem sikerült betölteni a telephelyeket.';
+        return of([]);
+      }),
+      shareReplay(1)
+    );
 
-  loadSeedUsers(): void {
-    this.devAuthService.getSeedUsers().subscribe({
-      next: users => {
-        this.seedUsers = users;
-
-        if (!this.selectedDevUserId && users.length > 0) {
-          this.selectedDevUserId = users[0].id;
+    this.offices$ = this.selectedLocationId$.pipe(
+      distinctUntilChanged(),
+      switchMap(locationId => {
+        if (!locationId) {
+          return of([]);
         }
 
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = 'Nem sikerült betölteni a seedelt usereket.';
-        this.cdr.detectChanges();
-      }
-    });
+        return this.officeService.loadAllByLocationId(locationId).pipe(
+          catchError(err => {
+            console.error(err);
+            this.errorMessage = 'Nem sikerült betölteni az irodákat.';
+            return of([]);
+          })
+        );
+      }),
+      tap(offices => {
+        if (!this.selectedOfficeId) {
+          return;
+        }
+
+        const exists = offices.some(office => office.id === this.selectedOfficeId);
+
+        if (!exists) {
+          this.selectedOfficeId = '';
+          this.selectedWorkstationId = '';
+          this.currentBookingId = null;
+          this.selectedOfficeIdSubject.next('');
+          this.saveState();
+        }
+      }),
+      shareReplay(1)
+    );
+
+    this.availability$ = combineLatest([
+      this.selectedOfficeId$,
+      this.selectedDate$,
+      this.availabilityRefresh$
+    ]).pipe(
+      switchMap(([officeId, date]) => {
+        if (!officeId || !date) {
+          this.currentBookingId = null;
+          this.selectedWorkstationId = '';
+          return of(null);
+        }
+
+        this.errorMessage = '';
+        this.successMessage = '';
+
+        return this.bookingService.getAvailability(officeId, date).pipe(
+          tap(availability => {
+            if (
+              this.selectedWorkstationId &&
+              !availability.workstations.some(ws => ws.workstationId === this.selectedWorkstationId)
+            ) {
+              this.selectedWorkstationId = '';
+            }
+
+            if (availability.currentUserHasBooking && availability.currentUserWorkstationId) {
+              this.selectedWorkstationId = availability.currentUserWorkstationId;
+              this.currentBookingId = availability.currentUserBookingId ?? null;
+            } else {
+              this.currentBookingId = null;
+            }
+
+            this.saveState();
+          }),
+          catchError(err => {
+            console.error(err);
+            this.currentBookingId = null;
+            this.errorMessage = 'Nem sikerült betölteni az elérhetőségi adatokat.';
+            return of(null);
+          })
+        );
+      }),
+      shareReplay(1)
+    );
+
+    this.selectedLocationIdSubject.next(this.selectedLocationId);
+    this.selectedOfficeIdSubject.next(this.selectedOfficeId);
+    this.selectedDateSubject.next(this.selectedDateString);
   }
 
-  switchDevUser(): void {
+  onLocationChange(locationId: string): void {
+    this.selectedLocationId = locationId;
+    this.selectedOfficeId = '';
+    this.selectedWorkstationId = '';
+    this.currentBookingId = null;
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!this.selectedDevUserId) {
-      this.errorMessage = 'Válassz egy felhasználót.';
-      return;
-    }
-
-    this.isLoggingInDevUser = true;
-
-    this.devAuthService.loginAsUser(this.selectedDevUserId).subscribe({
-      next: response => {
-        console.log('DEV LOGIN SUCCESS, TOKEN SAVED');
-        this.currentDevUserName = response.user.displayName;
-        this.successMessage = `Aktív felhasználó: ${response.user.displayName}`;
-        this.isLoggingInDevUser = false;
-
-        setTimeout(() => {
-          if (this.selectedOfficeId) {
-            this.loadAvailability();
-          }
-        }, 0);
-
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = err?.error?.message ?? 'Nem sikerült a dev bejelentkezés.';
-        this.isLoggingInDevUser = false;
-        this.cdr.detectChanges();
-      }
-    });
+    this.selectedLocationIdSubject.next(locationId);
+    this.selectedOfficeIdSubject.next('');
+    this.saveState();
   }
 
-  private bindStreams(): void {
-    this.locations$ = this.locationService.location$;
-    this.offices$ = this.officeService.offices$;
-    this.workstations$ = this.workstationService.workstations$;
-  }
-
-  loadLocations(): void {
-    this.locationService.loadAll().subscribe({
-      next: locations => {
-        const hasSavedLocation =
-          !!this.selectedLocationId &&
-          locations.some(location => location.id === this.selectedLocationId);
-
-        if (!hasSavedLocation) {
-          this.resetLocationSelection();
-          this.saveState();
-          return;
-        }
-
-        this.loadOffices(this.selectedLocationId, true);
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = 'Nem sikerült betölteni a telephelyeket.';
-      }
-    });
-  }
-
-  loadOffices(locationId: string, restoringState = false): void {
-    if (!locationId) {
-      this.resetLocationSelection();
-      this.saveState();
-      return;
-    }
-
-    if (!restoringState) {
-      this.selectedOfficeId = '';
-      this.selectedWorkstationId = '';
-      this.availability = null;
-      this.workstationService.clear();
-    }
-
-    this.officeService.loadAllByLocationId(locationId).subscribe({
-      next: offices => {
-        const hasSavedOffice =
-          !!this.selectedOfficeId &&
-          offices.some(office => office.id === this.selectedOfficeId);
-
-        if (!hasSavedOffice) {
-          this.selectedOfficeId = '';
-          this.selectedWorkstationId = '';
-          this.availability = null;
-          this.workstationService.clear();
-          this.saveState();
-          return;
-        }
-
-        this.loadAvailability();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage = 'Nem sikerült betölteni az irodákat.';
-      }
-    });
-  }
-
-  loadAvailability(): void {
-    if (!this.selectedOfficeId || !this.selectedDateString) {
-      this.availability = null;
-      this.workstationService.clear();
-      this.saveState();
-      return;
-    }
-
-    this.isLoadingAvailability = true;
+  onOfficeChange(officeId: string): void {
+    this.selectedOfficeId = officeId;
+    this.selectedWorkstationId = '';
+    this.currentBookingId = null;
     this.errorMessage = '';
+    this.successMessage = '';
 
-    this.bookingService.getAvailability(this.selectedOfficeId, this.selectedDateString)
-      .subscribe({
-        next: availability => {
-          this.availability = availability;
-
-          if (
-            this.selectedWorkstationId &&
-            !availability.workstations.some(ws => ws.workstationId === this.selectedWorkstationId)
-          ) {
-            this.selectedWorkstationId = '';
-          }
-
-          if (
-            availability.currentUserHasBooking &&
-            availability.currentUserWorkstationId
-          ) {
-            this.selectedWorkstationId = availability.currentUserWorkstationId;
-            this.loadMyBookingId();
-          } else {
-            this.currentBookingId = null;
-          }
-
-          this.isLoadingAvailability = false;
-          this.saveState();
-          this.cdr.detectChanges();
-        },
-        error: err => {
-          console.error(err);
-          this.availability = null;
-          this.isLoadingAvailability = false;
-          this.errorMessage = 'Nem sikerült betölteni az elérhetőségi adatokat.';
-          this.cdr.detectChanges();
-        }
-      });
+    this.selectedOfficeIdSubject.next(officeId);
+    this.saveState();
   }
 
-  private loadMyBookingId(): void {
-    const fromDate = this.selectedDateString;
-    const toDate = this.selectedDateString;
+  onWorkstationSelected(workstationId: string, availability: OfficeDayAvailabilityDto | null): void {
+    if (availability?.currentUserHasBooking && this.selectedWorkstationId !== workstationId) {
+      return;
+    }
 
-    this.bookingService.getMyBookings(fromDate, toDate).subscribe({
-      next: bookings => {
-        const match = bookings.find(b => b.bookingDate === this.selectedDateString);
-        this.currentBookingId = match?.id ?? null;
-        this.cdr.detectChanges();
+    this.selectedWorkstationId =
+      this.selectedWorkstationId === workstationId ? '' : workstationId;
+
+    this.saveState();
+  }
+
+  selectDay(selectedDay: CalendarDay): void {
+    this.selectedDate = selectedDay.date;
+
+    this.calendarDays = this.calendarDays.map(day => ({
+      ...day,
+      isSelected: day.date.getTime() === selectedDay.date.getTime()
+    }));
+
+    this.selectedWorkstationId = '';
+    this.currentBookingId = null;
+    this.selectedDateSubject.next(this.selectedDateString);
+    this.saveState();
+  }
+
+  submitBooking(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.selectedOfficeId) {
+      this.errorMessage = 'Előbb válassz irodát.';
+      return;
+    }
+
+    if (!this.selectedWorkstationId) {
+      this.errorMessage = 'Válassz egy munkaállomást.';
+      return;
+    }
+
+    this.isSubmittingBooking = true;
+
+    this.bookingService.createBooking(
+      this.selectedWorkstationId,
+      this.selectedDateString
+    ).subscribe({
+      next: () => {
+        this.successMessage = 'A foglalás sikeresen létrejött.';
+        this.isSubmittingBooking = false;
+
+        this.availabilityRefreshSubject.next(Date.now());
+        this.selectedOfficeIdSubject.next(this.selectedOfficeId);
       },
       error: err => {
         console.error(err);
-        this.currentBookingId = null;
-        this.cdr.detectChanges();
+        this.errorMessage =
+          err?.error?.message ?? 'Nem sikerült létrehozni a foglalást.';
+        this.isSubmittingBooking = false;
       }
     });
   }
@@ -287,81 +261,17 @@ export class DeskBooking implements OnInit {
         this.isSubmittingBooking = false;
         this.currentBookingId = null;
         this.selectedWorkstationId = '';
+        this.availabilityRefreshSubject.next(Date.now());
 
-        this.loadAvailability();
+        this.selectedOfficeIdSubject.next(this.selectedOfficeId);
       },
       error: err => {
         console.error(err);
         this.errorMessage =
           err?.error?.message ?? 'Nem sikerült lemondani a foglalást.';
         this.isSubmittingBooking = false;
-        this.cdr.detectChanges();
       }
     });
-  }
-
-  currentLocation$(locations: Location[]): Location | undefined {
-    return locations.find(location => location.id === this.selectedLocationId);
-  }
-
-  currentOffice$(offices: Office[]): Office | undefined {
-    return offices.find(office => office.id === this.selectedOfficeId);
-  }
-
-  onLocationChange(locationId: string): void {
-    this.selectedLocationId = locationId;
-    this.selectedOfficeId = '';
-    this.selectedWorkstationId = '';
-    this.availability = null;
-    this.workstationService.clear();
-    this.saveState();
-
-    if (!locationId) {
-      return;
-    }
-
-    this.loadOffices(locationId);
-  }
-
-  onOfficeChange(officeId: string): void {
-    this.selectedOfficeId = officeId;
-    this.selectedWorkstationId = '';
-    this.availability = null;
-    this.workstationService.clear();
-    this.saveState();
-
-    if (!officeId) {
-      return;
-    }
-
-    this.loadAvailability();
-  }
-
-  onWorkstationSelected(workstationId: string): void {
-    if (this.availability?.currentUserHasBooking && this.selectedWorkstationId !== workstationId) {
-      return;
-    }
-
-    this.selectedWorkstationId =
-      this.selectedWorkstationId === workstationId ? '' : workstationId;
-
-    this.saveState();
-  }
-
-  selectDay(selectedDay: CalendarDay): void {
-    this.selectedDate = selectedDay.date;
-
-    this.calendarDays = this.calendarDays.map(day => ({
-      ...day,
-      isSelected: day.date.getTime() === selectedDay.date.getTime()
-    }));
-
-    this.selectedWorkstationId = '';
-    this.saveState();
-
-    if (this.selectedOfficeId) {
-      this.loadAvailability();
-    }
   }
 
   get selectedDateString(): string {
@@ -442,53 +352,9 @@ export class DeskBooking implements OnInit {
     }
   }
 
-  private resetLocationSelection(): void {
-    this.selectedLocationId = '';
-    this.selectedOfficeId = '';
-    this.selectedWorkstationId = '';
-    this.availability = null;
-    this.workstationService.clear();
-  }
-
   private isSameDate(first: Date, second: Date): boolean {
     return first.getFullYear() === second.getFullYear()
       && first.getMonth() === second.getMonth()
       && first.getDate() === second.getDate();
-  }
-
-  submitBooking(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    if (!this.selectedOfficeId) {
-      this.errorMessage = 'Előbb válassz irodát.';
-      return;
-    }
-
-    if (!this.selectedWorkstationId) {
-      this.errorMessage = 'Válassz egy munkaállomást.';
-      return;
-    }
-
-    this.isSubmittingBooking = true;
-
-    this.bookingService.createBooking(
-      this.selectedWorkstationId,
-      this.selectedDateString
-    ).subscribe({
-      next: () => {
-        this.successMessage = 'A foglalás sikeresen létrejött.';
-        this.isSubmittingBooking = false;
-
-        this.loadAvailability();
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage =
-          err?.error?.message ?? 'Nem sikerült létrehozni a foglalást.';
-        this.isSubmittingBooking = false;
-        this.cdr.detectChanges();
-      }
-    });
   }
 }

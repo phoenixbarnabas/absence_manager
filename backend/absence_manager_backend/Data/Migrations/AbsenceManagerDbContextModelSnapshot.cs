@@ -67,32 +67,6 @@ namespace Data.Migrations
                         .HasFilter("\"TenantId\" IS NOT NULL");
 
                     b.ToTable("AppUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "user-1",
-                            CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
-                            Department = "IT",
-                            DisplayName = "András Bátori",
-                            Email = "batori@email.com",
-                            EntraObjectId = "entra-1",
-                            IsActive = true,
-                            JobTitle = "Software Engineer",
-                            TenantId = "tenant-1"
-                        },
-                        new
-                        {
-                            Id = "user-2",
-                            CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
-                            Department = "IT",
-                            DisplayName = "Fenyvesi Barnabás",
-                            Email = "fenyvesi@email.com",
-                            EntraObjectId = "entra-2",
-                            IsActive = true,
-                            JobTitle = "GYAKORNOK",
-                            TenantId = "tenant-1"
-                        });
                 });
 
             modelBuilder.Entity("Entities.Models.Location", b =>
@@ -167,7 +141,7 @@ namespace Data.Migrations
                             DisplayOrder = 1,
                             IsActive = true,
                             LocationId = "loc-Fót",
-                            Name = "IT Office"
+                            Name = "113 - IT Office"
                         });
                 });
 
@@ -214,28 +188,6 @@ namespace Data.Migrations
                         .HasDatabaseName("IX_OfficeBookings_Workstation_BookingDate_IsCancelled");
 
                     b.ToTable("OfficeBookings", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "booking-1",
-                            BookingDate = new DateOnly(2026, 3, 30),
-                            CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
-                            CreatedByUserId = "user-1",
-                            IsCancelled = false,
-                            UserId = "user-1",
-                            WorkstationId = "ws-1"
-                        },
-                        new
-                        {
-                            Id = "booking-2",
-                            BookingDate = new DateOnly(2026, 3, 30),
-                            CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, 0, DateTimeKind.Utc),
-                            CreatedByUserId = "user-2",
-                            IsCancelled = false,
-                            UserId = "user-2",
-                            WorkstationId = "ws-2"
-                        });
                 });
 
             modelBuilder.Entity("Entities.Models.Workstation", b =>
@@ -283,10 +235,10 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-1",
-                            Code = "A1",
+                            Code = "KL",
                             DisplayOrder = 1,
                             IsActive = true,
-                            Name = "Desk A1",
+                            Name = "1",
                             OfficeId = "office-ft-1",
                             PositionX = 1m,
                             PositionY = 1m
@@ -294,10 +246,10 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-2",
-                            Code = "A2",
+                            Code = "GV",
                             DisplayOrder = 2,
                             IsActive = true,
-                            Name = "Desk A2",
+                            Name = "2",
                             OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 1m
@@ -305,10 +257,10 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-3",
-                            Code = "A3",
+                            Code = "KI",
                             DisplayOrder = 3,
                             IsActive = true,
-                            Name = "Desk A3",
+                            Name = "3",
                             OfficeId = "office-ft-1",
                             PositionX = 3m,
                             PositionY = 1m
@@ -316,10 +268,10 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-4",
-                            Code = "B1",
+                            Code = "PB",
                             DisplayOrder = 4,
                             IsActive = true,
-                            Name = "Desk B1",
+                            Name = "4",
                             OfficeId = "office-ft-1",
                             PositionX = 1m,
                             PositionY = 2m
@@ -327,10 +279,10 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "B2",
+                            Code = "F1",
                             DisplayOrder = 5,
                             IsActive = true,
-                            Name = "Desk B2",
+                            Name = "5",
                             OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 2m
@@ -338,13 +290,24 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-6",
-                            Code = "B3",
+                            Code = "Szp",
                             DisplayOrder = 6,
                             IsActive = true,
-                            Name = "Desk B3",
+                            Name = "6",
                             OfficeId = "office-ft-1",
                             PositionX = 3m,
                             PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-7",
+                            Code = "F2",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            Name = "7",
+                            OfficeId = "office-ft-1",
+                            PositionX = 2m,
+                            PositionY = 3m
                         });
                 });
 

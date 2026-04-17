@@ -1,84 +1,69 @@
 using Data;
-using Entities.Helpers;
 using Logic.Helper;
 using Logic.Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Absence Manager API",
-        Version = "v1"
-    });
+//builder.Services.AddSwaggerGen(options =>
+//{
+//    options.SwaggerDoc("v1", new OpenApiInfo
+//    {
+//        Title = "Absence Manager API",
+//        Version = "v1"
+//    });
 
-    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        Description = "JWT Authorization header using the Bearer scheme."
-    });
+//    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+//    {
+//        Type = SecuritySchemeType.Http,
+//        Scheme = "bearer",
+//        BearerFormat = "JWT",
+//        Description = "Microsoft Entra access token"
+//    });
 
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecuritySchemeReference("bearer", document)] = []
-    });
-});
+//    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+//    {
+//        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+//    });
+//});
+
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped(typeof(Repository<>));
 builder.Services.AddSingleton<DtoProvider>();
 builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
 builder.Services.AddScoped<UserLogic>();
+builder.Services.AddScoped<IAppUserResolver, AppUserResolver>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowAnyOrigin();
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
 builder.Services.AddDbContext<AbsenceManagerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
-
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
-                  ?? throw new InvalidOperationException("Missing Jwt settings.");
-
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ValidIssuer = jwtSettings.Issuer,
-            ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
-            ClockSkew = TimeSpan.Zero
-        };
+        options.Authority = "https://login.microsoftonline.com/1878a48b-63d6-4d12-a900-07d4267f6762/v2.0";
+        options.Audience = "cacb868f-e5d8-4113-acde-780f810c824d";
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/app-user-models';
 import { DevAuthService } from '../../services/dev-auth-service';
+import { AuthService } from '../../auth/auth-service';
 
 @Component({
   selector: 'app-profile',
@@ -10,32 +11,35 @@ import { DevAuthService } from '../../services/dev-auth-service';
   styleUrl: './profile.sass',
 })
 export class Profile implements OnInit {
-  userProfile: UserProfile | null = null;
+   userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
 
-  constructor(private userService: UserService, private devAuthService: DevAuthService) {}
+  constructor(
+    private userService: UserService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.loadFromCurrentDevUser();
-    this.loadProfileData();
-  }
+    const account = this.authService.getAccount() ?? this.authService.getActiveAccount();
 
-  private loadFromCurrentDevUser(): void {
-    const currentUser = this.devAuthService.getCurrentUser();
+    if (account) {
+      this.userProfile = {
+        displayName: account.name || account.username || 'Ismeretlen felhasználó',
+        email: account.username || '',
+        department: '',
+        jobTitle: ''
+      };
+      this.loading = false;
+    }
 
-    if (!currentUser) {
+    if (!this.authService.isLoggedIn()) {
+      this.error = 'Nincs bejelentkezett felhasználó';
+      this.loading = false;
       return;
     }
 
-    this.userProfile = {
-      displayName: currentUser.displayName,
-      email: currentUser.email,
-      department: currentUser.department,
-      jobTitle: currentUser.jobTitle
-    };
-
-    this.loading = false;
+    this.loadProfileData();
   }
 
   private loadProfileData(): void {
@@ -60,12 +64,9 @@ export class Profile implements OnInit {
   getInitials(displayName: string): string {
     return displayName
       .split(' ')
+      .filter(Boolean)
       .map(n => n[0])
       .join('')
       .toUpperCase();
-  }
-
-  openSettings(): void {
-    console.log('Open settings');
   }
 }

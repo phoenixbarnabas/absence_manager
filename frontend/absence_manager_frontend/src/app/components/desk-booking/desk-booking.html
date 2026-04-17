@@ -7,38 +7,14 @@
   </div>
 
   <div class="booking-card">
-    <div class="form-row-inline form-row-inline--user">
-      <div class="form-field">
-        <label for="devUserSelect" class="form-label">Fejlesztői felhasználó</label>
-        <select id="devUserSelect" class="form-select" [(ngModel)]="selectedDevUserId">
-          <option value="">Válassz felhasználót...</option>
-          <option *ngFor="let user of seedUsers" [value]="user.id">
-            {{ user.displayName }} ({{ user.id }})
-          </option>
-        </select>
-      </div>
-
-      <div class="form-action">
-        <button type="button" class="btn btn-outline-primary w-100"
-          [disabled]="!selectedDevUserId || isLoggingInDevUser" (click)="switchDevUser()">
-          <span *ngIf="!isLoggingInDevUser">Felhasználó aktiválása</span>
-          <span *ngIf="isLoggingInDevUser">Beléptetés...</span>
+    <div class="calendar-scroll">
+      <div class="calendar-row">
+        <button type="button" class="calendar-day" *ngFor="let day of calendarDays"
+          [class.calendar-day--active]="day.isSelected" (click)="selectDay(day)">
+          <span class="calendar-day__label">{{ day.dayLabel }}</span>
+          <span class="calendar-day__number">{{ day.dayNumber }}</span>
         </button>
       </div>
-    </div>
-
-    <div class="mt-3" *ngIf="currentDevUserName">
-      <strong>Aktív dev user:</strong> {{ currentDevUserName }}
-    </div>
-  </div>
-
-  <div class="booking-card">
-    <div class="calendar-row">
-      <button type="button" class="calendar-day" *ngFor="let day of calendarDays"
-        [class.calendar-day--active]="day.isSelected" (click)="selectDay(day)">
-        <span class="calendar-day__label">{{ day.dayLabel }}</span>
-        <span class="calendar-day__number">{{ day.dayNumber }}</span>
-      </button>
     </div>
   </div>
 
@@ -48,7 +24,7 @@
         <label for="locationSelect" class="form-label">Telephely</label>
         <select id="locationSelect" class="form-select" [(ngModel)]="selectedLocationId"
           (ngModelChange)="onLocationChange($event)">
-          <option value="">Válassz telephelyet...</option>
+          <option value="">Válassz telephelyet</option>
           <option *ngFor="let location of (locations$ | async)" [value]="location.id">
             {{ location.name }}
           </option>
@@ -59,7 +35,7 @@
         <label for="officeSelect" class="form-label">Iroda</label>
         <select id="officeSelect" class="form-select" [(ngModel)]="selectedOfficeId"
           (ngModelChange)="onOfficeChange($event)">
-          <option value="">Válassz irodát...</option>
+          <option value="">Válassz irodát</option>
           <option *ngFor="let office of (offices$ | async)" [value]="office.id">
             {{ office.name }}
           </option>
@@ -68,44 +44,37 @@
     </div>
   </div>
 
-  <app-workstation-list [workstations]="availability?.workstations ?? []"
-    [selectedWorkstationId]="selectedWorkstationId"
-    [currentUserHasBooking]="availability?.currentUserHasBooking ?? false"
-    (workstationSelected)="onWorkstationSelected($event)">
-  </app-workstation-list>
+  <ng-container *ngIf="availability$ | async as availability">
+    <app-workstation-list *ngIf="availability" [workstations]="availability.workstations"
+      [selectedWorkstationId]="selectedWorkstationId" [currentUserHasBooking]="availability.currentUserHasBooking"
+      (workstationSelected)="onWorkstationSelected($event, availability)">
+    </app-workstation-list>
 
-  <div class="booking-card booking-actions-card">
-    <div class="booking-actions-row">
-      <button *ngIf="!currentBookingId" type="button" class="btn booking-btn booking-btn--primary"
-        [disabled]="!selectedWorkstationId || isSubmittingBooking || !!currentBookingId" (click)="submitBooking()">
-        <i class="bi bi-check2-circle"></i>
-        <span *ngIf="!isSubmittingBooking">Foglalás mentése</span>
-        <span *ngIf="isSubmittingBooking">Mentés...</span>
-      </button>
+    <div class="booking-card booking-actions-card">
+      <div class="booking-actions-row">
+        <button *ngIf="!currentBookingId" type="button" class="btn booking-btn booking-btn--primary"
+          [disabled]="!selectedWorkstationId || isSubmittingBooking || !!currentBookingId" (click)="submitBooking()">
+          <i class="bi bi-check2-circle"></i>
+          <span *ngIf="!isSubmittingBooking">Foglalás mentése</span>
+          <span *ngIf="isSubmittingBooking">Mentés...</span>
+        </button>
 
-      <button type="button" class="btn booking-btn booking-btn--danger" *ngIf="currentBookingId"
-        [disabled]="isSubmittingBooking" (click)="cancelBooking()">
-        <i class="bi bi-x-circle"></i>
-        <span>Foglalás lemondása</span>
-      </button>
+        <button type="button" class="btn booking-btn booking-btn--danger" *ngIf="currentBookingId"
+          [disabled]="isSubmittingBooking" (click)="cancelBooking()">
+          <i class="bi bi-x-circle"></i>
+          <span>Foglalás lemondása</span>
+        </button>
+      </div>
     </div>
-</div>
+  </ng-container>
 
-<div class="feedback-messages">
-  <div class="alert alert-danger" *ngIf="errorMessage">
-    {{ errorMessage }}
+  <div class="feedback-messages">
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
   </div>
-
-  <div class="alert alert-success" *ngIf="successMessage">
-    {{ successMessage }}
-  </div>
-</div>
-
-<div class="alert alert-danger mt-3" *ngIf="errorMessage">
-  {{ errorMessage }}
-</div>
-
-<div class="alert alert-success mt-3" *ngIf="successMessage">
-  {{ successMessage }}
-</div>
 </div>

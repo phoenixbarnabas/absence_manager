@@ -212,7 +212,7 @@ namespace Data
             {
                 Id = "office-ft-1",
                 LocationId = location1.Id,
-                Name = "IT Office",
+                Name = "113 - IT Office",
                 Description = "IT fejlesztés",
                 IsActive = true,
                 DisplayOrder = 1
@@ -225,8 +225,8 @@ namespace Data
                 {
                     Id = "ws-1",
                     OfficeId = office1.Id,
-                    Code = "A1",
-                    Name = "Desk A1",
+                    Code = "KL",
+                    Name = "1",
                     IsActive = true,
                     DisplayOrder = 1,
                     PositionX = 1,
@@ -236,8 +236,8 @@ namespace Data
                 {
                     Id = "ws-2",
                     OfficeId = office1.Id,
-                    Code = "A2",
-                    Name = "Desk A2",
+                    Code = "GV",
+                    Name = "2",
                     IsActive = true,
                     DisplayOrder = 2,
                     PositionX = 2,
@@ -247,8 +247,8 @@ namespace Data
                 {
                     Id = "ws-3",
                     OfficeId = office1.Id,
-                    Code = "A3",
-                    Name = "Desk A3",
+                    Code = "KI",
+                    Name = "3",
                     IsActive = true,
                     DisplayOrder = 3,
                     PositionX = 3,
@@ -257,8 +257,8 @@ namespace Data
                 new Workstation{
                     Id = "ws-4",
                     OfficeId = office1.Id,
-                    Code = "B1",
-                    Name = "Desk B1",
+                    Code = "PB",
+                    Name = "4",
                     IsActive = true,
                     DisplayOrder = 4,
                     PositionX = 1,
@@ -268,8 +268,8 @@ namespace Data
                 {
                     Id = "ws-5",
                     OfficeId = office1.Id,
-                    Code = "B2",
-                    Name = "Desk B2",
+                    Code = "F1",
+                    Name = "5",
                     IsActive = true,
                     DisplayOrder = 5,
                     PositionX = 2,
@@ -279,71 +279,32 @@ namespace Data
                 {
                     Id = "ws-6",
                     OfficeId = office1.Id,
-                    Code = "B3",
-                    Name = "Desk B3",
+                    Code = "Szp",
+                    Name = "6",
                     IsActive = true,
                     DisplayOrder = 6,
                     PositionX = 3,
                     PositionY = 2
-                }
+                },
+                new Workstation
+                {
+                    Id = "ws-7",
+                    OfficeId = office1.Id,
+                    Code = "F2",
+                    Name = "7",
+                    IsActive = true,
+                    DisplayOrder = 7,
+                    PositionX = 2,
+                    PositionY = 3
+                },
 
             };
 
-            // ===== USERS =====
-            var user1 = new AppUser
-            {
-                Id = "user-1",
-                EntraObjectId = "entra-1",
-                TenantId = "tenant-1",
-                DisplayName = "András Bátori",
-                Email = "batori@email.com",
-                Department = "IT",
-                JobTitle = "Software Engineer",
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc)
-            };
-
-            var user2 = new AppUser
-            {
-                Id = "user-2",
-                EntraObjectId = "entra-2",
-                TenantId = "tenant-1",
-                DisplayName = "Fenyvesi Barnabás",
-                Email = "fenyvesi@email.com",
-                Department= "IT",
-                JobTitle = "GYAKORNOK",
-                IsActive = true,
-                CreatedAt = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc)
-            };
-
-            // ===== BOOKINGS =====
-            var booking1 = new OfficeBooking
-            {
-                Id = "booking-1",
-                WorkstationId = "ws-1",
-                UserId = user1.Id,
-                BookingDate = new DateOnly(2026, 3, 30),
-                CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc),
-                CreatedByUserId = user1.Id,
-                IsCancelled = false
-            };
-
-            var booking2 = new OfficeBooking
-            {
-                Id = "booking-2",
-                WorkstationId = "ws-2",
-                UserId = user2.Id,
-                BookingDate = new DateOnly(2026, 3, 30),
-                CreatedAtUtc = new DateTime(2026, 3, 27, 8, 30, 0, DateTimeKind.Utc),
-                CreatedByUserId = user2.Id,
-                IsCancelled = false
-            };
 
             modelBuilder.Entity<Location>().HasData(location1);
             modelBuilder.Entity<Office>().HasData(office1);
             modelBuilder.Entity<Workstation>().HasData(workstations);
-            modelBuilder.Entity<AppUser>().HasData(user1, user2);
-            modelBuilder.Entity<OfficeBooking>().HasData(booking1, booking2);
+            
         }
     }
 }
