@@ -6,11 +6,11 @@ import { Profile } from './components/profile/profile';
 import { MsalGuard } from '@azure/msal-angular';
 
 const routes: Routes = [
-  {path:"",redirectTo:"login",pathMatch:"full"},
+  {path:"",redirectTo:"welcome",pathMatch:"full"},
   {path:"welcome",component: WelcomePage},
   {path:"desk-booking",component: DeskBooking, canActivate: [MsalGuard]},
   {path:"profile",component: Profile, canActivate: [MsalGuard]},
-  {path:"**",redirectTo:"login"}
+  {path:"**",redirectTo:"welcome"}
 ];
 
 @NgModule({

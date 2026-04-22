@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/app-user-models';
 import { DevAuthService } from '../../services/dev-auth-service';
@@ -11,52 +11,48 @@ import { AuthService } from '../../auth/auth-service';
   styleUrl: './profile.sass',
 })
 export class Profile implements OnInit {
-   userProfile: UserProfile | null = null;
+  userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
 
   constructor(
     private userService: UserService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
+    this.loading = true;
+    this.error = null;
+
     const account = this.authService.getAccount() ?? this.authService.getActiveAccount();
 
-    if (account) {
-      this.userProfile = {
-        displayName: account.name || account.username || 'Ismeretlen felhasználó',
-        email: account.username || '',
-        department: '',
-        jobTitle: ''
-      };
-      this.loading = false;
-    }
-
-    if (!this.authService.isLoggedIn()) {
+    if (!account) {
       this.error = 'Nincs bejelentkezett felhasználó';
       this.loading = false;
       return;
     }
 
-    this.loadProfileData();
-  }
+    this.userProfile = {
+      displayName: account.name || account.username || 'Ismeretlen felhasználó',
+      email: account.username || '',
+      department: '',
+      jobTitle: ''
+    };
 
-  private loadProfileData(): void {
     this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
         this.loading = false;
         this.error = null;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-
-        if (!this.userProfile) {
-          this.error = 'Hiba a profil betöltése közben';
-        }
-
+        console.error('Profile load error', err);
+        this.error = 'Hiba a profil betöltése közben';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
