@@ -1,5 +1,7 @@
 ﻿using Data;
+using Entities.Dtos.Graph;
 using Entities.Models;
+using Logic.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using System.Security.Claims;
@@ -14,10 +16,13 @@ public interface IAppUserResolver
 public class AppUserResolver : IAppUserResolver
 {
     private readonly AbsenceManagerDbContext _dbContext;
+    private readonly IMsGraphLogic _graphLogic;
 
-    public AppUserResolver(AbsenceManagerDbContext dbContext)
+    public AppUserResolver(AbsenceManagerDbContext dbContext, IMsGraphLogic graphLogic)
     {
         _dbContext = dbContext;
+        _graphLogic = graphLogic;
+
     }
 
     public async Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
@@ -89,6 +94,22 @@ public class AppUserResolver : IAppUserResolver
             "upn"
         );
 
+        GraphUserProfileDto? graphProfile = null;
+
+        try
+        {
+            graphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Graph profile retrieval failed: {ex.Message}");
+        }
+
+        var resolvedDisplayName = graphProfile?.DisplayName ?? displayName;
+        var resolvedEmail = graphProfile?.Email ?? email;
+        var resolvedDepartment = graphProfile?.Department ?? string.Empty;
+        var resolvedJobTitle = graphProfile?.JobTitle ?? string.Empty;
+
         var user = await _dbContext.AppUsers
             .FirstOrDefaultAsync(
                 x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
@@ -98,15 +119,27 @@ public class AppUserResolver : IAppUserResolver
         {
             var changed = false;
 
-            if (user.DisplayName != displayName)
+            if (user.DisplayName != resolvedDisplayName)
             {
-                user.DisplayName = displayName;
+                user.DisplayName = resolvedDisplayName;
                 changed = true;
             }
 
-            if (user.Email != email)
+            if (user.Email != resolvedEmail)
             {
-                user.Email = email;
+                user.Email = resolvedEmail;
+                changed = true;
+            }
+
+            if (user.Department != resolvedDepartment)
+            {
+                user.Department = resolvedDepartment;
+                changed = true;
+            }
+
+            if (user.JobTitle != resolvedJobTitle)
+            {
+                user.JobTitle = resolvedJobTitle;
                 changed = true;
             }
 
@@ -128,10 +161,10 @@ public class AppUserResolver : IAppUserResolver
         {
             EntraObjectId = entraObjectId,
             TenantId = tenantId,
-            DisplayName = displayName,
-            Email = email,
-            Department = string.Empty,
-            JobTitle = string.Empty,
+            DisplayName = resolvedDisplayName,
+            Email = resolvedEmail,
+            Department = resolvedDepartment,
+            JobTitle = resolvedJobTitle,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
