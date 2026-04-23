@@ -14,6 +14,7 @@ import { Subject, takeUntil } from 'rxjs';
 export class Navbar implements OnInit {
   userProfile: UserProfile | null = null;
   loading = true;
+  isLoggedIn = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -26,6 +27,8 @@ export class Navbar implements OnInit {
     this.authService.account$
       .pipe(takeUntil(this.destroy$))
       .subscribe((account) => {
+        this.isLoggedIn = !!account;
+
         if (!account) {
           this.userProfile = null;
           this.loading = false;
@@ -40,7 +43,6 @@ export class Navbar implements OnInit {
         };
 
         this.loading = false;
-
         this.loadProfileData();
       });
   }
