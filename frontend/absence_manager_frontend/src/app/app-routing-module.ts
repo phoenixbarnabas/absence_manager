@@ -3,15 +3,16 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { DeskBooking } from './components/desk-booking/desk-booking';
 import { Profile } from './components/profile/profile';
-import { LoginPage } from './components/login-page/login-page';
+import { WelcomePage } from './components/landing/welcome-page/welcome-page';
 import { authGuard } from './auth/guards/auth-guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'desk-booking', pathMatch: 'full' },
-  { path: 'login', component: LoginPage },
+  { path: '', redirectTo: 'welcome', pathMatch: 'full' },
+  { path: 'welcome', component: WelcomePage },
+  { path: 'login', redirectTo: 'welcome', pathMatch: 'full' },
   { path: 'desk-booking', component: DeskBooking, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
-  { path: '**', redirectTo: 'desk-booking' }
+  { path: '**', redirectTo: 'welcome' }
 ];
 
 @NgModule({

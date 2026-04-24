@@ -30,6 +30,7 @@ userProfile: UserProfile | null = null;
   async ngOnInit(): Promise<void> {
     try {
       await this.authService.initialize();
+      await this.authService.handleRedirect();
 
       if (this.authService.isLoggedIn()) {
         await this.authService.acquireApiToken();
