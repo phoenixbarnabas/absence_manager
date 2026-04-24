@@ -1,9 +1,8 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UserProfile } from '../../models/app-user-models';
-import { UserService } from '../../services/user.service';
-import { DevAuthService } from '../../services/dev-auth-service';
-import { AuthService } from '../../auth/auth-service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
+import { UserProfile } from '../../models/app-user-models';
+import { AuthService } from '../../auth/auth-service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,7 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
   templateUrl: './navbar.html',
   styleUrl: './navbar.sass',
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   loading = true;
   isLoggedIn = false;
@@ -21,7 +20,7 @@ export class Navbar implements OnInit {
   constructor(
     private userService: UserService,
     public authService: AuthService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.authService.account$

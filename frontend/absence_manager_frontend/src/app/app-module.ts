@@ -1,27 +1,28 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { MsalGuard, MsalModule } from '@azure/msal-angular';
-import { Navbar } from './components/navbar/navbar';
-import { App } from './app';
-import { WelcomePage } from './components/landing/welcome-page/welcome-page';
-import { Profile } from './components/profile/profile';
-import { WorkstationList } from './components/workstation-list/workstation-list';
-import { DeskBooking } from './components/desk-booking/desk-booking';
-import { AppRoutingModule } from './app-routing-module';
+import { MsalModule } from '@azure/msal-angular';
 import { FormsModule } from '@angular/forms';
-import { authInterceptor } from './auth/auth-interceptor';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { InteractionType } from '@azure/msal-browser';
+
+import { App } from './app';
+import { AppRoutingModule } from './app-routing-module';
+import { Navbar } from './components/navbar/navbar';
+import { Profile } from './components/profile/profile';
+import { DeskBooking } from './components/desk-booking/desk-booking';
+import { WelcomePage } from './components/landing/welcome-page/welcome-page';
+import { WorkstationList } from './components/workstation-list/workstation-list';
+import { authInterceptor } from './auth/auth-interceptor';
 import { msalInstance } from './auth/entra-auth-config';
 
 @NgModule({
   declarations: [
     App,
-    WelcomePage,
-    Profile,
     Navbar,
-    WorkstationList,
+    Profile,
     DeskBooking,
+    WelcomePage,
+    WorkstationList
   ],
   imports: [
     FormsModule,
@@ -32,9 +33,13 @@ import { msalInstance } from './auth/entra-auth-config';
       {
         interactionType: InteractionType.Redirect,
         authRequest: {
-          scopes: ['openid', 'profile', 'email', 'api://cacb868f-e5d8-4113-acde-780f810c824d/user_impersonation']
-        },
-        loginFailedRoute: '/login-failed'
+          scopes: [
+            'openid',
+            'profile',
+            'email',
+            'api://cacb868f-e5d8-4113-acde-780f810c824d/user_impersonation'
+          ]
+        }
       },
       {
         interactionType: InteractionType.Redirect,
@@ -43,12 +48,8 @@ import { msalInstance } from './auth/entra-auth-config';
     ),
   ],
   providers: [
-    MsalGuard,
-    provideHttpClient(
-      withInterceptors([authInterceptor])
-    )
+    provideHttpClient(withInterceptors([authInterceptor]))
   ],
   bootstrap: [App]
 })
 export class AppModule { }
-

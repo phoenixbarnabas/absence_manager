@@ -1,5 +1,5 @@
 <aside class="sidebar d-flex flex-column">
-    <a class="sidebar-header mb-4 py-3" routerLink="/welcome" routerLinkActive="active">
+    <a class="sidebar-header mb-4 py-3" routerLink="/desk-booking" routerLinkActive="active">
         <img src="/images/phoenix-logo.png" alt="" class="navbar-logo" />
     </a>
 
@@ -19,7 +19,7 @@
     <div class="mt-auto"></div>
 
     <div class="px-3 mb-3" *ngIf="isLoggedIn; else loggedOutBlock">
-        <a class="sidebar-user pt-3 mt-3 border-top mb-3 text-decoration-none d-block" routerLink="/profile"
+        <a class="sidebar-user pt-3 mt-3 mb-1 border-top text-decoration-none d-block" routerLink="/profile"
             routerLinkActive="active" *ngIf="userProfile">
             <div class="d-flex align-items-center gap-2">
                 <div class="avatar">
@@ -38,7 +38,7 @@
 
     <ng-template #loggedOutBlock>
         <div class="px-3 mb-3 pt-3 mt-3 border-top">
-            <a routerLink="/welcome" class="btn btn-primary w-100">
+            <a routerLink="/login" class="btn btn-primary w-100">
                 Bejelentkezés
             </a>
         </div>

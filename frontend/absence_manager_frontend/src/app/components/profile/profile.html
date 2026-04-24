@@ -1,6 +1,10 @@
 <div class="profile-container" *ngIf="!loading">
   <div class="profile-header">
     <h1 class="profile-title">Profilom</h1>
+
+    <button type="button" class="logout-button" (click)="logout()">
+      Kijelentkezés
+    </button>
   </div>
 
   <div class="user-card" *ngIf="userProfile">

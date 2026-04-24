@@ -1,22 +1,25 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { switchMap } from 'rxjs/internal/operators/switchMap';
-import { AuthService } from './auth-service';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { from } from 'rxjs';
+import { Router } from '@angular/router';
+import { from, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { AuthService } from './auth-service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const router = inject(Router);
 
   const isApiRequest = req.url.startsWith('https://localhost:7190/api/');
 
   if (!isApiRequest) {
-    return next(req)
+    return next(req);
   }
 
   return from(authService.acquireApiToken()).pipe(
-    switchMap((token) => {
+    switchMap(token => {
       if (!token) {
-        return next(req)
+        router.navigate(['/welcome']);
+        return throwError(() => new Error('Nincs hozzáférési token.'));
       }
 
       const authReq = req.clone({
@@ -25,7 +28,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         }
       });
 
-      return next(authReq)
+      return next(authReq).pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 401 || error.status === 403) {
+            router.navigate(['/welcome']);
+          }
+
+          return throwError(() => error);
+        })
+      );
     })
-  )
-}
+  );
+};

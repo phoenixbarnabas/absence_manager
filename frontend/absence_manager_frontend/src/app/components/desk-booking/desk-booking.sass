@@ -82,6 +82,107 @@
     .calendar-day__label
         color: $light-500
 
+.calendar-day--weekend
+    background: #f3f4f6
+    border-color: #9ca3af
+
+.calendar-day--holiday
+    background: #fee2e2
+    border-color: #ef4444
+
+.calendar-day
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 4px
+    padding: 8px
+    border: 1px solid transparent
+    background: transparent
+    cursor: pointer
+
+.calendar-day--weekend
+    background: #f3f4f6
+
+.calendar-day--holiday
+    background: #fee2e2
+
+.day-number
+    width: 32px
+    height: 32px
+    display: flex
+    align-items: center
+    justify-content: center
+    border-radius: 50%
+    transition: 0.2s ease
+
+.calendar-day--selected .day-number
+    background: $primary-500
+    color: white
+    font-weight: 600
+
+.workstation-navigation
+    display: grid
+    grid-template-columns: 44px 1fr 44px
+    gap: 14px
+    align-items: center
+
+.workstation-date-inline
+    display: flex
+    justify-content: center
+    align-items: center
+    gap: 8px
+    margin-bottom: 12px
+    font-size: 17px
+    font-weight: 500
+    color: #374151
+
+.separator
+    color: #9ca3af
+
+.non-working
+    color: #dc2626
+    font-weight: 600
+
+.day-nav-placeholder
+    width: 44px
+    height: 44px
+
+.day-nav-button
+    width: 44px
+    height: 44px
+    border: 1px solid #d1d5db
+    border-radius: 999px
+    background: #ffffff
+    display: flex
+    align-items: center
+    justify-content: center
+    cursor: pointer
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08)
+    transition: 0.15s ease
+
+    i
+        font-size: 20px
+
+    &:hover
+        background: #f3f4f6
+        transform: translateY(-1px)
+
+    &:active
+        transform: translateY(0)
+
+.workstation-content
+    min-width: 0
+
+.selected-day-info
+    display: flex
+    gap: 12px
+    align-items: center
+    margin-bottom: 12px
+
+.non-working-day
+    color: #dc2626
+    font-weight: 600
+
 .form-row-inline
     display: flex
     gap: 1rem
