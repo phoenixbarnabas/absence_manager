@@ -325,22 +325,26 @@ export class DeskBooking implements OnInit {
     this.changeSelectedDateBy(1);
   }
 
+  private normalizeDate(date: Date): Date {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }
+
   private changeSelectedDateBy(dayOffset: number): void {
-    const newDate = new Date(this.selectedDate);
-    newDate.setDate(this.selectedDate.getDate() + dayOffset);
+    const newDate = this.normalizeDate(this.selectedDate);
+    newDate.setDate(newDate.getDate() + dayOffset);
+
+    const today = this.getToday();
+    const maxDate = this.getMaxBookableDate();
+
+    if (newDate < today || newDate > maxDate) {
+      return;
+    }
 
     this.selectedDate = newDate;
     this.selectedWorkstationId = '';
     this.currentBookingId = null;
-
-    const existsInCalendar = this.calendarDays.some(day =>
-      this.isSameDate(day.date, newDate)
-    );
-
-    if (!existsInCalendar) {
-      this.generateCalendarDaysFrom(newDate);
-      this.loadHolidaysForVisibleYears();
-    }
 
     this.calendarDays = this.calendarDays.map(day => ({
       ...day,
@@ -416,6 +420,28 @@ export class DeskBooking implements OnInit {
     }
 
     return 'Munkanap';
+  }
+
+  readonly maxBookableDays = 14;
+
+  get isFirstBookableDay(): boolean {
+    return this.isSameDate(this.selectedDate, this.getToday());
+  }
+
+  get isLastBookableDay(): boolean {
+    return this.isSameDate(this.selectedDate, this.getMaxBookableDate());
+  }
+
+  private getToday(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+
+  private getMaxBookableDate(): Date {
+    const maxDate = this.getToday();
+    maxDate.setDate(maxDate.getDate() + this.maxBookableDays - 1);
+    return maxDate;
   }
 
   private saveState(): void {

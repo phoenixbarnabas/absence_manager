@@ -94,11 +94,25 @@ public class AppUserResolver : IAppUserResolver
             "upn"
         );
 
+        var user = await _dbContext.AppUsers
+            .FirstOrDefaultAsync(
+                x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
+                cancellationToken);
+
+        if (user != null)
+        {
+            return user;
+        }
+
         GraphUserProfileDto? graphProfile = null;
 
         try
         {
             graphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -109,53 +123,6 @@ public class AppUserResolver : IAppUserResolver
         var resolvedEmail = graphProfile?.Email ?? email;
         var resolvedDepartment = graphProfile?.Department ?? string.Empty;
         var resolvedJobTitle = graphProfile?.JobTitle ?? string.Empty;
-
-        var user = await _dbContext.AppUsers
-            .FirstOrDefaultAsync(
-                x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
-                cancellationToken);
-
-        if (user != null)
-        {
-            var changed = false;
-
-            if (user.DisplayName != resolvedDisplayName)
-            {
-                user.DisplayName = resolvedDisplayName;
-                changed = true;
-            }
-
-            if (user.Email != resolvedEmail)
-            {
-                user.Email = resolvedEmail;
-                changed = true;
-            }
-
-            if (user.Department != resolvedDepartment)
-            {
-                user.Department = resolvedDepartment;
-                changed = true;
-            }
-
-            if (user.JobTitle != resolvedJobTitle)
-            {
-                user.JobTitle = resolvedJobTitle;
-                changed = true;
-            }
-
-            if (!user.IsActive)
-            {
-                user.IsActive = true;
-                changed = true;
-            }
-
-            if (changed)
-            {
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
-
-            return user;
-        }
 
         user = new AppUser
         {
