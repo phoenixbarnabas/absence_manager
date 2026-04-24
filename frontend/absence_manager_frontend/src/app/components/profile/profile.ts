@@ -18,7 +18,7 @@ export class Profile implements OnInit {
     private userService: UserService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const account = this.authService.getAccount();
@@ -59,5 +59,9 @@ export class Profile implements OnInit {
       .map(n => n[0])
       .join('')
       .toUpperCase();
+  }
+
+  async logout(): Promise<void> {
+    await this.authService.logout();
   }
 }

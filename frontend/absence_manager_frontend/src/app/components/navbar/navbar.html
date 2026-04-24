@@ -19,7 +19,7 @@
     <div class="mt-auto"></div>
 
     <div class="px-3 mb-3" *ngIf="isLoggedIn; else loggedOutBlock">
-        <a class="sidebar-user pt-3 mt-3 border-top mb-3 text-decoration-none d-block" routerLink="/profile"
+        <a class="sidebar-user pt-3 mt-3 mb-1 border-top text-decoration-none d-block" routerLink="/profile"
             routerLinkActive="active" *ngIf="userProfile">
             <div class="d-flex align-items-center gap-2">
                 <div class="avatar">
@@ -34,10 +34,6 @@
                 </div>
             </div>
         </a>
-
-        <button type="button" class="btn btn-outline-secondary w-100" (click)="logout()">
-            Kijelentkezés
-        </button>
     </div>
 
     <ng-template #loggedOutBlock>

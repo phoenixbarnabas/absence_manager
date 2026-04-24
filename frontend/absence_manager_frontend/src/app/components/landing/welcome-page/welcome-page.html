@@ -5,26 +5,17 @@
 
         <div class="card shadow login-card border-0">
           <div class="card-body text-center p-4 p-md-5">
-            <img
-              src="/images/phoenix-logo.png"
-              alt="Phoenix logo"
-              class="login-logo mb-4"
-            />
+            <img src="/images/phoenix-logo.png" alt="Phoenix logo" class="login-logo mb-4" />
 
-            <h1 class="login-title mb-2">Login</h1>
+            <h1 class="login-title mb-2">Bejelentkezés</h1>
 
-            <p class="login-subtitle text-muted mb-4">
-              Sign in with your Microsoft account to continue.
+            <p class="login-subtitle mb-4">
+              Jelentkezz be a Microsoft-fiókoddal a folytatáshoz.
             </p>
 
-            <button
-              class="btn btn-primary w-100 login-button"
-              type="button"
-              (click)="login()"
-              [disabled]="entraLoading"
-            >
-              <span *ngIf="!entraLoading">Login with Microsoft</span>
-              <span *ngIf="entraLoading">Signing in...</span>
+            <button class="btn w-100 login-button" type="button" (click)="login()" [disabled]="entraLoading">
+              <span *ngIf="!entraLoading">Bejelentkezés Microsofttal</span>
+              <span *ngIf="entraLoading">Bejelentkezés folyamatban...</span>
             </button>
 
             <div class="alert alert-danger mt-4 mb-0 text-start" *ngIf="entraError">
