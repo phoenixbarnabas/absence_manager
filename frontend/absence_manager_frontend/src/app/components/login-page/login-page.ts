@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../auth/auth-service';
+import { Router } from '@angular/router';
 import { MeResponse, UserService } from '../../services/user.service';
+import { AuthService } from '../../auth/auth-service';
 
 @Component({
   selector: 'app-login-page',
@@ -11,7 +11,6 @@ import { MeResponse, UserService } from '../../services/user.service';
 })
 export class LoginPage implements OnInit {
   loading = true;
-  loginInProgress = false;
   error: string | null = null;
 
   me: MeResponse | null = null;
@@ -21,24 +20,23 @@ export class LoginPage implements OnInit {
   entraError: string | null = null;
 
   constructor(
-    public authService: AuthService,
     private userService: UserService,
-    private router: Router,
-    private route: ActivatedRoute
+    public authService: AuthService,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
       await this.authService.initialize();
-      await this.authService.handleRedirect();
 
       if (this.authService.isLoggedIn()) {
+        const loginStarted = sessionStorage.getItem('login_started') === 'true';
+
         await this.authService.acquireApiToken();
 
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-
-        if (returnUrl) {
-          await this.router.navigateByUrl(returnUrl);
+        if (loginStarted) {
+          sessionStorage.removeItem('login_started');
+          await this.router.navigateByUrl('/desk-booking');
           return;
         }
 
@@ -46,31 +44,26 @@ export class LoginPage implements OnInit {
       }
     } catch (error) {
       console.error(error);
-      this.error = 'Nem sikerült inicializálni a bejelentkezést.';
+      this.entraError = 'Hiba a bejelentkezés vagy a token kezelés közben.';
     } finally {
       this.loading = false;
     }
   }
 
   async login(): Promise<void> {
-    this.loginInProgress = true;
-    this.error = null;
-
     try {
+      sessionStorage.setItem('login_started', 'true');
       await this.authService.login();
     } catch (error) {
       console.error(error);
-      this.error = 'A bejelentkezés indítása sikertelen.';
-      this.loginInProgress = false;
+      sessionStorage.removeItem('login_started');
+      this.error = 'Nem sikerült elindítani a bejelentkezést.';
     }
   }
 
   async logout(): Promise<void> {
+    sessionStorage.removeItem('login_started');
     await this.authService.logout();
-  }
-
-  async continueToApp(): Promise<void> {
-    await this.router.navigateByUrl('/desk-booking');
   }
 
   private loadEntraData(): void {

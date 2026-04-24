@@ -20,10 +20,6 @@ export class AuthService {
     await this.sessionService.init();
   }
 
-  async handleRedirect(): Promise<void> {
-    await this.sessionService.init();
-  }
-
   async login(): Promise<void> {
     await this.sessionService.login();
   }

@@ -125,23 +125,4 @@ export class SessionService {
       return null;
     }
   }
-
-  async refreshAccountState(): Promise<void> {
-    await this.init();
-
-    const active =
-      msalInstance.getActiveAccount() ??
-      msalInstance.getAllAccounts()[0] ??
-      null;
-
-    if (active) {
-      msalInstance.setActiveAccount(active);
-    }
-
-    this.accountSubject.next(active);
-
-    if (!active) {
-      this.accessToken = null;
-    }
-  }
 }
