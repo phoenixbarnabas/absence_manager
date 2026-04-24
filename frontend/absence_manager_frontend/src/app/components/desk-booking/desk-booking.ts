@@ -1,17 +1,26 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject, catchError, combineLatest, distinctUntilChanged, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Location, Office, Workstation } from '../../models/entity-models';
 import { LocationService } from '../../services/location-service';
 import { OfficeService } from '../../services/office-service';
-import { WorkstationService } from '../../services/workstation-service';
 import { BookingService } from '../../services/booking-service';
 import { OfficeDayAvailabilityDto } from '../../models/availability-models';
+import { HttpClient } from '@angular/common/http';
 
 type CalendarDay = {
   date: Date;
   dayLabel: string;
   dayNumber: number;
   isSelected: boolean;
+  isWeekend: boolean;
+  isHoliday: boolean;
+  holidayName?: string;
+};
+
+type PublicHoliday = {
+  date: string;
+  localName: string;
+  name: string;
 };
 
 type DeskBookingState = {
@@ -61,10 +70,12 @@ export class DeskBooking implements OnInit {
     private locationService: LocationService,
     private officeService: OfficeService,
     private bookingService: BookingService,
+    private http: HttpClient,
   ) { }
 
   ngOnInit(): void {
     this.generateCalendarDays();
+    this.loadHolidaysForVisibleYears();
     this.restoreState();
 
     this.locations$ = this.locationService.loadAll().pipe(
@@ -297,11 +308,140 @@ export class DeskBooking implements OnInit {
         date,
         dayLabel: dayNames[date.getDay()],
         dayNumber: date.getDate(),
-        isSelected: index === 0
+        isSelected: index === 0,
+        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        isHoliday: false
       };
     });
 
     this.selectedDate = this.calendarDays[0].date;
+  }
+
+  goToPreviousDay(): void {
+    this.changeSelectedDateBy(-1);
+  }
+
+  goToNextDay(): void {
+    this.changeSelectedDateBy(1);
+  }
+
+  private normalizeDate(date: Date): Date {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }
+
+  private changeSelectedDateBy(dayOffset: number): void {
+    const newDate = this.normalizeDate(this.selectedDate);
+    newDate.setDate(newDate.getDate() + dayOffset);
+
+    const today = this.getToday();
+    const maxDate = this.getMaxBookableDate();
+
+    if (newDate < today || newDate > maxDate) {
+      return;
+    }
+
+    this.selectedDate = newDate;
+    this.selectedWorkstationId = '';
+    this.currentBookingId = null;
+
+    this.calendarDays = this.calendarDays.map(day => ({
+      ...day,
+      isSelected: this.isSameDate(day.date, newDate)
+    }));
+
+    this.selectedDateSubject.next(this.selectedDateString);
+    this.saveState();
+  }
+
+  private generateCalendarDaysFrom(startDate: Date): void {
+    const dayNames = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
+
+    this.calendarDays = Array.from({ length: 14 }, (_, index) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + index);
+
+      return {
+        date,
+        dayLabel: dayNames[date.getDay()],
+        dayNumber: date.getDate(),
+        isSelected: index === 0,
+        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        isHoliday: false
+      };
+    });
+  }
+
+  private loadHolidaysForVisibleYears(): void {
+    const years = [...new Set(this.calendarDays.map(day => day.date.getFullYear()))];
+
+    years.forEach(year => {
+      this.http.get<PublicHoliday[]>(`https://date.nager.at/api/v3/PublicHolidays/${year}/HU`)
+        .subscribe({
+          next: holidays => {
+            this.calendarDays = this.calendarDays.map(day => {
+              const dateString = this.formatDateForApi(day.date);
+              const holiday = holidays.find(h => h.date === dateString);
+
+              return {
+                ...day,
+                isHoliday: !!holiday,
+                holidayName: holiday?.localName
+              };
+            });
+          },
+          error: err => {
+            console.error('Ünnepnapok betöltése sikertelen', err);
+          }
+        });
+    });
+  }
+
+  isSelectedDateNonWorkingDay(): boolean {
+    const selectedDay = this.calendarDays.find(day =>
+      this.isSameDate(day.date, this.selectedDate)
+    );
+
+    return !!selectedDay?.isWeekend || !!selectedDay?.isHoliday;
+  }
+
+  getSelectedDateLabel(): string {
+    const selectedDay = this.calendarDays.find(day =>
+      this.isSameDate(day.date, this.selectedDate)
+    );
+
+    if (selectedDay?.isHoliday) {
+      return `Ünnepnap: ${selectedDay.holidayName}`;
+    }
+
+    if (selectedDay?.isWeekend) {
+      return 'Hétvége';
+    }
+
+    return 'Munkanap';
+  }
+
+  readonly maxBookableDays = 14;
+
+  get isFirstBookableDay(): boolean {
+    return this.isSameDate(this.selectedDate, this.getToday());
+  }
+
+  get isLastBookableDay(): boolean {
+    return this.isSameDate(this.selectedDate, this.getMaxBookableDate());
+  }
+
+  private getToday(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+
+  private getMaxBookableDate(): Date {
+    const maxDate = this.getToday();
+    maxDate.setDate(maxDate.getDate() + this.maxBookableDays - 1);
+    return maxDate;
   }
 
   private saveState(): void {

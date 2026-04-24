@@ -89,6 +89,10 @@ namespace Absence_Manager.Controllers
             {
                 return BadRequest(ex.Message);
             }
+            catch (OperationCanceledException)
+            {
+                return new StatusCodeResult(499);
+            }
         }
 
         [HttpPost]
@@ -114,6 +118,10 @@ namespace Absence_Manager.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+            catch (OperationCanceledException)
+            {
+                return new StatusCodeResult(499);
+            }
         }
 
         [HttpDelete("{bookingId}")]
@@ -138,6 +146,10 @@ namespace Absence_Manager.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (OperationCanceledException)
+            {
+                return new StatusCodeResult(499);
             }
         }
     }
