@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { UserProfile } from '../../models/app-user-models';
 import { MeResponse, UserService } from '../../services/user.service';
 import { AuthService } from '../../auth/auth-service';
 
 @Component({
-  selector: 'app-login-page',
+  selector: 'app-welcome-page',
   standalone: false,
-  templateUrl: './login-page.html',
-  styleUrl: './login-page.sass'
+  templateUrl: './welcome-page.html',
+  styleUrl: './welcome-page.sass',
 })
-export class LoginPage implements OnInit {
+export class WelcomePage implements OnInit {
+userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
 
@@ -21,48 +22,29 @@ export class LoginPage implements OnInit {
 
   constructor(
     private userService: UserService,
-    public authService: AuthService,
-    private router: Router
+    public authService: AuthService
   ) {}
 
   async ngOnInit(): Promise<void> {
     try {
       await this.authService.initialize();
+      await this.authService.handleRedirect();
 
       if (this.authService.isLoggedIn()) {
-        const loginStarted = sessionStorage.getItem('login_started') === 'true';
-
         await this.authService.acquireApiToken();
-
-        if (loginStarted) {
-          sessionStorage.removeItem('login_started');
-          await this.router.navigateByUrl('/desk-booking');
-          return;
-        }
-
         this.loadEntraData();
       }
     } catch (error) {
       console.error(error);
       this.entraError = 'Hiba a bejelentkezés vagy a token kezelés közben.';
-    } finally {
-      this.loading = false;
     }
   }
 
   async login(): Promise<void> {
-    try {
-      sessionStorage.setItem('login_started', 'true');
-      await this.authService.login();
-    } catch (error) {
-      console.error(error);
-      sessionStorage.removeItem('login_started');
-      this.error = 'Nem sikerült elindítani a bejelentkezést.';
-    }
+    await this.authService.login()
   }
 
   async logout(): Promise<void> {
-    sessionStorage.removeItem('login_started');
     await this.authService.logout();
   }
 
