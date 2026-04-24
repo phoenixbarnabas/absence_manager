@@ -1,5 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { AuthService } from './auth/auth-service';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subject, filter, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -7,21 +8,31 @@ import { AuthService } from './auth/auth-service';
   standalone: false,
   styleUrl: './app.sass'
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('absence_manager_frontend');
+  isLoginPage = false;
 
-  constructor(private authService: AuthService) { }
+  private readonly destroy$ = new Subject<void>();
 
-  async ngOnInit(): Promise<void> {
-    try {
-      await this.authService.initialize();
-      await this.authService.handleRedirect();
+  constructor(private router: Router) {}
 
-      if (this.authService.isLoggedIn()) {
-        await this.authService.acquireApiToken();
-      }
-    } catch (err) {
-      console.error('Auth init error', err);
-    }
+  ngOnInit(): void {
+    this.updateRouteState();
+
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.updateRouteState());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private updateRouteState(): void {
+    this.isLoginPage = this.router.url.startsWith('/login');
   }
 }

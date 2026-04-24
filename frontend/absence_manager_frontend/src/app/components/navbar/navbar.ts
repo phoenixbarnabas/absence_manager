@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subject, filter, takeUntil } from 'rxjs';
 import { UserProfile } from '../../models/app-user-models';
 import { UserService } from '../../services/user.service';
-import { DevAuthService } from '../../services/dev-auth-service';
 import { AuthService } from '../../auth/auth-service';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -11,22 +11,33 @@ import { Subject, takeUntil } from 'rxjs';
   templateUrl: './navbar.html',
   styleUrl: './navbar.sass',
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   loading = true;
   isLoggedIn = false;
+  isLoginPage = false;
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private userService: UserService,
-    public authService: AuthService
-  ) { }
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    this.updateRouteState();
+
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.updateRouteState());
+
     this.authService.account$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
+      .subscribe(account => {
         this.isLoggedIn = !!account;
 
         if (!account) {
@@ -52,12 +63,16 @@ export class Navbar implements OnInit {
     this.destroy$.complete();
   }
 
+  private updateRouteState(): void {
+    this.isLoginPage = this.router.url.startsWith('/login');
+  }
+
   private loadProfileData(): void {
     this.userService.getMe().subscribe({
-      next: (profile) => {
+      next: profile => {
         this.userProfile = profile;
       },
-      error: (err) => {
+      error: err => {
         console.error(err);
       }
     });

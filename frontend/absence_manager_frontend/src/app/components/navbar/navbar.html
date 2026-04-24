@@ -1,46 +1,40 @@
-<aside class="sidebar d-flex flex-column">
-    <a class="sidebar-header mb-4 py-3" routerLink="/welcome" routerLinkActive="active">
-        <img src="/images/phoenix-logo.png" alt="" class="navbar-logo" />
+<aside class="sidebar d-flex flex-column" *ngIf="!isLoginPage">
+  <a class="sidebar-header mb-4 py-3" routerLink="/desk-booking">
+    <img src="/images/phoenix-logo.png" alt="" class="navbar-logo" />
+  </a>
+
+  <nav class="sidebar-nav nav flex-column gap-1 px-3" *ngIf="isLoggedIn">
+    <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
+      <i class="bi bi-grid-3x2-gap"></i>
+      <span>Helyfoglalás</span>
     </a>
 
-    <nav class="sidebar-nav nav flex-column gap-1 px-3">
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
-            <i class="bi bi-grid-3x2-gap"></i>
-            <span>Helyfoglalás</span>
-        </a>
+    <a class="nav-link d-flex align-items-center gap-2" routerLink="/profile" routerLinkActive="active">
+      <i class="bi bi-person"></i>
+      <span>Profil</span>
+    </a>
+  </nav>
 
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/profile" routerLinkActive="active"
-            *ngIf="isLoggedIn">
-            <i class="bi bi-person"></i>
-            <span>Profil</span>
-        </a>
-    </nav>
+  <div class="mt-auto"></div>
 
-    <div class="mt-auto"></div>
-
-    <div class="px-3 mb-3" *ngIf="isLoggedIn; else loggedOutBlock">
-        <a class="sidebar-user pt-3 mt-3 border-top mb-3 text-decoration-none d-block" routerLink="/profile"
-            routerLinkActive="active" *ngIf="userProfile">
-            <div class="d-flex align-items-center gap-2">
-                <div class="avatar">
-                    {{ getInitials(userProfile.displayName) }}
-                </div>
-
-                <div class="user-meta">
-                    <div class="user-name">{{ userProfile.displayName }}</div>
-                    <div class="user-dept">
-                        {{ userProfile.department || userProfile.email || 'Bejelentkezett felhasználó' }}
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <ng-template #loggedOutBlock>
-        <div class="px-3 mb-3 pt-3 mt-3 border-top">
-            <a routerLink="/welcome" class="btn btn-primary w-100">
-                Bejelentkezés
-            </a>
+  <div class="px-3 mb-3" *ngIf="isLoggedIn && userProfile">
+    <a class="sidebar-user pt-3 mt-3 border-top mb-3 text-decoration-none d-block" routerLink="/profile">
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar">
+          {{ getInitials(userProfile.displayName) }}
         </div>
-    </ng-template>
+
+        <div class="user-meta">
+          <div class="user-name">{{ userProfile.displayName }}</div>
+          <div class="user-dept">
+            {{ userProfile.department || userProfile.email || 'Bejelentkezett felhasználó' }}
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <button class="btn btn-outline-danger w-100" (click)="logout()">
+      Kijelentkezés
+    </button>
+  </div>
 </aside>

@@ -1,20 +1,24 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import {WelcomePage} from './components/landing/welcome-page/welcome-page';
+
 import { DeskBooking } from './components/desk-booking/desk-booking';
 import { Profile } from './components/profile/profile';
-import { MsalGuard } from '@azure/msal-angular';
+import { LoginPage } from './components/login-page/login-page';
+import { authGuard } from './auth/guards/auth-guard';
 
 const routes: Routes = [
-  {path:"",redirectTo:"welcome",pathMatch:"full"},
-  {path:"welcome",component: WelcomePage},
-  {path:"desk-booking",component: DeskBooking, canActivate: [MsalGuard]},
-  {path:"profile",component: Profile, canActivate: [MsalGuard]},
-  {path:"**",redirectTo:"welcome"}
+  { path: '', redirectTo: 'desk-booking', pathMatch: 'full' },
+
+  { path: 'login', component: LoginPage },
+
+  { path: 'desk-booking', component: DeskBooking, canActivate: [authGuard] },
+  { path: 'profile', component: Profile, canActivate: [authGuard] },
+
+  { path: '**', redirectTo: 'desk-booking' }
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

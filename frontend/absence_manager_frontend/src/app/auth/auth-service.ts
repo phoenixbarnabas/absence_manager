@@ -1,100 +1,54 @@
 import { Injectable } from '@angular/core';
-import { authState } from './auth.state';
-import { apiScope, msalInstance, postLogoutRedirectUri } from './entra-auth-config';
-import { AccountInfo, AuthenticationResult } from '@azure/msal-browser';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { AccountInfo } from '@azure/msal-browser';
+import { SessionService } from '../services/session-service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class AuthService {
-  private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
-  private readonly tokenSubject = new BehaviorSubject<string | null>(null);
-  private initialized = false;
+  constructor(private sessionService: SessionService) {}
 
-  readonly account$ = this.accountSubject.asObservable();
-  readonly token$ = this.tokenSubject.asObservable();
+  get account$() {
+    return this.sessionService.account$;
+  }
+
+  get ready$() {
+    return this.sessionService.ready$;
+  }
 
   async initialize(): Promise<void> {
-    if (!this.initialized) {
-      await msalInstance.initialize();
-      this.initialized = true;
-    }
+    await this.sessionService.init();
   }
 
   async handleRedirect(): Promise<void> {
-    await this.initialize();
-
-    const authResult: AuthenticationResult | null = await msalInstance.handleRedirectPromise();
-    const accounts = msalInstance.getAllAccounts();
-
-    if (authResult?.account) {
-      msalInstance.setActiveAccount(authResult.account);
-      this.accountSubject.next(authResult.account);
-    } else if (accounts.length > 0) {
-      msalInstance.setActiveAccount(accounts[0]);
-      this.accountSubject.next(accounts[0]);
-    } else {
-      this.accountSubject.next(null);
-      this.tokenSubject.next(null);
-    }
+    await this.sessionService.init();
   }
 
   async login(): Promise<void> {
-    await this.initialize();
-
-    await msalInstance.loginRedirect({
-      scopes: ['openid', 'profile', 'email', apiScope]
-    });
+    await this.sessionService.login();
   }
 
   async logout(): Promise<void> {
-    await this.initialize();
-
-    this.accountSubject.next(null);
-    this.tokenSubject.next(null);
-
-    await msalInstance.logoutRedirect({
-      postLogoutRedirectUri
-    });
+    await this.sessionService.logout();
   }
 
   async acquireApiToken(): Promise<string | null> {
-    await this.initialize();
-
-    const existingToken = this.tokenSubject.value;
-    if (existingToken) {
-      return existingToken;
-    }
-
-    const account = this.getActiveAccount();
-    if (!account) {
-      this.tokenSubject.next(null);
-      return null;
-    }
-
-    const result = await msalInstance.acquireTokenSilent({
-      account,
-      scopes: [apiScope]
-    });
-
-    this.tokenSubject.next(result.accessToken);
-    return result.accessToken;
+    return this.sessionService.getAccessToken();
   }
 
   getAccount(): AccountInfo | null {
-    return this.accountSubject.value;
-  }
-
-  getToken(): string | null {
-    return this.tokenSubject.value;
+    return this.sessionService.account;
   }
 
   getActiveAccount(): AccountInfo | null {
-    return msalInstance.getActiveAccount() ?? msalInstance.getAllAccounts()[0] ?? null;
+    return this.sessionService.account;
+  }
+
+  getToken(): string | null {
+    return this.sessionService.token;
   }
 
   isLoggedIn(): boolean {
-    return this.getActiveAccount() !== null || this.getAccount() !== null;
+    return this.sessionService.isLoggedIn;
   }
 }

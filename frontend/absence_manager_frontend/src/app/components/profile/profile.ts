@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/app-user-models';
-import { DevAuthService } from '../../services/dev-auth-service';
 import { AuthService } from '../../auth/auth-service';
 
 @Component({
@@ -19,16 +18,13 @@ export class Profile implements OnInit {
     private userService: UserService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    this.loading = true;
-    this.error = null;
-
-    const account = this.authService.getAccount() ?? this.authService.getActiveAccount();
+    const account = this.authService.getAccount();
 
     if (!account) {
-      this.error = 'Nincs bejelentkezett felhasználó';
+      this.error = 'Nincs bejelentkezett felhasználó.';
       this.loading = false;
       return;
     }
@@ -41,16 +37,15 @@ export class Profile implements OnInit {
     };
 
     this.userService.getMe().subscribe({
-      next: (profile) => {
+      next: profile => {
         this.userProfile = profile;
         this.loading = false;
         this.error = null;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: err => {
         console.error(err);
-        console.error('Profile load error', err);
-        this.error = 'Hiba a profil betöltése közben';
+        this.error = 'Hiba a profil betöltése közben.';
         this.loading = false;
         this.cdr.detectChanges();
       }

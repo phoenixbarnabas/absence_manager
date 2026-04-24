@@ -1,8 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { MsalService } from '@azure/msal-angular';
 import { MeResponse, UserService } from '../../../services/user.service';
-import { AuthenticationResult } from '@azure/msal-browser';
-import { UserProfile } from '../../../models/app-user-models';
 import { AuthService } from '../../../auth/auth-service';
 
 @Component({
@@ -12,10 +9,6 @@ import { AuthService } from '../../../auth/auth-service';
   styleUrl: './welcome-page.sass',
 })
 export class WelcomePage implements OnInit {
-userProfile: UserProfile | null = null;
-  loading = true;
-  error: string | null = null;
-
   me: MeResponse | null = null;
   claims: Array<{ type: string; value: string }> | null = null;
 
@@ -43,7 +36,7 @@ userProfile: UserProfile | null = null;
   }
 
   async login(): Promise<void> {
-    await this.authService.login()
+    await this.authService.login();
   }
 
   async logout(): Promise<void> {

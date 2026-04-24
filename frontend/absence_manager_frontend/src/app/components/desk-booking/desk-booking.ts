@@ -6,7 +6,6 @@ import { OfficeService } from '../../services/office-service';
 import { WorkstationService } from '../../services/workstation-service';
 import { BookingService } from '../../services/booking-service';
 import { OfficeDayAvailabilityDto } from '../../models/availability-models';
-import { DevAuthService, DevSeedUser } from '../../services/dev-auth-service';
 
 type CalendarDay = {
   date: Date;

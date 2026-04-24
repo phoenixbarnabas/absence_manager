@@ -1,0 +1,26 @@
+<div class="login-page d-flex align-items-center justify-content-center min-vh-100">
+  <div class="card shadow p-4" style="width: 100%; max-width: 420px;">
+    <div class="text-center mb-4">
+      <img src="/images/phoenix-logo.png" alt="Logo" style="max-width: 140px;" class="mb-3" />
+      <h1 class="h4 mb-2">Helyfoglaló</h1>
+      <p class="text-muted mb-0">Jelentkezz be a folytatáshoz</p>
+    </div>
+
+    <div *ngIf="loading" class="text-center">
+      <p class="mb-0">Betöltés...</p>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <button
+        class="btn btn-primary w-100"
+        (click)="login()"
+        [disabled]="loginInProgress">
+        {{ loginInProgress ? 'Átirányítás...' : 'Bejelentkezés Microsoft-tal' }}
+      </button>
+    </ng-container>
+  </div>
+</div>
