@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+/* import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { AccountInfo, AuthenticationResult } from '@azure/msal-browser';
 import { apiScope, msalInstance, postLogoutRedirectUri } from '../auth/entra-auth-config';
@@ -125,4 +125,4 @@ export class SessionService {
       return null;
     }
   }
-}
+} */

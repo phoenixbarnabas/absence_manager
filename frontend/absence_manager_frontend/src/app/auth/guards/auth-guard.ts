@@ -1,18 +1,19 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { SessionService } from '../../services/session-service';
+import { AuthService } from '../auth-service';
 
 export const authGuard: CanActivateFn = async (_route, state) => {
-  const sessionService = inject(SessionService);
+  const authService = inject(AuthService);
   const router = inject(Router);
 
   try {
-    await sessionService.init();
+    await authService.initialize();
+    await authService.handleRedirect();
   } catch (error) {
     console.error('Auth guard init failed', error);
   }
 
-  if (sessionService.isLoggedIn) {
+  if (authService.isLoggedIn()) {
     return true;
   }
 

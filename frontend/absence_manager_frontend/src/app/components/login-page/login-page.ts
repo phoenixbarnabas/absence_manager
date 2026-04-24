@@ -4,12 +4,12 @@ import { MeResponse, UserService } from '../../services/user.service';
 import { AuthService } from '../../auth/auth-service';
 
 @Component({
-  selector: 'app-welcome-page',
+  selector: 'app-login-page',
   standalone: false,
-  templateUrl: './welcome-page.html',
-  styleUrl: './welcome-page.sass',
+  templateUrl: './login-page.html',
+  styleUrl: './login-page.sass',
 })
-export class WelcomePage implements OnInit {
+export class LoginPage implements OnInit {
 userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
