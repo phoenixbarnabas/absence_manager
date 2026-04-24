@@ -47,7 +47,7 @@ import { msalInstance } from './auth/entra-auth-config';
         interactionType: InteractionType.Redirect,
         protectedResourceMap: new Map()
       }
-    )
+    ),
   ],
   providers: [
     provideHttpClient(withInterceptors([authInterceptor]))

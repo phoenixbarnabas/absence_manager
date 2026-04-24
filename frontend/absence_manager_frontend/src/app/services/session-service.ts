@@ -18,7 +18,7 @@ export class SessionService {
   readonly ready$ = this.readySubject.asObservable();
 
   async init(): Promise<void> {
-    if (this.readySubject.value && this.initialized) {
+    if (this.initialized && this.readySubject.value) {
       return;
     }
 

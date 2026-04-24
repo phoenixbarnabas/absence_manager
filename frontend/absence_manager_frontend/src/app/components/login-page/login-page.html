@@ -1,26 +1,170 @@
-<div class="login-page d-flex align-items-center justify-content-center min-vh-100">
-  <div class="card shadow p-4" style="width: 100%; max-width: 420px;">
-    <div class="text-center mb-4">
-      <img src="/images/phoenix-logo.png" alt="Logo" style="max-width: 140px;" class="mb-3" />
-      <h1 class="h4 mb-2">Helyfoglaló</h1>
-      <p class="text-muted mb-0">Jelentkezz be a folytatáshoz</p>
-    </div>
+<div class="login-page py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
 
-    <div *ngIf="loading" class="text-center">
-      <p class="mb-0">Betöltés...</p>
-    </div>
+        <div class="card shadow mb-4">
+          <div class="card-body text-center p-4">
+            <img src="/images/phoenix-logo.png" alt="Logo" style="max-width: 140px;" class="mb-4" />
 
-    <ng-container *ngIf="!loading">
-      <div *ngIf="error" class="alert alert-danger">
-        {{ error }}
+            <h1 class="display-5 mb-3">Helyfoglaló</h1>
+            <p class="lead text-muted">Jelentkezz be a folytatáshoz</p>
+
+            <div *ngIf="loading" class="mt-4">
+              <p class="mb-0">Betöltés...</p>
+            </div>
+
+            <ng-container *ngIf="!loading">
+              <div *ngIf="error" class="alert alert-danger mt-4">
+                {{ error }}
+              </div>
+
+              <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+                <button class="btn btn-primary" (click)="login()" [disabled]="loginInProgress">
+                  {{ loginInProgress ? 'Átirányítás...' : 'Login' }}
+                </button>
+
+                <button class="btn btn-outline-danger" (click)="logout()" [disabled]="!authService.isLoggedIn()">
+                  Logout
+                </button>
+
+                <button class="btn btn-outline-success" (click)="loadMe()" [disabled]="!authService.isLoggedIn()">
+                  Me betöltése
+                </button>
+
+                <button class="btn btn-outline-success" (click)="loadClaims()" [disabled]="!authService.isLoggedIn()">
+                  Claims betöltése
+                </button>
+
+                <button class="btn btn-outline-primary" (click)="continueToApp()" [disabled]="!authService.isLoggedIn()">
+                  Tovább a helyfoglalóhoz
+                </button>
+
+                <a
+                  href="https://github.com/phoenixbarnabas/absence_manager"
+                  target="_blank"
+                  class="btn btn-outline-secondary"
+                >
+                  Repository
+                </a>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4" *ngIf="entraLoading">
+          <div class="card-body">
+            <p class="mb-0">Entra adatok betöltése...</p>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4 border-danger" *ngIf="entraError">
+          <div class="card-body">
+            <h5 class="text-danger mb-3">Hiba</h5>
+            <p class="mb-0">{{ entraError }}</p>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4" *ngIf="authService.getAccount() as account">
+          <div class="card-body">
+            <h4 class="mb-3">Aktív account</h4>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Username</div>
+              <div class="col-sm-8">{{ account.username || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Név</div>
+              <div class="col-sm-8">{{ account.name || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Home account ID</div>
+              <div class="col-sm-8 text-break">{{ account.homeAccountId || '-' }}</div>
+            </div>
+
+            <div class="row">
+              <div class="col-sm-4 fw-semibold">Tenant ID</div>
+              <div class="col-sm-8 text-break">{{ account.tenantId || '-' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4" *ngIf="authService.getToken() as token">
+          <div class="card-body">
+            <h4 class="mb-3">Access token</h4>
+            <pre class="mb-0 small text-break" style="white-space: pre-wrap;">{{ token }}</pre>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4" *ngIf="me as meData">
+          <div class="card-body">
+            <h4 class="mb-3">Entra /me</h4>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">OID</div>
+              <div class="col-sm-8 text-break">{{ meData.oid || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Tenant ID</div>
+              <div class="col-sm-8 text-break">{{ meData.tid || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Név</div>
+              <div class="col-sm-8">{{ meData.name || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Preferred username</div>
+              <div class="col-sm-8">{{ meData.preferred_username || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Email</div>
+              <div class="col-sm-8">{{ meData.email || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">UPN</div>
+              <div class="col-sm-8">{{ meData.upn || '-' }}</div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col-sm-4 fw-semibold">Scope</div>
+              <div class="col-sm-8">{{ meData.scp || '-' }}</div>
+            </div>
+
+            <div class="row">
+              <div class="col-sm-4 fw-semibold">Roles</div>
+              <div class="col-sm-8">
+                <span *ngIf="meData.roles.length; else noRoles">
+                  {{ meData.roles.join(', ') }}
+                </span>
+                <ng-template #noRoles>-</ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow mb-4" *ngIf="claims">
+          <div class="card-body">
+            <h4 class="mb-3">Claims</h4>
+
+            <div *ngIf="claims.length === 0" class="text-muted">
+              Nincs claim.
+            </div>
+
+            <div *ngFor="let claim of claims" class="border rounded p-3 mb-2">
+              <div class="fw-semibold text-break">{{ claim.type }}</div>
+              <div class="text-muted text-break">{{ claim.value }}</div>
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      <button
-        class="btn btn-primary w-100"
-        (click)="login()"
-        [disabled]="loginInProgress">
-        {{ loginInProgress ? 'Átirányítás...' : 'Bejelentkezés Microsoft-tal' }}
-      </button>
-    </ng-container>
+    </div>
   </div>
 </div>
