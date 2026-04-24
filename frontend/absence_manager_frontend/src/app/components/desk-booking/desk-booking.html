@@ -10,9 +10,10 @@
     <div class="calendar-scroll">
       <div class="calendar-row">
         <button type="button" class="calendar-day" *ngFor="let day of calendarDays"
-          [class.calendar-day--active]="day.isSelected" (click)="selectDay(day)">
-          <span class="calendar-day__label">{{ day.dayLabel }}</span>
-          <span class="calendar-day__number">{{ day.dayNumber }}</span>
+          [class.calendar-day--selected]="day.isSelected" [class.calendar-day--weekend]="day.isWeekend"
+          [class.calendar-day--holiday]="day.isHoliday" [title]="day.holidayName || ''" (click)="selectDay(day)">
+          <span>{{ day.dayLabel }}</span>
+          <strong>{{ day.dayNumber }}</strong>
         </button>
       </div>
     </div>
@@ -45,10 +46,30 @@
   </div>
 
   <ng-container *ngIf="availability$ | async as availability">
-    <app-workstation-list *ngIf="availability" [workstations]="availability.workstations"
-      [selectedWorkstationId]="selectedWorkstationId" [currentUserHasBooking]="availability.currentUserHasBooking"
-      (workstationSelected)="onWorkstationSelected($event, availability)">
-    </app-workstation-list>
+    <div class="workstation-navigation" *ngIf="availability$ | async as availability">
+      <button type="button" class="day-nav-button" (click)="goToPreviousDay()">
+        ‹
+      </button>
+
+      <div class="workstation-content">
+        <div class="selected-day-info">
+          <strong>{{ selectedDateString }}</strong>
+          <span [class.non-working-day]="isSelectedDateNonWorkingDay()">
+            {{ getSelectedDateLabel() }}
+          </span>
+        </div>
+
+        <app-workstation-list [workstations]="availability?.workstations ?? []"
+          [selectedWorkstationId]="selectedWorkstationId"
+          [currentUserHasBooking]="availability?.currentUserHasBooking ?? false"
+          (workstationSelected)="onWorkstationSelected($event, availability)">
+        </app-workstation-list>
+      </div>
+
+      <button type="button" class="day-nav-button" (click)="goToNextDay()">
+        ›
+      </button>
+    </div>
 
     <div class="booking-card booking-actions-card">
       <div class="booking-actions-row">

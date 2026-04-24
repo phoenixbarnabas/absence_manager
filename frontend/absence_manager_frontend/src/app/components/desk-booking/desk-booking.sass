@@ -82,6 +82,44 @@
     .calendar-day__label
         color: $light-500
 
+.calendar-day--weekend
+    background: #f3f4f6
+    border-color: #9ca3af
+
+.calendar-day--holiday
+    background: #fee2e2
+    border-color: #ef4444
+
+.calendar-day--selected
+    outline: 2px solid #2563eb
+
+.workstation-navigation
+    display: grid
+    grid-template-columns: 48px 1fr 48px
+    gap: 16px
+    align-items: center
+
+.day-nav-button
+    height: 48px
+    border-radius: 999px
+    border: 1px solid #d1d5db
+    background: white
+    font-size: 32px
+    cursor: pointer
+
+.workstation-content
+    min-width: 0
+
+.selected-day-info
+    display: flex
+    gap: 12px
+    align-items: center
+    margin-bottom: 12px
+
+.non-working-day
+    color: #dc2626
+    font-weight: 600
+
 .form-row-inline
     display: flex
     gap: 1rem
