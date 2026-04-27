@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Graph" Version="5.103.0" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
+		<PackageReference Include="AutoMapper" Version="15.1.1" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.7.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Data\Data.csproj" />
+		<ProjectReference Include="..\Entities\Entities.csproj" />
+	</ItemGroup>
+
+
+</Project>

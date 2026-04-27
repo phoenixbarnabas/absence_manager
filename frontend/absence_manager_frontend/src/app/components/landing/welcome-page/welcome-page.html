@@ -1,40 +1,31 @@
-<div class="container mt-5">
+<div class="login-page">
+  <div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row justify-content-center w-100">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
 
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
+        <div class="card shadow login-card border-0">
+          <div class="card-body text-center p-4 p-md-5">
+            <img src="/images/phoenix-logo.png" alt="Phoenix logo" class="login-logo mb-4" />
 
-      <div class="card shadow">
-        <div class="card-body text-center">
+            <h1 class="login-title mb-2">Bejelentkezés</h1>
 
-          <h1 class="display-5 mb-3">
-            Welcome
-          </h1>
+            <p class="login-subtitle mb-4">
+              Jelentkezz be a Microsoft-fiókoddal a folytatáshoz.
+            </p>
 
-          <p class="lead text-muted">
-            Absence Manager frontend test page
-          </p>
-
-          <hr>
-
-          <p>
-            Angular + Bootstrap UI teszt oldal.
-          </p>
-
-          <div class="d-flex justify-content-center gap-3 mt-4">
-            <button class="btn btn-primary">
-              Login
+            <button class="btn w-100 login-button" type="button" (click)="login()" [disabled]="entraLoading">
+              <span *ngIf="!entraLoading">Bejelentkezés Microsofttal</span>
+              <span *ngIf="entraLoading">Bejelentkezés folyamatban...</span>
             </button>
 
-            <button class="btn btn-outline-secondary">
-              Documentation
-            </button>
+            <div class="alert alert-danger mt-4 mb-0 text-start" *ngIf="entraError">
+              <h6 class="mb-2">Bejelentkezési hiba</h6>
+              <p class="mb-0">{{ entraError }}</p>
+            </div>
           </div>
-
         </div>
+
       </div>
-      php -i | findstr /I "openssl.cafile curl.cainfo"php -i | findstr /I "openssl.cafile curl.cainfo"
-      php -m | findstr /I "curl openssl"    </div>
+    </div>
   </div>
-
 </div>
-

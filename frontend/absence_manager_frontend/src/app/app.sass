@@ -1,0 +1,33 @@
+@use '../../src/styles' as *
+
+.app-shell
+    display: flex
+    min-height: 100vh
+    height: 100vh
+    overflow: hidden
+
+.app-sidebar
+    width: 280px
+    min-width: 280px
+    height: 100vh
+    position: sticky
+    top: 0
+    align-self: flex-start
+    overflow: hidden
+    border-right: 1px solid #e5e7eb
+    background: #fff
+
+.app-content
+    flex: 1 1 auto
+    height: 100vh
+    overflow-y: auto
+    overflow-x: hidden
+    padding: 1rem
+
+.app-shell.login-layout
+    display: block
+
+.app-shell.login-layout .app-content
+    height: auto
+    min-height: 100vh
+    padding: 0

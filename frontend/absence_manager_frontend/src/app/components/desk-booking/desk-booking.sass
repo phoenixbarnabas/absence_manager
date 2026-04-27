@@ -1,0 +1,320 @@
+@use '../../../../src/styles' as *
+
+.desk-booking-page
+    width: 100%
+    max-width: 1100px
+    min-width: 0
+    margin: 0 auto
+    padding: 1.5rem 1rem 2rem
+    box-sizing: border-box
+
+.page-header
+    margin-bottom: 1.25rem
+
+.page-title
+    margin: 0
+    font-size: 1.75rem
+    font-weight: 700
+    color: $dark-900
+
+.booking-card
+    width: 100%
+    max-width: 100%
+    min-width: 0
+    background: $light-500
+    border: 1px solid $border-color
+    border-radius: 16px
+    padding: 1.25rem
+    margin-bottom: 1rem
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04)
+    box-sizing: border-box
+    overflow: visible
+
+.calendar-scroll
+    width: 100%
+    max-width: 100%
+    min-width: 0
+    overflow-x: auto
+    overflow-y: hidden
+    -webkit-overflow-scrolling: touch
+    padding: 0.25rem 0
+    box-sizing: border-box
+
+.calendar-row
+    display: flex
+    flex-wrap: nowrap
+    gap: 0.75rem
+    width: max-content
+    min-width: 100%
+    justify-content: flex-start
+
+.calendar-day
+    border: none
+    background: transparent
+    border-radius: 12px
+    min-width: 56px
+    height: 76px
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 0.3rem
+    color: $dark-800
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease
+    flex: 0 0 auto
+
+    &:hover
+        background: $light-200
+        transform: translateY(-1px)
+
+.calendar-day__label
+    font-size: 0.75rem
+    color: $dark-700
+
+.calendar-day__number
+    font-size: 1rem
+    font-weight: 700
+
+.calendar-day--active
+    background: $primary-500
+    color: $light-500
+
+    .calendar-day__label
+        color: $light-500
+
+.calendar-day--weekend
+    background: #f3f4f6
+    border-color: #9ca3af
+
+.calendar-day--holiday
+    background: #fee2e2
+    border-color: #ef4444
+
+.calendar-day
+    display: flex
+    flex-direction: column
+    align-items: center
+    gap: 4px
+    padding: 8px
+    border: 1px solid transparent
+    background: transparent
+    cursor: pointer
+
+.calendar-day--weekend
+    background: #f3f4f6
+
+.calendar-day--holiday
+    background: #fee2e2
+
+.day-number
+    width: 32px
+    height: 32px
+    display: flex
+    align-items: center
+    justify-content: center
+    border-radius: 50%
+    transition: 0.2s ease
+
+.calendar-day--selected .day-number
+    background: $primary-500
+    color: white
+    font-weight: 600
+
+.workstation-navigation
+    display: grid
+    grid-template-columns: 44px 1fr 44px
+    gap: 14px
+    align-items: center
+
+.workstation-date-inline
+    display: flex
+    justify-content: center
+    align-items: center
+    gap: 8px
+    margin-bottom: 12px
+    font-size: 17px
+    font-weight: 500
+    color: #374151
+
+.separator
+    color: #9ca3af
+
+.non-working
+    color: #dc2626
+    font-weight: 600
+
+.day-nav-placeholder
+    width: 44px
+    height: 44px
+
+.day-nav-button
+    width: 44px
+    height: 44px
+    border: 1px solid #d1d5db
+    border-radius: 999px
+    background: #ffffff
+    display: flex
+    align-items: center
+    justify-content: center
+    cursor: pointer
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08)
+    transition: 0.15s ease
+
+    i
+        font-size: 20px
+
+    &:hover
+        background: #f3f4f6
+        transform: translateY(-1px)
+
+    &:active
+        transform: translateY(0)
+
+.workstation-content
+    min-width: 0
+
+.selected-day-info
+    display: flex
+    gap: 12px
+    align-items: center
+    margin-bottom: 12px
+
+.non-working-day
+    color: #dc2626
+    font-weight: 600
+
+.form-row-inline
+    display: flex
+    gap: 1rem
+    align-items: end
+    flex-wrap: wrap
+    min-width: 0
+
+.form-row-inline--user
+    .form-field
+        flex: 1 1 auto
+        min-width: 0
+
+    .form-action
+        flex: 0 0 240px
+
+.form-field
+    flex: 1 1 280px
+    min-width: 0
+
+.form-label
+    margin-bottom: 0.45rem
+    font-weight: 600
+    color: $dark-800
+
+.form-select
+    width: 100%
+    min-width: 0
+
+.form-action
+    display: flex
+    align-items: end
+    min-width: 0
+
+    .btn
+        width: 100%
+
+.booking-actions-card
+    padding-top: 1rem
+    padding-bottom: 1rem
+
+.booking-actions-row
+    display: flex
+    gap: 0.75rem
+    justify-content: center
+    align-items: center
+    flex-wrap: wrap
+    min-width: 0
+
+.booking-btn
+    min-width: 220px
+    min-height: 44px
+    padding: 0.7rem 1.1rem
+    border-radius: 12px
+    font-weight: 600
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: 0.5rem
+    transition: transform 0.15s ease, box-shadow 0.15s ease
+    box-sizing: border-box
+
+    &:hover:not(:disabled)
+        transform: translateY(-1px)
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08)
+
+.booking-btn--primary
+    background: $primary-500
+    border-color: $primary-500
+    color: $light-500
+
+.booking-btn--danger
+    background: transparent
+    border: 1px solid #dc3545
+    color: #dc3545
+
+    &:hover:not(:disabled)
+        background: rgba(220, 53, 69, 0.08)
+
+.feedback-messages
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+
+.alert
+    margin-bottom: 0
+
+@media (max-width: 768px)
+    .desk-booking-page
+        padding: 1rem 0.875rem 1.5rem
+
+    .page-title
+        font-size: 1.5rem
+
+    .booking-card
+        padding: 1rem
+
+    .form-row-inline
+        flex-direction: column
+        align-items: stretch
+
+    .form-field
+        flex: 1 1 auto
+
+    .booking-actions-row
+        justify-content: stretch
+
+    .booking-btn
+        width: 100%
+        min-width: 0
+
+@media (max-width: 576px)
+    .desk-booking-page
+        padding: 1rem 0.75rem 1.5rem
+
+    .booking-card
+        padding: 0.875rem
+
+    .calendar-row
+        gap: 0.5rem
+
+    .calendar-day
+        min-width: 52px
+        height: 72px
+
+    .form-row-inline--user
+        .form-action
+            flex: 1 1 auto
+
+    .booking-actions-row
+        flex-direction: column
+        align-items: stretch
+
+    .booking-btn
+        width: 100%
+        min-width: 0

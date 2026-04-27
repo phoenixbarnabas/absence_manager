@@ -1,0 +1,48 @@
+<div class="profile-container" *ngIf="!loading">
+  <div class="profile-header">
+    <h1 class="profile-title">Profilom</h1>
+
+    <button type="button" class="logout-button" (click)="logout()">
+      Kijelentkezés
+    </button>
+  </div>
+
+  <div class="user-card" *ngIf="userProfile">
+    <div class="user-avatar">{{ getInitials(userProfile.displayName) }}</div>
+    <div class="user-info">
+      <h2 class="user-name">{{ userProfile.displayName }}</h2>
+      <p class="user-email">{{ userProfile.email || '-' }}</p>
+      <div class="user-badges">
+        <span class="badge" *ngIf="userProfile.department">{{ userProfile.department }}</span>
+        <span class="badge" *ngIf="userProfile.jobTitle">{{ userProfile.jobTitle }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="additional-data-card" *ngIf="userProfile">
+    <h3 class="section-title">További Adatok</h3>
+
+    <div class="data-row">
+      <p class="data-label">Osztály</p>
+      <p class="data-value">{{ userProfile.department || '-' }}</p>
+    </div>
+
+    <div class="data-row">
+      <p class="data-label">Beosztás</p>
+      <p class="data-value">{{ userProfile.jobTitle || '-' }}</p>
+    </div>
+
+    <div class="data-row">
+      <p class="data-label">Email</p>
+      <p class="data-value">{{ userProfile.email || '-' }}</p>
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    <p>{{ error }}</p>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <p>Betöltés...</p>
+</div>

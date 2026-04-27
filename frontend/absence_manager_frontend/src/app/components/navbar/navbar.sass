@@ -1,0 +1,81 @@
+@use '../../../../src/styles' as *
+
+.sidebar
+    width: 270px
+    min-height: 100vh
+    background: white
+    border-right: 1px solid $border-color
+
+.sidebar-header
+  display: flex
+  justify-content: center
+  align-items: center
+
+.navbar-logo
+  max-width: 160px
+  height: auto
+  display: block
+        
+
+.sidebar-nav
+    .nav-link
+        border-radius: 0.5rem
+        padding: 0.65rem 0.8rem
+        color: $dark
+        text-decoration: none
+        transition: background 0.15s ease, color 0.15s ease
+
+        i
+            font-size: 1.2rem
+            line-height: 1
+
+        &:hover
+            background: $light-100
+            color: $dark
+
+        &.active
+            background: $primary-500
+            color: $light-500
+            font-weight: 500
+
+        &.active:hover
+            background: $primary-500
+            color: $light-500
+
+.sidebar-user
+    border-top: 1px solid $border-color
+
+.sidebar-user
+  border-top: 1px solid $border-color
+  display: block
+  color: inherit
+  cursor: pointer
+
+  &.active
+    border-radius: 12px
+
+.avatar
+  width: 48px
+  height: 48px
+  background: #16a085
+  color: white
+  border-radius: 50%
+  display: flex
+  align-items: center
+  justify-content: center
+  font-size: 16px
+  font-weight: 600
+  flex-shrink: 0
+
+.user-meta
+  display: flex
+  flex-direction: column
+  min-width: 0
+
+.user-name
+  font-weight: 600
+  line-height: 1.2
+
+.user-dept
+  font-size: 0.875rem
+  opacity: 0.8

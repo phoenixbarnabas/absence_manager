@@ -1,1 +1,9 @@
-<router-outlet></router-outlet>
+<div class="app-shell" [class.login-layout]="isLoginPage">
+  <aside class="app-sidebar" *ngIf="!isLoginPage">
+    <app-navbar></app-navbar>
+  </aside>
+
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
