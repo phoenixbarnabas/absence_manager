@@ -20,8 +20,4 @@ COPY frontend/absence_manager_frontend/nginx.conf /etc/nginx/nginx.conf
 
 # a buildelt Angular app bemásolása az nginx rootba
 COPY --from=build /usr/src/app/dist/absence_manager_frontend/browser /usr/share/nginx/html
-COPY frontend/absence_manager_frontend/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENV BACKEND_URL=""
-ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
