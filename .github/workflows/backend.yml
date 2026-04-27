@@ -28,4 +28,4 @@ jobs:
           context: .
           file: ./backend/absence_manager_backend/absence_manager_backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/helyfoglalo-backend:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/absence-manager-backend:latest
