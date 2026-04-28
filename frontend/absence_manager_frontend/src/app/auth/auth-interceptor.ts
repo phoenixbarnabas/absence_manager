@@ -4,12 +4,18 @@ import { Router } from '@angular/router';
 import { from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth-service';
+import { ConfigService } from '../services/config-service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const configService = inject(ConfigService);
 
-  const isApiRequest = req.url.startsWith('https://localhost:7190/api/');
+  if (!configService.isLoaded || req.url.endsWith('/config.json')) {
+    return next(req);
+  }
+
+  const isApiRequest = req.url.startsWith(configService.apiUrl + '/');
 
   if (!isApiRequest) {
     return next(req);

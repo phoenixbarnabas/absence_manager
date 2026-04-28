@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment.development';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { tap } from 'rxjs/internal/operators/tap';
+import { ConfigService } from './config-service';
 
 export interface DevSeedUser {
   id: string;
@@ -33,14 +34,14 @@ export class DevAuthService {
   private tokenKey = 'dev-auth-token';
   private userKey = 'dev-auth-user';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: ConfigService) { }
 
   getSeedUsers(): Observable<DevSeedUser[]> {
-    return this.http.get<DevSeedUser[]>(`${this.apiUrl}/dev-auth/seed-users`);
+    return this.http.get<DevSeedUser[]>(`${this.configService.apiUrl}/dev-auth/seed-users`);
   }
 
   loginAsUser(userId: string): Observable<DevLoginResponse> {
-    return this.http.post<DevLoginResponse>(`${this.apiUrl}/dev-auth/login/${userId}`, {}).pipe(
+    return this.http.post<DevLoginResponse>(`${this.configService.apiUrl}/dev-auth/login/${userId}`, {}).pipe(
       tap(response => {
         localStorage.setItem(this.tokenKey, response.token);
         localStorage.setItem(this.userKey, JSON.stringify(response.user));
