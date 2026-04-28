@@ -1,0 +1,7 @@
+{
+  "apiUrl": "",
+  "azureClientId": "",
+  "azureTenantId": "",
+  "apiScope": "",
+  "postLogoutRedirectUri": ""
+}

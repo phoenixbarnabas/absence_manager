@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { authState } from './auth.state';
-import { apiScope, msalInstance, postLogoutRedirectUri } from './entra-auth-config';
 import { AccountInfo, AuthenticationResult } from '@azure/msal-browser';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { getApiScope, getMsalInstance, getPostLogoutRedirectUri } from './entra-auth-config';
 
 @Injectable({
   providedIn: 'root',
@@ -17,7 +16,7 @@ export class AuthService {
 
   async initialize(): Promise<void> {
     if (!this.initialized) {
-      await msalInstance.initialize();
+      await getMsalInstance().initialize();
       this.initialized = true;
     }
   }
@@ -25,14 +24,14 @@ export class AuthService {
   async handleRedirect(): Promise<void> {
     await this.initialize();
 
-    const authResult: AuthenticationResult | null = await msalInstance.handleRedirectPromise();
-    const accounts = msalInstance.getAllAccounts();
+    const authResult: AuthenticationResult | null = await getMsalInstance().handleRedirectPromise();
+    const accounts = getMsalInstance().getAllAccounts();
 
     if (authResult?.account) {
-      msalInstance.setActiveAccount(authResult.account);
+      getMsalInstance().setActiveAccount(authResult.account);
       this.accountSubject.next(authResult.account);
     } else if (accounts.length > 0) {
-      msalInstance.setActiveAccount(accounts[0]);
+      getMsalInstance().setActiveAccount(accounts[0]);
       this.accountSubject.next(accounts[0]);
     } else {
       this.accountSubject.next(null);
@@ -43,8 +42,8 @@ export class AuthService {
   async login(): Promise<void> {
     await this.initialize();
 
-    await msalInstance.loginRedirect({
-      scopes: ['openid', 'profile', 'email', apiScope]
+    await getMsalInstance().loginRedirect({
+      scopes: ['openid', 'profile', 'email', getApiScope()]
     });
   }
 
@@ -54,8 +53,8 @@ export class AuthService {
     this.accountSubject.next(null);
     this.tokenSubject.next(null);
 
-    await msalInstance.logoutRedirect({
-      postLogoutRedirectUri
+    await getMsalInstance().logoutRedirect({
+      postLogoutRedirectUri: getPostLogoutRedirectUri()
     });
   }
 
@@ -73,9 +72,9 @@ export class AuthService {
       return null;
     }
 
-    const result = await msalInstance.acquireTokenSilent({
+    const result = await getMsalInstance().acquireTokenSilent({
       account,
-      scopes: [apiScope]
+      scopes: [getApiScope()]
     });
 
     this.tokenSubject.next(result.accessToken);
@@ -91,7 +90,7 @@ export class AuthService {
   }
 
   getActiveAccount(): AccountInfo | null {
-    return msalInstance.getActiveAccount() ?? msalInstance.getAllAccounts()[0] ?? null;
+    return getMsalInstance().getActiveAccount() ?? getMsalInstance().getAllAccounts()[0] ?? null;
   }
 
   isLoggedIn(): boolean {
