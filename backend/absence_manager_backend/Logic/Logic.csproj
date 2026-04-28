@@ -9,9 +9,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Graph" Version="5.103.0" />
-		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
 		<PackageReference Include="AutoMapper" Version="15.1.1" />
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.7.0" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.7" />
 	</ItemGroup>
 
 	<ItemGroup>
