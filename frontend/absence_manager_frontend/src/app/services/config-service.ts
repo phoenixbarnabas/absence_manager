@@ -1,21 +1,57 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom, tap } from 'rxjs';
-import { Config } from '../models/config';
+import { AppConfig } from '../models/app-config.model';
+import { createMsalInstance } from '../auth/entra-auth-config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConfigService {
-  public cfg: Config = new Config();
-  constructor(private http: HttpClient) { }
+  private config: AppConfig | null = null;
+  private rawHttp: HttpClient;
 
-  loadconfig(): Promise<void> {
-    return firstValueFrom(this.http.get<Config>('/config.json', { headers: { 'Cache-Control': 'no-cache' } }).pipe(
-      tap(config => {
-        this.cfg = config;
-        console.log('Config loaded:', this.cfg);
-      })
-    )).then(() => { });
+  constructor(httpBackend: HttpBackend) {
+    this.rawHttp = new HttpClient(httpBackend);
+  }
+
+  loadConfig(): Promise<void> {
+    return firstValueFrom(this.rawHttp.get<AppConfig>('/config.json'))
+      .then((config) => {
+        this.config = config;
+        createMsalInstance(config);
+      });
+  }
+
+  get isLoaded(): boolean {
+    return this.config !== null;
+  }
+
+  get apiUrl(): string {
+    return this.getConfig().apiUrl;
+  }
+
+  get azureClientId(): string {
+    return this.getConfig().azureClientId;
+  }
+
+  get azureTenantId(): string {
+    return this.getConfig().azureTenantId;
+  }
+
+  get apiScope(): string {
+    return this.getConfig().apiScope;
+  }
+
+  get postLogoutRedirectUri(): string {
+    return this.getConfig().postLogoutRedirectUri;
+  }
+
+  private getConfig(): AppConfig {
+    if (!this.config) {
+      throw new Error('Config is not loaded yet.');
+    }
+
+    return this.config;
   }
 }

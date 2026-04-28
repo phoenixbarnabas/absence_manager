@@ -31,3 +31,10 @@ Thumbs.db
 
 # Ignore all Development configs in any project
 **/appsettings.Development.json
+
+# Angular environment (local)
+src/environments/environment.development.ts
+
+# Runtime config
+public/config.json
+!public/config.example.json
