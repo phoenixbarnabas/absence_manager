@@ -1,0 +1,584 @@
+@use '../../../../src/styles' as *
+.calendar-page
+    width: 100%
+    max-width: 1320px
+    min-width: 0
+    margin: 0 auto
+    padding: 1.5rem 1rem 2rem
+    box-sizing: border-box
+
+.page-header
+    display: flex
+    justify-content: space-between
+    align-items: flex-start
+    gap: 1rem
+    margin-bottom: 1.25rem
+
+.page-title
+    margin: 0
+    font-size: 1.75rem
+    font-weight: 700
+    color: $dark-900
+
+.page-subtitle
+    margin: 0.4rem 0 0
+    color: $dark-700
+
+.calendar-toolbar,
+.filter-card,
+.calendar-card,
+.event-details,
+.selected-day-card,
+.empty-state,
+.loading-card
+    background: $light-500
+    border: 1px solid $border-color
+    border-radius: 16px
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04)
+
+.calendar-toolbar
+    display: flex
+    justify-content: space-between
+    align-items: center
+    gap: 1rem
+    padding: 1rem
+    margin-bottom: 1rem
+    flex-wrap: wrap
+
+.period-controls
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    flex-wrap: wrap
+
+.period-title
+    min-width: 220px
+    font-weight: 700
+    color: $dark-900
+
+.view-switcher
+    display: flex
+    align-items: center
+    gap: 0.4rem
+    padding: 0.25rem
+    border-radius: 12px
+    background: $light-100
+
+.view-switcher__btn
+    display: inline-flex
+    align-items: center
+    gap: 0.4rem
+    border: 0
+    border-radius: 10px
+    color: $dark-700
+
+.view-switcher__btn--active
+    background: $primary-500
+    color: $light-500
+
+.filter-card
+    display: flex
+    gap: 1.25rem
+    align-items: flex-start
+    padding: 1rem
+    margin-bottom: 1rem
+    flex-wrap: wrap
+
+.filter-group--scope
+    flex: 0 1 280px
+
+.filter-group--types
+    flex: 1 1 480px
+
+.form-label
+    font-weight: 700
+    color: $dark-800
+    margin-bottom: 0.45rem
+
+.filter-hint
+    display: block
+    margin-top: 0.35rem
+    color: $dark-600
+
+.event-type-filters
+    display: flex
+    gap: 0.5rem
+    flex-wrap: wrap
+
+.event-type-filter
+    display: inline-flex
+    align-items: center
+    gap: 0.4rem
+    min-height: 38px
+    padding: 0.45rem 0.7rem
+    border: 1px solid $border-color
+    border-radius: 999px
+    cursor: pointer
+    user-select: none
+    color: $dark-800
+    background: $light-500
+
+    input
+        margin: 0
+
+.event-type-dot
+    width: 0.65rem
+    height: 0.65rem
+    border-radius: 999px
+    background: $dark-600
+
+.event-type-filter--vacation .event-type-dot,
+.event-pill--vacation .event-pill__dot,
+.year-type--vacation,
+.week-event--vacation,
+.selected-day-event--vacation,
+.event-details__type--vacation
+    background: $success-500
+
+.event-type-filter--homeOffice .event-type-dot,
+.event-pill--homeOffice .event-pill__dot,
+.year-type--homeOffice,
+.week-event--homeOffice,
+.selected-day-event--homeOffice,
+.event-details__type--homeOffice
+    background: $info-500
+
+.event-type-filter--sickLeave .event-type-dot,
+.event-pill--sickLeave .event-pill__dot,
+.year-type--sickLeave,
+.week-event--sickLeave,
+.selected-day-event--sickLeave,
+.event-details__type--sickLeave
+    background: $danger-500
+
+.event-type-filter--otherAbsence .event-type-dot,
+.event-pill--otherAbsence .event-pill__dot,
+.year-type--otherAbsence,
+.week-event--otherAbsence,
+.selected-day-event--otherAbsence,
+.event-details__type--otherAbsence
+    background: $warning-500
+
+.event-type-filter--deskBooking .event-type-dot,
+.event-pill--deskBooking .event-pill__dot,
+.year-type--deskBooking,
+.week-event--deskBooking,
+.selected-day-event--deskBooking,
+.event-details__type--deskBooking
+    background: $primary-500
+
+.calendar-alerts
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+    margin-bottom: 1rem
+
+.alert
+    margin: 0
+
+.loading-card
+    display: flex
+    justify-content: center
+    align-items: center
+    gap: 0.75rem
+    min-height: 180px
+    color: $dark-700
+
+.calendar-layout
+    display: grid
+    grid-template-columns: minmax(0, 1fr)
+    gap: 1rem
+
+.calendar-layout--with-details
+    grid-template-columns: minmax(0, 1fr) 360px
+    align-items: start
+
+.calendar-card
+    padding: 1rem
+    min-width: 0
+
+.calendar-summary-row
+    display: flex
+    justify-content: space-between
+    align-items: center
+    gap: 1rem
+    margin-bottom: 1rem
+    color: $dark-700
+    font-size: 0.9rem
+    flex-wrap: wrap
+
+.month-weekdays
+    display: grid
+    grid-template-columns: repeat(7, minmax(0, 1fr))
+    gap: 0.5rem
+    margin-bottom: 0.5rem
+    color: $dark-700
+    font-weight: 700
+    text-align: center
+
+.month-grid
+    display: grid
+    grid-template-columns: repeat(7, minmax(0, 1fr))
+    gap: 0.5rem
+
+.month-day
+    min-height: 138px
+    padding: 0.65rem
+    border: 1px solid $border-color
+    border-radius: 14px
+    background: $light-500
+    cursor: pointer
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease
+    overflow: hidden
+
+    &:hover
+        border-color: $primary-400
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06)
+        transform: translateY(-1px)
+
+.month-day--other-month
+    opacity: 0.45
+
+.month-day--today
+    border-color: $primary-500
+
+.month-day--selected
+    box-shadow: 0 0 0 3px rgba(0, 146, 123, 0.15)
+
+.month-day--non-working
+    background: $light-100
+
+.month-day__header
+    display: flex
+    align-items: center
+    gap: 0.35rem
+    margin-bottom: 0.4rem
+    flex-wrap: wrap
+
+.month-day__number
+    font-weight: 800
+    color: $dark-900
+
+.day-badge
+    display: inline-flex
+    align-items: center
+    padding: 0.1rem 0.35rem
+    border-radius: 999px
+    font-size: 0.65rem
+    font-weight: 700
+
+.day-badge--today
+    background: $primary-200
+    color: $primary-700
+
+.day-badge--holiday
+    background: rgba(214, 69, 69, 0.12)
+    color: $danger-600
+
+.day-badge--weekend
+    background: $light-200
+    color: $dark-700
+
+.month-day__holiday
+    margin-bottom: 0.35rem
+    font-size: 0.72rem
+    color: $danger-600
+    font-weight: 700
+
+.event-list
+    display: flex
+    flex-direction: column
+    gap: 0.3rem
+
+.event-pill
+    display: flex
+    align-items: center
+    gap: 0.35rem
+    width: 100%
+    min-width: 0
+    border: 0
+    border-radius: 8px
+    padding: 0.3rem 0.4rem
+    background: $light-100
+    color: $dark-800
+    text-align: left
+    font-size: 0.76rem
+
+.event-pill__dot
+    flex: 0 0 auto
+    width: 0.55rem
+    height: 0.55rem
+    border-radius: 999px
+
+.event-pill__text
+    min-width: 0
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+.event-more,
+.empty-day
+    font-size: 0.72rem
+    color: $dark-600
+
+.empty-day
+    margin-top: 1.7rem
+
+.week-grid
+    display: grid
+    grid-template-columns: repeat(7, minmax(0, 1fr))
+    gap: 0.75rem
+
+.week-day
+    min-height: 460px
+    border: 1px solid $border-color
+    border-radius: 14px
+    background: $light-500
+    padding: 0.75rem
+    cursor: pointer
+
+.week-day--today
+    border-color: $primary-500
+
+.week-day--selected
+    box-shadow: 0 0 0 3px rgba(0, 146, 123, 0.15)
+
+.week-day--non-working
+    background: $light-100
+
+.week-day__header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    margin-bottom: 0.45rem
+
+.week-day__name
+    color: $dark-700
+    font-weight: 700
+
+.week-day__number
+    font-size: 1.35rem
+    font-weight: 800
+    color: $dark-900
+
+.week-day__meta
+    margin-bottom: 0.5rem
+    color: $danger-600
+    font-size: 0.78rem
+    font-weight: 700
+
+.week-events
+    display: flex
+    flex-direction: column
+    gap: 0.5rem
+
+.week-event,
+.selected-day-event
+    display: flex
+    flex-direction: column
+    align-items: flex-start
+    gap: 0.2rem
+    width: 100%
+    border: 0
+    border-radius: 12px
+    padding: 0.65rem
+    color: $light-500
+    text-align: left
+
+    small
+        opacity: 0.85
+
+.week-empty
+    color: $dark-600
+    font-size: 0.85rem
+    padding-top: 1rem
+
+.year-grid
+    display: grid
+    grid-template-columns: repeat(4, minmax(0, 1fr))
+    gap: 0.75rem
+
+.year-month
+    border: 1px solid $border-color
+    border-radius: 14px
+    padding: 1rem
+    background: $light-500
+
+.year-month__header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    gap: 0.75rem
+    margin-bottom: 0.5rem
+
+    h2
+        margin: 0
+        font-size: 1.05rem
+        color: $dark-900
+        font-weight: 800
+
+    span
+        min-width: 2rem
+        min-height: 2rem
+        border-radius: 999px
+        display: inline-flex
+        align-items: center
+        justify-content: center
+        background: $primary-200
+        color: $primary-700
+        font-weight: 800
+
+.year-month__meta
+    display: flex
+    gap: 0.5rem
+    flex-wrap: wrap
+    color: $dark-600
+    font-size: 0.8rem
+    margin-bottom: 0.65rem
+
+.year-month__types
+    display: flex
+    flex-direction: column
+    gap: 0.35rem
+
+.year-type
+    display: inline-flex
+    width: fit-content
+    border-radius: 999px
+    padding: 0.2rem 0.5rem
+    color: $light-500
+    font-size: 0.75rem
+    font-weight: 700
+
+.year-empty
+    color: $dark-600
+    font-size: 0.85rem
+
+.event-details
+    padding: 1rem
+    position: sticky
+    top: 1rem
+
+.event-details__header
+    display: flex
+    justify-content: space-between
+    align-items: flex-start
+    gap: 0.75rem
+    margin-bottom: 1rem
+
+    h2
+        margin: 0.55rem 0 0
+        font-size: 1.25rem
+        font-weight: 800
+        color: $dark-900
+
+.event-details__type
+    display: inline-flex
+    align-items: center
+    gap: 0.4rem
+    color: $light-500
+    border-radius: 999px
+    padding: 0.3rem 0.6rem
+    font-size: 0.8rem
+    font-weight: 800
+
+.event-details__list
+    display: flex
+    flex-direction: column
+    gap: 0.8rem
+    margin: 0 0 1rem
+
+    div
+        border-bottom: 1px solid $border-color
+        padding-bottom: 0.65rem
+
+    dt
+        color: $dark-600
+        font-size: 0.78rem
+        margin-bottom: 0.15rem
+
+    dd
+        margin: 0
+        color: $dark-900
+        font-weight: 700
+
+.selected-day-card
+    margin-top: 1rem
+    padding: 1rem
+
+    h2
+        margin: 0 0 0.75rem
+        font-size: 1.1rem
+        font-weight: 800
+        color: $dark-900
+
+.selected-day-event
+    margin-bottom: 0.5rem
+
+.empty-state
+    margin-top: 1rem
+    padding: 2rem
+    text-align: center
+    color: $dark-700
+
+    i
+        font-size: 2.5rem
+        color: $primary-500
+
+    h2
+        margin: 0.75rem 0 0.35rem
+        color: $dark-900
+        font-weight: 800
+
+    p
+        margin: 0
+
+@media (max-width: 1180px)
+    .calendar-layout--with-details
+        grid-template-columns: minmax(0, 1fr)
+
+    .event-details
+        position: static
+
+    .week-grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+
+    .year-grid
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+
+@media (max-width: 768px)
+    .calendar-page
+        padding: 1rem 0.75rem 1.5rem
+
+    .page-header,
+    .calendar-toolbar,
+    .filter-card
+        flex-direction: column
+        align-items: stretch
+
+    .period-controls,
+    .view-switcher
+        width: 100%
+
+    .period-title
+        flex: 1 1 auto
+        min-width: 0
+
+    .view-switcher__btn
+        flex: 1 1 0
+        justify-content: center
+
+    .month-weekdays
+        display: none
+
+    .month-grid,
+    .week-grid,
+    .year-grid
+        grid-template-columns: 1fr
+
+    .month-day,
+    .week-day
+        min-height: auto
+
+    .empty-day
+        margin-top: 0.5rem
