@@ -4,15 +4,21 @@
     </a>
 
     <nav class="sidebar-nav nav flex-column gap-1 px-3">
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/profile" routerLinkActive="active"
+            *ngIf="isLoggedIn">
+            <i class="bi bi-person"></i>
+            <span>Profil</span>
+        </a>
+        
         <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
             <i class="bi bi-grid-3x2-gap"></i>
             <span>Helyfoglalás</span>
         </a>
 
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/profile" routerLinkActive="active"
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/calendar" routerLinkActive="active"
             *ngIf="isLoggedIn">
-            <i class="bi bi-person"></i>
-            <span>Profil</span>
+            <i class="bi bi-calendar"></i>
+            <span>Naptár</span>
         </a>
     </nav>
 
