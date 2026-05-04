@@ -10,6 +10,7 @@ namespace Data
         public DbSet<Office> Offices => Set<Office>();
         public DbSet<Workstation> Workstations => Set<Workstation>();
         public DbSet<OfficeBooking> OfficeBookings => Set<OfficeBooking>();
+        public DbSet<AbsenceRequest> AbsenceRequests => Set<AbsenceRequest>();
 
         public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options)
             : base(options)
@@ -151,6 +152,66 @@ namespace Data
 
                 entity.HasIndex(x => new { x.OfficeId, x.Name })
                     .IsUnique();
+            });
+
+            // -------------------------
+            // AbsenceRequest
+            // -------------------------
+            modelBuilder.Entity<AbsenceRequest>(entity =>
+            {
+                entity.ToTable("AbsenceRequests");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Id)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.UserId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.DateFrom)
+                    .IsRequired();
+
+                entity.Property(x => x.DateTo)
+                    .IsRequired();
+
+                entity.Property(x => x.Reason)
+                    .HasMaxLength(1000);
+
+                entity.Property(x => x.CreatedAtUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.CreatedByUserId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.ReviewedByUserId)
+                    .HasMaxLength(50);
+
+                entity.HasOne(x => x.User)
+                    .WithMany(x => x.AbsenceRequests)
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.ReviewedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.ReviewedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => new { x.UserId, x.DateFrom, x.DateTo, x.Status })
+                    .HasDatabaseName("IX_AbsenceRequests_User_DateRange_Status");
             });
 
             // -------------------------

@@ -1,7 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of, Subscription, timeout } from 'rxjs';
 
+import {
+  CalendarAbsenceRequestType,
+  CalendarDayInfoDto,
+  CalendarDayView,
+  CalendarEventDto,
+  CalendarEventType,
+  CalendarScope,
+  CalendarViewMode,
+  CreateAbsenceRequestDto
+} from '../../models/calendar-models';
+import { CalendarService } from '../../services/calendar-service';
 
 @Component({
   selector: 'app-calendar-page',
@@ -9,8 +20,9 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
   templateUrl: './calendar-page.html',
   styleUrl: './calendar-page.sass'
 })
-export class CalendarPage implements OnInit {
+export class CalendarPage implements OnInit, OnDestroy {
   readonly weekDayNames = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
+
   readonly monthNames = [
     'Január',
     'Február',
@@ -28,14 +40,25 @@ export class CalendarPage implements OnInit {
 
   readonly viewModes: { value: CalendarViewMode; label: string; icon: string }[] = [
     { value: 'month', label: 'Havi', icon: 'bi-calendar3' },
-    { value: 'week', label: 'Heti', icon: 'bi-calendar-week' },
-    { value: 'year', label: 'Éves', icon: 'bi-calendar4-range' }
+    { value: 'week', label: 'Heti', icon: 'bi-calendar-week' }
   ];
 
   readonly scopeOptions: { value: CalendarScope; label: string; description: string }[] = [
-    { value: 'mine', label: 'Saját', description: 'Csak a saját eseményeim' },
-    { value: 'team', label: 'Csapat', description: 'Managerként a saját csapat eseményei' },
-    { value: 'organization', label: 'Szervezet', description: 'HR/Admin jogosultsággal szélesebb nézet' }
+    {
+      value: 'mine',
+      label: 'Saját',
+      description: 'Csak a saját szabadság, home office és helyfoglalás eseményeim.'
+    },
+    {
+      value: 'team',
+      label: 'Csapat',
+      description: 'A saját department / csapat eseményei.'
+    },
+    {
+      value: 'organization',
+      label: 'Szervezet',
+      description: 'HR/Admin esetén szervezeti nézet, egyébként saját nézetre korlátozva.'
+    }
   ];
 
   readonly eventTypeOptions: { value: CalendarEventType; label: string; icon: string }[] = [
@@ -46,13 +69,20 @@ export class CalendarPage implements OnInit {
     { value: 'deskBooking', label: 'Helyfoglalás', icon: 'bi-grid-3x2-gap' }
   ];
 
+  readonly absenceTypeOptions: { value: CalendarAbsenceRequestType; label: string; icon: string }[] = [
+    { value: 'vacation', label: 'Szabadság', icon: 'bi-suitcase-lg' },
+    { value: 'homeOffice', label: 'Home office', icon: 'bi-house-door' },
+    { value: 'sickLeave', label: 'Betegszabadság', icon: 'bi-heart-pulse' },
+    { value: 'otherAbsence', label: 'Egyéb távollét', icon: 'bi-calendar-x' }
+  ];
+
   viewMode: CalendarViewMode = 'month';
   scope: CalendarScope = 'mine';
+
   currentDate = this.startOfDay(new Date());
   selectedDateKey = this.formatDateForApi(new Date());
 
   calendarDays: CalendarDayView[] = [];
-  monthSummaries: CalendarMonthSummary[] = [];
   selectedEvent: CalendarEventDto | null = null;
 
   eventTypeSelection: Record<CalendarEventType, boolean> = {
@@ -64,13 +94,30 @@ export class CalendarPage implements OnInit {
   };
 
   loading = false;
+  saving = false;
+
   errorMessage = '';
   warningMessage = '';
+  successMessage = '';
+
+  requestModalOpen = false;
+  requestModalDay: CalendarDayView | null = null;
+
+  requestForm: CreateAbsenceRequestDto = {
+    type: 'vacation',
+    dateFrom: this.selectedDateKey,
+    dateTo: this.selectedDateKey,
+    reason: ''
+  };
 
   private dayInfos: CalendarDayInfoDto[] = [];
   private events: CalendarEventDto[] = [];
+
   private rangeFrom = this.currentDate;
   private rangeTo = this.currentDate;
+
+  private calendarLoadSubscription?: Subscription;
+  private calendarLoadVersion = 0;
 
   constructor(
     private calendarService: CalendarService,
@@ -81,11 +128,11 @@ export class CalendarPage implements OnInit {
     this.loadCalendar();
   }
 
-  get periodTitle(): string {
-    if (this.viewMode === 'year') {
-      return `${this.currentDate.getFullYear()}`;
-    }
+  ngOnDestroy(): void {
+    this.calendarLoadSubscription?.unsubscribe();
+  }
 
+  get periodTitle(): string {
     if (this.viewMode === 'week') {
       const range = this.getCurrentRange();
       return `${this.formatShortDate(range.from)} - ${this.formatShortDate(range.to)}`;
@@ -113,6 +160,34 @@ export class CalendarPage implements OnInit {
     return this.events.length;
   }
 
+  get selectedScopeDescription(): string {
+    return this.scopeOptions.find(option => option.value === this.scope)?.description ?? '';
+  }
+
+  get requestModalTitle(): string {
+    if (!this.requestModalDay) {
+      return 'Új igény';
+    }
+
+    return `${this.formatLongDate(this.requestModalDay.date)} - új igény`;
+  }
+
+  get canSubmitRequest(): boolean {
+    if (!this.requestForm.type || !this.requestForm.dateFrom || !this.requestForm.dateTo) {
+      return false;
+    }
+
+    if (this.requestForm.dateTo < this.requestForm.dateFrom) {
+      return false;
+    }
+
+    if (this.requestForm.dateFrom < this.formatDateForApi(new Date())) {
+      return false;
+    }
+
+    return !this.saving;
+  }
+
   setViewMode(mode: CalendarViewMode): void {
     if (this.viewMode === mode) {
       return;
@@ -124,10 +199,12 @@ export class CalendarPage implements OnInit {
   }
 
   previousPeriod(): void {
-    if (this.viewMode === 'year') {
-      this.currentDate = new Date(this.currentDate.getFullYear() - 1, 0, 1);
-    } else if (this.viewMode === 'month') {
-      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+    if (this.viewMode === 'month') {
+      this.currentDate = new Date(
+        this.currentDate.getFullYear(),
+        this.currentDate.getMonth() - 1,
+        1
+      );
     } else {
       const previousWeek = new Date(this.currentDate);
       previousWeek.setDate(previousWeek.getDate() - 7);
@@ -140,10 +217,12 @@ export class CalendarPage implements OnInit {
   }
 
   nextPeriod(): void {
-    if (this.viewMode === 'year') {
-      this.currentDate = new Date(this.currentDate.getFullYear() + 1, 0, 1);
-    } else if (this.viewMode === 'month') {
-      this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
+    if (this.viewMode === 'month') {
+      this.currentDate = new Date(
+        this.currentDate.getFullYear(),
+        this.currentDate.getMonth() + 1,
+        1
+      );
     } else {
       const nextWeek = new Date(this.currentDate);
       nextWeek.setDate(nextWeek.getDate() + 7);
@@ -176,16 +255,83 @@ export class CalendarPage implements OnInit {
 
   selectDay(day: CalendarDayView): void {
     this.selectedDateKey = day.dateKey;
+    this.selectedEvent = null;
+
     this.calendarDays = this.calendarDays.map(calendarDay => ({
       ...calendarDay,
       isSelected: calendarDay.dateKey === day.dateKey
     }));
+
+    this.openRequestModal(day);
+  }
+
+  openRequestModal(day: CalendarDayView): void {
+    this.clearMessages();
+
+    this.requestModalDay = day;
+    this.requestModalOpen = true;
+
+    this.requestForm = {
+      type: 'vacation',
+      dateFrom: day.dateKey,
+      dateTo: day.dateKey,
+      reason: ''
+    };
+
+    if (!day.isWorkingDay) {
+      this.warningMessage = day.holidayName
+        ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
+        : 'A kiválasztott nap hétvége vagy nem munkanap.';
+    }
+  }
+
+  closeRequestModal(): void {
+    if (this.saving) {
+      return;
+    }
+
+    this.requestModalOpen = false;
+    this.requestModalDay = null;
+  }
+
+  submitRequest(): void {
+    if (!this.canSubmitRequest) {
+      this.errorMessage = 'Ellenőrizd a dátumokat és az igény típusát.';
+      return;
+    }
+
+    this.clearMessages();
+    this.saving = true;
+
+    const dto: CreateAbsenceRequestDto = {
+      type: this.requestForm.type,
+      dateFrom: this.requestForm.dateFrom,
+      dateTo: this.requestForm.dateTo,
+      reason: this.requestForm.reason?.trim() || null
+    };
+
+    this.calendarService.createAbsenceRequest(dto)
+      .pipe(finalize(() => this.saving = false))
+      .subscribe({
+        next: () => {
+          this.successMessage = 'Az igény mentése sikerült.';
+          this.requestModalOpen = false;
+          this.requestModalDay = null;
+          this.loadCalendar();
+        },
+        error: err => {
+          console.error(err);
+          this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült menteni az igényt.');
+        }
+      });
   }
 
   selectEvent(event: CalendarEventDto, domEvent?: Event): void {
     domEvent?.stopPropagation();
+
     this.selectedEvent = event;
     this.selectedDateKey = event.dateFrom;
+
     this.calendarDays = this.calendarDays.map(calendarDay => ({
       ...calendarDay,
       isSelected: calendarDay.dateKey === event.dateFrom
@@ -210,10 +356,6 @@ export class CalendarPage implements OnInit {
 
   trackByEvent(_: number, event: CalendarEventDto): string {
     return event.id;
-  }
-
-  trackByMonth(_: number, summary: CalendarMonthSummary): number {
-    return summary.monthIndex;
   }
 
   getEventTypeLabel(type: CalendarEventType): string {
@@ -247,12 +389,12 @@ export class CalendarPage implements OnInit {
     return `${this.formatLongDate(this.parseDateKey(event.dateFrom))} - ${this.formatLongDate(this.parseDateKey(event.dateTo))}`;
   }
 
-  hasMonthSummaryEvent(summary: CalendarMonthSummary, type: CalendarEventType): boolean {
-    return summary.eventsByType[type] > 0;
-  }
-
   private loadCalendar(): void {
     const range = this.getCurrentRange();
+    const loadVersion = ++this.calendarLoadVersion;
+
+    this.calendarLoadSubscription?.unsubscribe();
+
     this.rangeFrom = range.from;
     this.rangeTo = range.to;
 
@@ -264,30 +406,60 @@ export class CalendarPage implements OnInit {
     this.errorMessage = '';
     this.warningMessage = '';
 
+    this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
+    this.events = [];
+    this.rebuildView();
+
     const dayInfos$ = this.calendarService.getDayInfos(fromDate, toDate).pipe(
+      timeout(12000),
       catchError(err => {
-        console.error(err);
-        this.warningMessage = 'A munkanap/ünnepnap API nem érhető el, ezért ideiglenes helyi naptárlogikát használok.';
+        console.error('Calendar day-infos load failed', err);
+        this.warningMessage = 'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.';
         return of(this.generateFallbackDayInfos(range.from, range.to));
       })
     );
 
-    const events$ = this.calendarService.getEvents(fromDate, toDate, this.scope, selectedTypes).pipe(
-      catchError(err => {
-        console.error(err);
-        this.errorMessage = err?.status === 403
-          ? 'Ehhez a naptár nézethez nincs megfelelő jogosultságod.'
-          : 'Nem sikerült betölteni a naptár eseményeit.';
-        return of([] as CalendarEventDto[]);
-      })
-    );
+    const events$ = selectedTypes.length === 0
+      ? of([] as CalendarEventDto[])
+      : this.calendarService.getEvents(fromDate, toDate, this.scope, selectedTypes).pipe(
+        timeout(12000),
+        catchError(err => {
+          console.error('Calendar events load failed', err);
+          this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.');
+          return of([] as CalendarEventDto[]);
+        })
+      );
 
-    forkJoin({ dayInfos: dayInfos$, events: events$ })
-      .pipe(finalize(() => this.loading = false))
-      .subscribe(({ dayInfos, events }) => {
-        this.dayInfos = dayInfos;
-        this.events = events;
-        this.rebuildView();
+    this.calendarLoadSubscription = forkJoin({
+      dayInfos: dayInfos$,
+      events: events$
+    })
+      .pipe(finalize(() => {
+        if (loadVersion === this.calendarLoadVersion) {
+          this.loading = false;
+        }
+      }))
+      .subscribe({
+        next: ({ dayInfos, events }) => {
+          if (loadVersion !== this.calendarLoadVersion) {
+            return;
+          }
+
+          this.dayInfos = dayInfos;
+          this.events = events;
+          this.rebuildView();
+        },
+        error: err => {
+          if (loadVersion !== this.calendarLoadVersion) {
+            return;
+          }
+
+          console.error('Unexpected calendar load error', err);
+          this.errorMessage = 'Váratlan hiba történt a naptár betöltése közben.';
+          this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
+          this.events = [];
+          this.rebuildView();
+        }
       });
   }
 
@@ -304,6 +476,7 @@ export class CalendarPage implements OnInit {
         date: currentDate,
         dateKey,
         dayNumber: currentDate.getDate(),
+        dayName: this.weekDayNames[this.getMondayBasedWeekdayIndex(currentDate)],
         isToday: this.isSameDate(currentDate, new Date()),
         isCurrentMonth: this.viewMode !== 'month' || currentDate.getMonth() === this.currentDate.getMonth(),
         isSelected: dateKey === this.selectedDateKey,
@@ -316,84 +489,61 @@ export class CalendarPage implements OnInit {
     }
 
     this.calendarDays = days;
-    this.monthSummaries = this.buildMonthSummaries();
 
     if (this.selectedEvent && !this.events.some(event => event.id === this.selectedEvent?.id)) {
       this.selectedEvent = null;
     }
   }
 
-  private buildMonthSummaries(): CalendarMonthSummary[] {
-    const year = this.currentDate.getFullYear();
-
-    return this.monthNames.map((monthName, monthIndex) => {
-      const firstDay = new Date(year, monthIndex, 1);
-      const lastDay = new Date(year, monthIndex + 1, 0);
-      const counters = this.createEmptyEventCounter();
-      const monthEvents = this.events.filter(event => this.eventIntersectsRange(event, firstDay, lastDay));
-      const monthDayInfos = this.dayInfos.filter(dayInfo => this.parseDateKey(dayInfo.date).getMonth() === monthIndex);
-
-      monthEvents.forEach(event => {
-        counters[event.type] += 1;
-      });
-
-      return {
-        monthIndex,
-        monthName,
-        totalEvents: monthEvents.length,
-        workdays: monthDayInfos.filter(dayInfo => dayInfo.isWorkingDay).length,
-        holidays: monthDayInfos.filter(dayInfo => dayInfo.isHoliday).length,
-        eventsByType: counters
-      };
-    });
-  }
-
   private getCurrentRange(): { from: Date; to: Date } {
-    if (this.viewMode === 'year') {
-      return {
-        from: new Date(this.currentDate.getFullYear(), 0, 1),
-        to: new Date(this.currentDate.getFullYear(), 11, 31)
-      };
-    }
-
     if (this.viewMode === 'week') {
       const weekStart = this.getStartOfWeek(this.currentDate);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
 
-      return { from: weekStart, to: weekEnd };
+      return {
+        from: weekStart,
+        to: weekEnd
+      };
     }
 
-    const firstDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-    const lastDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
-    const gridStart = this.getStartOfWeek(firstDayOfMonth);
-    const gridEnd = this.getEndOfWeek(lastDayOfMonth);
+    const firstDayOfMonth = new Date(
+      this.currentDate.getFullYear(),
+      this.currentDate.getMonth(),
+      1
+    );
 
-    return { from: gridStart, to: gridEnd };
+    const lastDayOfMonth = new Date(
+      this.currentDate.getFullYear(),
+      this.currentDate.getMonth() + 1,
+      0
+    );
+
+    return {
+      from: this.getStartOfWeek(firstDayOfMonth),
+      to: this.getEndOfWeek(lastDayOfMonth)
+    };
   }
 
   private getStartOfWeek(date: Date): Date {
     const result = this.startOfDay(date);
     const dayOfWeek = result.getDay();
     const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
     result.setDate(result.getDate() + diff);
+
     return result;
   }
 
   private getEndOfWeek(date: Date): Date {
     const result = this.getStartOfWeek(date);
     result.setDate(result.getDate() + 6);
+
     return result;
   }
 
   private isEventOnDate(event: CalendarEventDto, dateKey: string): boolean {
     return event.dateFrom <= dateKey && event.dateTo >= dateKey;
-  }
-
-  private eventIntersectsRange(event: CalendarEventDto, from: Date, to: Date): boolean {
-    const fromKey = this.formatDateForApi(from);
-    const toKey = this.formatDateForApi(to);
-    return event.dateFrom <= toKey && event.dateTo >= fromKey;
   }
 
   private generateFallbackDayInfos(from: Date, to: Date): CalendarDayInfoDto[] {
@@ -419,14 +569,30 @@ export class CalendarPage implements OnInit {
     };
   }
 
-  private createEmptyEventCounter(): Record<CalendarEventType, number> {
-    return {
-      vacation: 0,
-      homeOffice: 0,
-      sickLeave: 0,
-      otherAbsence: 0,
-      deskBooking: 0
-    };
+  private clearMessages(): void {
+    this.errorMessage = '';
+    this.warningMessage = '';
+    this.successMessage = '';
+  }
+
+  private getApiErrorMessage(err: any, fallback: string): string {
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+
+    if (err?.status === 401) {
+      return 'A munkamenet lejárt vagy nincs jogosultságod. Jelentkezz be újra.';
+    }
+
+    if (err?.status === 403) {
+      return 'Ehhez a művelethez nincs megfelelő jogosultságod.';
+    }
+
+    if (err?.name === 'TimeoutError') {
+      return 'A backend nem válaszolt időben. Ellenőrizd, hogy fut-e az API.';
+    }
+
+    return fallback;
   }
 
   private formatDateForApi(date: Date): string {
@@ -451,7 +617,11 @@ export class CalendarPage implements OnInit {
   }
 
   private startOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
   }
 
   private isSameDate(first: Date, second: Date): boolean {
@@ -459,6 +629,9 @@ export class CalendarPage implements OnInit {
       && first.getMonth() === second.getMonth()
       && first.getDate() === second.getDate();
   }
-}import { CalendarDayInfoDto, CalendarDayView, CalendarEventDto, CalendarEventType, CalendarMonthSummary, CalendarScope, CalendarViewMode } from '../../models/calendar-models';
-import { CalendarService } from '../../services/calendar-service';
 
+  private getMondayBasedWeekdayIndex(date: Date): number {
+    const day = date.getDay();
+    return day === 0 ? 6 : day - 1;
+  }
+}

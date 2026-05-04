@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Entities.Dtos.CalendarDtos
+namespace Entities.Dtos.AbsenceRequestDtos
 {
-    public class CalendarEventDto
+    public class AbsenceRequestViewDto
     {
         public string Id { get; set; } = null!;
-
-        public string Title { get; set; } = null!;
 
         public string Type { get; set; } = null!;
 
@@ -18,22 +16,14 @@ namespace Entities.Dtos.CalendarDtos
 
         public DateOnly DateTo { get; set; }
 
+        public string? Reason { get; set; }
+
         public string UserId { get; set; } = null!;
 
         public string UserName { get; set; } = null!;
 
         public string? Department { get; set; }
 
-        public string? Description { get; set; }
-
-        public string? SourceId { get; set; }
-
-        public string? DetailsUrl { get; set; }
-
-        public string? LocationName { get; set; }
-
-        public string? OfficeName { get; set; }
-
-        public string? WorkstationName { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
     }
 }

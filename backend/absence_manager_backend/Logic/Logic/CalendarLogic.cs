@@ -1,5 +1,6 @@
 ﻿using Data;
 using Entities.Dtos.CalendarDtos;
+using Entities.Enums;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,15 +10,11 @@ namespace Logic.Logic
     {
         private const int MaximumRangeInDays = 370;
 
-        private readonly Repository<OfficeBooking> _officeBookingRepository;
-        private readonly Repository<AppUser> _appUserRepository;
+        private readonly AbsenceManagerDbContext _dbContext;
 
-        public CalendarLogic(
-            Repository<OfficeBooking> officeBookingRepository,
-            Repository<AppUser> appUserRepository)
+        public CalendarLogic(AbsenceManagerDbContext dbContext)
         {
-            _officeBookingRepository = officeBookingRepository;
-            _appUserRepository = appUserRepository;
+            _dbContext = dbContext;
         }
 
         public IEnumerable<CalendarDayInfoDto> GetDayInfos(DateOnly fromDate, DateOnly toDate)
@@ -34,25 +31,21 @@ namespace Logic.Logic
             return result;
         }
 
-        public IEnumerable<CalendarEventDto> GetEvents(
+        public async Task<IEnumerable<CalendarEventDto>> GetEventsAsync(
             DateOnly fromDate,
             DateOnly toDate,
             string currentUserId,
             string scope,
-            IEnumerable<string>? eventTypes)
+            IEnumerable<string>? eventTypes,
+            CancellationToken cancellationToken = default)
         {
             ValidateDateRange(fromDate, toDate);
 
-            var requestedTypes = eventTypes?
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
-                .ToHashSet(StringComparer.OrdinalIgnoreCase)
-                ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var requestedTypes = NormalizeRequestedTypes(eventTypes);
 
-            if (requestedTypes.Count > 0 && !requestedTypes.Contains("deskBooking"))
-                return Enumerable.Empty<CalendarEventDto>();
-
-            var currentUser = _appUserRepository.FindById(currentUserId);
+            var currentUser = await _dbContext.AppUsers
+                .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken)
+                ?? throw new KeyNotFoundException("User not found.");
 
             if (!currentUser.IsActive)
                 throw new InvalidOperationException("User is not active.");
@@ -61,7 +54,83 @@ namespace Logic.Logic
                 ? "mine"
                 : scope.Trim().ToLowerInvariant();
 
-            var query = _officeBookingRepository.GetAll()
+            var result = new List<CalendarEventDto>();
+
+            if (requestedTypes.Count == 0 || requestedTypes.Any(IsAbsenceType))
+            {
+                var absenceEvents = await GetAbsenceEventsAsync(
+                    fromDate,
+                    toDate,
+                    currentUser,
+                    normalizedScope,
+                    requestedTypes,
+                    cancellationToken);
+
+                result.AddRange(absenceEvents);
+            }
+
+            if (requestedTypes.Count == 0 || requestedTypes.Contains("deskBooking"))
+            {
+                var deskBookingEvents = await GetDeskBookingEventsAsync(
+                    fromDate,
+                    toDate,
+                    currentUser,
+                    normalizedScope,
+                    cancellationToken);
+
+                result.AddRange(deskBookingEvents);
+            }
+
+            return result
+                .OrderBy(x => x.DateFrom)
+                .ThenBy(x => x.UserName)
+                .ThenBy(x => x.Title)
+                .ToList();
+        }
+
+        private async Task<IEnumerable<CalendarEventDto>> GetAbsenceEventsAsync(
+            DateOnly fromDate,
+            DateOnly toDate,
+            AppUser currentUser,
+            string scope,
+            HashSet<string> requestedTypes,
+            CancellationToken cancellationToken)
+        {
+            var query = _dbContext.AbsenceRequests
+                .Include(x => x.User)
+                .Where(x =>
+                    x.DateFrom <= toDate &&
+                    x.DateTo >= fromDate &&
+                    x.Status != AbsenceRequestStatus.Cancelled);
+
+            query = ApplyAbsenceVisibility(query, currentUser, scope);
+
+            if (requestedTypes.Count > 0)
+            {
+                var requestedAbsenceTypes = requestedTypes
+                    .Where(IsAbsenceType)
+                    .Select(AbsenceRequestLogic.ParseType)
+                    .ToHashSet();
+
+                query = query.Where(x => requestedAbsenceTypes.Contains(x.Type));
+            }
+
+            var requests = await query
+                .OrderBy(x => x.DateFrom)
+                .ThenBy(x => x.User.DisplayName)
+                .ToListAsync(cancellationToken);
+
+            return requests.Select(ToAbsenceCalendarEvent);
+        }
+
+        private async Task<IEnumerable<CalendarEventDto>> GetDeskBookingEventsAsync(
+            DateOnly fromDate,
+            DateOnly toDate,
+            AppUser currentUser,
+            string scope,
+            CancellationToken cancellationToken)
+        {
+            var query = _dbContext.OfficeBookings
                 .Include(b => b.User)
                 .Include(b => b.Workstation)
                 .ThenInclude(w => w.Office)
@@ -71,38 +140,78 @@ namespace Logic.Logic
                     b.BookingDate <= toDate &&
                     !b.IsCancelled);
 
-            query = normalizedScope switch
-            {
-                "mine" => query.Where(b => b.UserId == currentUserId),
-                "team" => ApplyTeamVisibility(query, currentUser),
-                "organization" => ApplyOrganizationVisibility(query, currentUser),
-                _ => throw new ArgumentException("Unknown calendar scope.")
-            };
+            query = ApplyDeskBookingVisibility(query, currentUser, scope);
 
-            return query
+            var bookings = await query
                 .OrderBy(b => b.BookingDate)
                 .ThenBy(b => b.User.DisplayName)
-                .ToList()
-                .Select(ToDeskBookingCalendarEvent);
+                .ToListAsync(cancellationToken);
+
+            return bookings.Select(ToDeskBookingCalendarEvent);
         }
 
-        private IQueryable<OfficeBooking> ApplyTeamVisibility(IQueryable<OfficeBooking> query, AppUser currentUser)
+        private static IQueryable<AbsenceRequest> ApplyAbsenceVisibility(
+            IQueryable<AbsenceRequest> query,
+            AppUser currentUser,
+            string scope)
         {
-            if (!CanSeeTeamCalendar(currentUser))
-                throw new UnauthorizedAccessException("Team calendar view is not allowed for the current user.");
+            return scope switch
+            {
+                "mine" => query.Where(x => x.UserId == currentUser.Id),
 
-            if (string.IsNullOrWhiteSpace(currentUser.Department))
-                return query.Where(b => b.UserId == currentUser.Id);
+                "team" => string.IsNullOrWhiteSpace(currentUser.Department)
+                    ? query.Where(x => x.UserId == currentUser.Id)
+                    : query.Where(x => x.User.Department == currentUser.Department),
 
-            return query.Where(b => b.User.Department == currentUser.Department);
+                "organization" => AbsenceRequestLogic.IsHrOrAdmin(currentUser)
+                    ? query
+                    : query.Where(x => x.UserId == currentUser.Id),
+
+                _ => query.Where(x => x.UserId == currentUser.Id)
+            };
         }
 
-        private IQueryable<OfficeBooking> ApplyOrganizationVisibility(IQueryable<OfficeBooking> query, AppUser currentUser)
+        private static IQueryable<OfficeBooking> ApplyDeskBookingVisibility(
+            IQueryable<OfficeBooking> query,
+            AppUser currentUser,
+            string scope)
         {
-            if (!CanSeeOrganizationCalendar(currentUser))
-                throw new UnauthorizedAccessException("Organization calendar view is not allowed for the current user.");
+            return scope switch
+            {
+                "mine" => query.Where(x => x.UserId == currentUser.Id),
 
-            return query;
+                "team" => string.IsNullOrWhiteSpace(currentUser.Department)
+                    ? query.Where(x => x.UserId == currentUser.Id)
+                    : query.Where(x => x.User.Department == currentUser.Department),
+
+                "organization" => AbsenceRequestLogic.IsHrOrAdmin(currentUser)
+                    ? query
+                    : query.Where(x => x.UserId == currentUser.Id),
+
+                _ => query.Where(x => x.UserId == currentUser.Id)
+            };
+        }
+
+        private static CalendarEventDto ToAbsenceCalendarEvent(AbsenceRequest request)
+        {
+            var typeKey = AbsenceRequestLogic.ToTypeKey(request.Type);
+            var typeLabel = AbsenceRequestLogic.GetTypeLabel(request.Type);
+
+            return new CalendarEventDto
+            {
+                Id = $"absence-{request.Id}",
+                SourceId = request.Id,
+                Title = $"{typeLabel} - {request.User.DisplayName}",
+                Type = typeKey,
+                Status = AbsenceRequestLogic.ToStatusKey(request.Status),
+                DateFrom = request.DateFrom,
+                DateTo = request.DateTo,
+                UserId = request.UserId,
+                UserName = request.User.DisplayName,
+                Department = request.User.Department,
+                Description = request.Reason,
+                DetailsUrl = $"/calendar?requestId={request.Id}"
+            };
         }
 
         private static CalendarEventDto ToDeskBookingCalendarEvent(OfficeBooking booking)
@@ -118,6 +227,7 @@ namespace Logic.Logic
                 DateTo = booking.BookingDate,
                 UserId = booking.UserId,
                 UserName = booking.User.DisplayName,
+                Department = booking.User.Department,
                 Description = "Irodai munkaállomás foglalás.",
                 DetailsUrl = "/desk-booking",
                 LocationName = booking.Workstation.Office.Location.Name,
@@ -126,23 +236,21 @@ namespace Logic.Logic
             };
         }
 
-        private static bool CanSeeTeamCalendar(AppUser user)
+        private static HashSet<string> NormalizeRequestedTypes(IEnumerable<string>? eventTypes)
         {
-            return CanSeeOrganizationCalendar(user)
-                || ContainsAny(user.JobTitle, "manager", "lead", "vezető", "vezeto", "team lead");
+            return eventTypes?
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        private static bool CanSeeOrganizationCalendar(AppUser user)
+        private static bool IsAbsenceType(string type)
         {
-            return ContainsAny(user.JobTitle, "hr", "admin", "administrator", "people");
-        }
-
-        private static bool ContainsAny(string? value, params string[] needles)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return false;
-
-            return needles.Any(needle => value.Contains(needle, StringComparison.OrdinalIgnoreCase));
+            return type.Equals("vacation", StringComparison.OrdinalIgnoreCase)
+                || type.Equals("homeOffice", StringComparison.OrdinalIgnoreCase)
+                || type.Equals("sickLeave", StringComparison.OrdinalIgnoreCase)
+                || type.Equals("otherAbsence", StringComparison.OrdinalIgnoreCase);
         }
 
         private static CalendarDayInfoDto CreateDayInfo(DateOnly date)

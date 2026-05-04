@@ -17,6 +17,7 @@ builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
 builder.Services.AddScoped<UserLogic>();
 builder.Services.AddScoped<CalendarLogic>();
+builder.Services.AddScoped<AbsenceRequestLogic>();
 builder.Services.AddScoped<IAppUserResolver, AppUserResolver>();
 builder.Services.AddScoped<IMsGraphLogic, MsGraphLogic>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

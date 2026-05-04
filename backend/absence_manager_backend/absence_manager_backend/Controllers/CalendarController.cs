@@ -50,12 +50,16 @@ namespace Absence_Manager.Controllers
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                var result = _calendarLogic.GetEvents(fromDate, toDate, currentUserId, scope, eventTypes);
+
+                var result = await _calendarLogic.GetEventsAsync(
+                    fromDate,
+                    toDate,
+                    currentUserId,
+                    scope,
+                    eventTypes,
+                    cancellationToken);
+
                 return Ok(result);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
             }
             catch (KeyNotFoundException ex)
             {
@@ -68,6 +72,10 @@ namespace Absence_Manager.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
         }
     }
