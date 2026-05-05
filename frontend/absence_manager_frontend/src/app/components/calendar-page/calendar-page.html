@@ -15,7 +15,7 @@
       type="button"
       class="btn btn-outline-secondary"
       (click)="reload()"
-      [disabled]="loading || saving"
+      [disabled]="saving"
     >
       <i class="bi bi-arrow-clockwise"></i>
       Frissítés
@@ -28,7 +28,7 @@
         type="button"
         class="btn btn-light"
         (click)="previousPeriod()"
-        [disabled]="loading || saving"
+        [disabled]="saving"
         aria-label="Előző időszak"
       >
         <i class="bi bi-chevron-left"></i>
@@ -38,7 +38,7 @@
         type="button"
         class="btn btn-light period-title"
         (click)="goToToday()"
-        [disabled]="loading || saving"
+        [disabled]="saving"
       >
         {{ periodTitle }}
       </button>
@@ -47,7 +47,7 @@
         type="button"
         class="btn btn-light"
         (click)="nextPeriod()"
-        [disabled]="loading || saving"
+        [disabled]="saving"
         aria-label="Következő időszak"
       >
         <i class="bi bi-chevron-right"></i>
@@ -57,7 +57,7 @@
         type="button"
         class="btn btn-outline-primary"
         (click)="goToToday()"
-        [disabled]="loading || saving"
+        [disabled]="saving"
       >
         Ma
       </button>
@@ -70,7 +70,7 @@
         *ngFor="let mode of viewModes"
         [class.view-switcher__btn--active]="viewMode === mode.value"
         (click)="setViewMode(mode.value)"
-        [disabled]="loading || saving"
+        [disabled]="saving"
       >
         <i class="bi" [ngClass]="mode.icon"></i>
         {{ mode.label }}
@@ -87,7 +87,7 @@
         class="form-select"
         [(ngModel)]="scope"
         (ngModelChange)="onScopeChange($event)"
-        [disabled]="loading || saving"
+        [disabled]="saving"
       >
         <option *ngFor="let option of scopeOptions" [ngValue]="option.value">
           {{ option.label }}
@@ -112,7 +112,7 @@
             type="checkbox"
             [checked]="eventTypeSelection[type.value]"
             (change)="onEventTypeToggle(type.value, $any($event.target).checked)"
-            [disabled]="loading || saving"
+            [disabled]="saving"
           />
 
           <span class="event-type-dot"></span>

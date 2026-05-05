@@ -1,6 +1,19 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, forkJoin, of, Subscription, timeout } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  finalize,
+  forkJoin,
+  map,
+  Observable,
+  of,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+  timeout
+} from 'rxjs';
 
 import {
   CalendarAbsenceRequestType,
@@ -116,20 +129,34 @@ export class CalendarPage implements OnInit, OnDestroy {
   private rangeFrom = this.currentDate;
   private rangeTo = this.currentDate;
 
-  private calendarLoadSubscription?: Subscription;
-  private calendarLoadVersion = 0;
+  private readonly reloadRequested$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
+
+  private loadVersion = 0;
+  private destroyed = false;
 
   constructor(
     private calendarService: CalendarService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    this.reloadRequested$
+      .pipe(
+        debounceTime(120),
+        switchMap(() => this.fetchCalendar()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
+
     this.loadCalendar();
   }
 
   ngOnDestroy(): void {
-    this.calendarLoadSubscription?.unsubscribe();
+    this.destroyed = true;
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get periodTitle(): string {
@@ -263,6 +290,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     }));
 
     this.openRequestModal(day);
+    this.refreshView();
   }
 
   openRequestModal(day: CalendarDayView): void {
@@ -283,6 +311,8 @@ export class CalendarPage implements OnInit, OnDestroy {
         ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
         : 'A kiválasztott nap hétvége vagy nem munkanap.';
     }
+
+    this.refreshView();
   }
 
   closeRequestModal(): void {
@@ -292,16 +322,19 @@ export class CalendarPage implements OnInit, OnDestroy {
 
     this.requestModalOpen = false;
     this.requestModalDay = null;
+    this.refreshView();
   }
 
   submitRequest(): void {
     if (!this.canSubmitRequest) {
       this.errorMessage = 'Ellenőrizd a dátumokat és az igény típusát.';
+      this.refreshView();
       return;
     }
 
     this.clearMessages();
     this.saving = true;
+    this.refreshView();
 
     const dto: CreateAbsenceRequestDto = {
       type: this.requestForm.type,
@@ -311,17 +344,25 @@ export class CalendarPage implements OnInit, OnDestroy {
     };
 
     this.calendarService.createAbsenceRequest(dto)
-      .pipe(finalize(() => this.saving = false))
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.saving = false;
+          this.refreshView();
+        })
+      )
       .subscribe({
         next: () => {
           this.successMessage = 'Az igény mentése sikerült.';
+          this.selectedDateKey = dto.dateFrom;
           this.requestModalOpen = false;
           this.requestModalDay = null;
           this.loadCalendar();
         },
         error: err => {
-          console.error(err);
+          console.error('Absence request save failed', err);
           this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült menteni az igényt.');
+          this.refreshView();
         }
       });
   }
@@ -336,6 +377,8 @@ export class CalendarPage implements OnInit, OnDestroy {
       ...calendarDay,
       isSelected: calendarDay.dateKey === event.dateFrom
     }));
+
+    this.refreshView();
   }
 
   openSelectedEvent(): void {
@@ -390,10 +433,12 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   private loadCalendar(): void {
-    const range = this.getCurrentRange();
-    const loadVersion = ++this.calendarLoadVersion;
+    this.reloadRequested$.next();
+  }
 
-    this.calendarLoadSubscription?.unsubscribe();
+  private fetchCalendar(): Observable<void> {
+    const range = this.getCurrentRange();
+    const currentLoadVersion = ++this.loadVersion;
 
     this.rangeFrom = range.from;
     this.rangeTo = range.to;
@@ -409,9 +454,10 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
     this.events = [];
     this.rebuildView();
+    this.refreshView();
 
     const dayInfos$ = this.calendarService.getDayInfos(fromDate, toDate).pipe(
-      timeout(12000),
+      timeout(10000),
       catchError(err => {
         console.error('Calendar day-infos load failed', err);
         this.warningMessage = 'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.';
@@ -422,7 +468,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     const events$ = selectedTypes.length === 0
       ? of([] as CalendarEventDto[])
       : this.calendarService.getEvents(fromDate, toDate, this.scope, selectedTypes).pipe(
-        timeout(12000),
+        timeout(10000),
         catchError(err => {
           console.error('Calendar events load failed', err);
           this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.');
@@ -430,41 +476,45 @@ export class CalendarPage implements OnInit, OnDestroy {
         })
       );
 
-    this.calendarLoadSubscription = forkJoin({
+    return forkJoin({
       dayInfos: dayInfos$,
       events: events$
-    })
-      .pipe(finalize(() => {
-        if (loadVersion === this.calendarLoadVersion) {
+    }).pipe(
+      tap(({ dayInfos, events }) => {
+        if (currentLoadVersion !== this.loadVersion) {
+          return;
+        }
+
+        this.dayInfos = dayInfos;
+        this.events = events.map(event => this.normalizeEvent(event));
+        this.rebuildView();
+      }),
+      catchError(err => {
+        if (currentLoadVersion !== this.loadVersion) {
+          return of(undefined);
+        }
+
+        console.error('Unexpected calendar load error', err);
+        this.errorMessage = 'Váratlan hiba történt a naptár betöltése közben.';
+        this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
+        this.events = [];
+        this.rebuildView();
+
+        return of(undefined);
+      }),
+      finalize(() => {
+        if (currentLoadVersion === this.loadVersion) {
           this.loading = false;
+          this.refreshView();
         }
-      }))
-      .subscribe({
-        next: ({ dayInfos, events }) => {
-          if (loadVersion !== this.calendarLoadVersion) {
-            return;
-          }
-
-          this.dayInfos = dayInfos;
-          this.events = events;
-          this.rebuildView();
-        },
-        error: err => {
-          if (loadVersion !== this.calendarLoadVersion) {
-            return;
-          }
-
-          console.error('Unexpected calendar load error', err);
-          this.errorMessage = 'Váratlan hiba történt a naptár betöltése közben.';
-          this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
-          this.events = [];
-          this.rebuildView();
-        }
-      });
+      }),
+      map(() => undefined)
+    );
   }
 
   private rebuildView(): void {
     const dayInfoMap = new Map(this.dayInfos.map(dayInfo => [dayInfo.date, dayInfo]));
+    const eventsByDate = this.createEventsByDateMap(this.events);
     const days: CalendarDayView[] = [];
 
     for (let date = new Date(this.rangeFrom); date <= this.rangeTo; date.setDate(date.getDate() + 1)) {
@@ -484,15 +534,39 @@ export class CalendarPage implements OnInit, OnDestroy {
         isHoliday: dayInfo.isHoliday,
         isWorkingDay: dayInfo.isWorkingDay,
         holidayName: dayInfo.holidayName,
-        events: this.events.filter(event => this.isEventOnDate(event, dateKey))
+        events: eventsByDate.get(dateKey) ?? []
       });
     }
 
     this.calendarDays = days;
 
-    if (this.selectedEvent && !this.events.some(event => event.id === this.selectedEvent?.id)) {
-      this.selectedEvent = null;
+    if (this.selectedEvent) {
+      const refreshedEvent = this.events.find(event => event.id === this.selectedEvent?.id);
+      this.selectedEvent = refreshedEvent ?? null;
     }
+  }
+
+  private createEventsByDateMap(events: CalendarEventDto[]): Map<string, CalendarEventDto[]> {
+    const result = new Map<string, CalendarEventDto[]>();
+
+    events.forEach(event => {
+      const from = this.parseDateKey(event.dateFrom);
+      const to = this.parseDateKey(event.dateTo);
+
+      for (let date = new Date(from); date <= to; date.setDate(date.getDate() + 1)) {
+        const dateKey = this.formatDateForApi(date);
+
+        if (dateKey < this.formatDateForApi(this.rangeFrom) || dateKey > this.formatDateForApi(this.rangeTo)) {
+          continue;
+        }
+
+        const existing = result.get(dateKey) ?? [];
+        existing.push(event);
+        result.set(dateKey, existing);
+      }
+    });
+
+    return result;
   }
 
   private getCurrentRange(): { from: Date; to: Date } {
@@ -542,10 +616,6 @@ export class CalendarPage implements OnInit, OnDestroy {
     return result;
   }
 
-  private isEventOnDate(event: CalendarEventDto, dateKey: string): boolean {
-    return event.dateFrom <= dateKey && event.dateTo >= dateKey;
-  }
-
   private generateFallbackDayInfos(from: Date, to: Date): CalendarDayInfoDto[] {
     const result: CalendarDayInfoDto[] = [];
 
@@ -569,6 +639,57 @@ export class CalendarPage implements OnInit, OnDestroy {
     };
   }
 
+  private normalizeEvent(event: CalendarEventDto): CalendarEventDto {
+    return {
+      ...event,
+      type: this.normalizeEventType(event.type),
+      status: this.normalizeStatus(event.status),
+      dateFrom: event.dateFrom.substring(0, 10),
+      dateTo: event.dateTo.substring(0, 10)
+    };
+  }
+
+  private normalizeEventType(type: string): CalendarEventType {
+    switch (type) {
+      case 'Vacation':
+      case 'vacation':
+        return 'vacation';
+      case 'HomeOffice':
+      case 'homeOffice':
+        return 'homeOffice';
+      case 'SickLeave':
+      case 'sickLeave':
+        return 'sickLeave';
+      case 'OtherAbsence':
+      case 'otherAbsence':
+        return 'otherAbsence';
+      case 'DeskBooking':
+      case 'deskBooking':
+        return 'deskBooking';
+      default:
+        return 'otherAbsence';
+    }
+  }
+
+  private normalizeStatus(status: string): 'approved' | 'pending' | 'rejected' | 'cancelled' | 'info' {
+    switch (status) {
+      case 'Approved':
+      case 'approved':
+        return 'approved';
+      case 'Pending':
+      case 'pending':
+        return 'pending';
+      case 'Rejected':
+      case 'rejected':
+        return 'rejected';
+      case 'Cancelled':
+      case 'cancelled':
+        return 'cancelled';
+      default:
+        return 'info';
+    }
+  }
+
   private clearMessages(): void {
     this.errorMessage = '';
     this.warningMessage = '';
@@ -578,6 +699,10 @@ export class CalendarPage implements OnInit, OnDestroy {
   private getApiErrorMessage(err: any, fallback: string): string {
     if (err?.error?.message) {
       return err.error.message;
+    }
+
+    if (err?.status === 0) {
+      return 'A backend nem érhető el. Ellenőrizd, hogy fut-e az API és jó-e az apiUrl.';
     }
 
     if (err?.status === 401) {
@@ -595,6 +720,22 @@ export class CalendarPage implements OnInit, OnDestroy {
     return fallback;
   }
 
+  private refreshView(): void {
+    this.cdr.markForCheck();
+
+    queueMicrotask(() => {
+      if (this.destroyed) {
+        return;
+      }
+
+      try {
+        this.cdr.detectChanges();
+      } catch {
+        // A komponens már lehet, hogy közben megsemmisült route váltás miatt.
+      }
+    });
+  }
+
   private formatDateForApi(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -604,7 +745,7 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   private parseDateKey(dateKey: string): Date {
-    const [year, month, day] = dateKey.split('-').map(Number);
+    const [year, month, day] = dateKey.substring(0, 10).split('-').map(Number);
     return new Date(year, month - 1, day);
   }
 
