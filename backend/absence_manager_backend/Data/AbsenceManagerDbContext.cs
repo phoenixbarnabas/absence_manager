@@ -329,7 +329,7 @@ namespace Data
                 {
                     Id = "ws-5",
                     OfficeId = office1.Id,
-                    Code = "F1",
+                    Code = "Senki",
                     Name = "5",
                     IsActive = true,
                     DisplayOrder = 5,
@@ -351,7 +351,7 @@ namespace Data
                 {
                     Id = "ws-7",
                     OfficeId = office1.Id,
-                    Code = "F2",
+                    Code = "Senki",
                     Name = "7",
                     IsActive = true,
                     DisplayOrder = 7,
