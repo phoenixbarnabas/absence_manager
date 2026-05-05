@@ -14,6 +14,7 @@ import { WelcomePage } from './components/landing/welcome-page/welcome-page';
 import { WorkstationList } from './components/workstation-list/workstation-list';
 import { authInterceptor } from './auth/auth-interceptor';
 import { ConfigService } from './services/config-service';
+import { CalendarPage } from './components/calendar-page/calendar-page';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { ConfigService } from './services/config-service';
     Profile,
     DeskBooking,
     WelcomePage,
-    WorkstationList
+    WorkstationList,
+    CalendarPage
   ],
   imports: [
     FormsModule,

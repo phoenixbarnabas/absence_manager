@@ -18,6 +18,8 @@ namespace Entities.Models
 
         public ICollection<OfficeBooking> OfficeBookings { get; set; } = new List<OfficeBooking>();
 
+        public ICollection<AbsenceRequest> AbsenceRequests { get; set; } = new List<AbsenceRequest>();
+
         public AppUser()
         {
             Id = Guid.NewGuid().ToString();
