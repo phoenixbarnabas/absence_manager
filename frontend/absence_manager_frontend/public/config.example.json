@@ -1,7 +1,7 @@
 {
-  "apiUrl": "",
-  "azureClientId": "",
-  "azureTenantId": "",
-  "apiScope": "",
-  "postLogoutRedirectUri": ""
+  "apiUrl": "${API_URL}",
+  "azureClientId": "${AZURE_CLIENT_ID}",
+  "azureTenantId": "${AZURE_TENANT_ID}",
+  "apiScope": "${API_SCOPE}",
+  "postLogoutRedirectUri": "${POST_LOGOUT_REDIRECT_URI}"
 }

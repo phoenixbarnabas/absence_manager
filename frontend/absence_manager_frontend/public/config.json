@@ -3,5 +3,5 @@
   "azureClientId": "cacb868f-e5d8-4113-acde-780f810c824d",
   "azureTenantId": "1878a48b-63d6-4d12-a900-07d4267f6762",
   "apiScope": "api://cacb868f-e5d8-4113-acde-780f810c824d/user_impersonation",
-  "postLogoutRedirectUri": "http://localhost:4200/welcome"
+  "postLogoutRedirectUri": "http://10.192.1.14:15055/welcome"
 }
