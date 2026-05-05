@@ -1,32 +1,12 @@
 @use '../../../../../src/styles' as *
 
 .login-page
-    position: relative
     min-height: 100vh
-    background-image: linear-gradient(rgba(15, 23, 42, 0.58), rgba(15, 23, 42, 0.58)), url('/images/login-bg.jpg')
-    background-size: cover
-    background-position: center
-    background-repeat: no-repeat
-    overflow: hidden
-
-    &::before
-        content: ''
-        position: absolute
-        inset: 0
-        background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.35), transparent 34%), radial-gradient(circle at bottom right, rgba(20, 83, 45, 0.35), transparent 36%)
-        pointer-events: none
-
-    .container
-        position: relative
-        z-index: 1
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)
 
 .login-card
-    border-radius: 1.25rem
-    border: 1px solid rgba(255, 255, 255, 0.45)
+    border-radius: 1rem
     border-top: 4px solid #10b981
-    background: rgba(255, 255, 255, 0.94)
-    backdrop-filter: blur(10px)
-    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.32)
 
 .login-logo
     max-width: 160px
@@ -48,10 +28,8 @@
     min-height: 48px
     font-weight: 600
     border-radius: 0.75rem
-    border: 0
     background: $primary-600
     color: #ffffff
-    box-shadow: 0 10px 24px rgba(16, 185, 129, 0.26)
 
     &:hover
         background: $primary-500
@@ -60,15 +38,4 @@
     &:disabled
         background: #9ca3af
         border-color: #9ca3af
-        box-shadow: none
         cursor: not-allowed
-
-@media (max-width: 576px)
-    .login-page
-        background-position: center
-
-    .login-title
-        font-size: 1.65rem
-
-    .login-card
-        border-radius: 1rem
