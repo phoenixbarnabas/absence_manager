@@ -15,7 +15,7 @@ FROM nginx:1.27-alpine
 
 RUN apk add --no-cache gettext
 
-COPY frontend/absence_manager_frontend/config.template.json /usr/share/nginx/html/assets/config.template.json
+COPY frontend/absence_manager_frontend/config.template.json /usr/share/nginx/html/assets/config.example.json
 COPY frontend/absence_manager_frontend/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh

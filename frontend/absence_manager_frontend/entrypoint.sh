@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-TEMPLATE="/usr/share/nginx/html/assets/config.template.json"
+TEMPLATE="/usr/share/nginx/html/assets/config.example.json"
 TARGET="/usr/share/nginx/html/assets/config.json"
 
 if [ -f "$TEMPLATE" ]; then
