@@ -15,9 +15,20 @@ FROM nginx:1.27-alpine
 
 RUN apk add --no-cache gettext
 
-COPY frontend/absence_manager_frontend/public/config.example.json /usr/share/nginx/html/assets/config.example.json
-COPY frontend/absence_manager_frontend/entrypoint.sh /entrypoint.sh
+# töröljük az nginx default tartalmat
+RUN rm -rf /usr/share/nginx/html/*
 
+# nginx config
+COPY frontend/absence_manager_frontend/nginx.conf /etc/nginx/nginx.conf
+
+# Angular build bemásolása (EZ HIÁNYZOTT!)
+COPY --from=build /usr/src/app/dist/absence_manager_frontend/browser/ /usr/share/nginx/html/
+
+# runtime config template (rootba!)
+COPY frontend/absence_manager_frontend/public/config.example.json /usr/share/nginx/html/config.example.json
+
+# entrypoint
+COPY frontend/absence_manager_frontend/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
