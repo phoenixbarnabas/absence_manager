@@ -9,7 +9,8 @@ RUN npm ci
 COPY frontend/absence_manager_frontend/. .
 RUN npm run build -- --configuration production
 
-
+RUN npm run build -- --configuration production
+RUN ls -la /usr/src/app/dist && find /usr/src/app/dist -maxdepth 3 -type f | head -50
 ### STAGE 2: Run ###
 FROM nginx:1.27-alpine
 
