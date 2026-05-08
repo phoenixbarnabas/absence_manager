@@ -8,7 +8,8 @@ namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/users")]
-
+    [Authorize]
+    [RequiredScope("user_impersonation")]
     public class UsersController : ControllerBase
     {
         private readonly UserLogic _userLogic;
