@@ -38,3 +38,4 @@ src/environments/environment.development.ts
 # Runtime config
 public/config.json
 !public/config.example.json
+frontend/absence_manager_frontend/public/config.json
