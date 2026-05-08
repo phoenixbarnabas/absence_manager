@@ -1,12 +1,14 @@
 ﻿using Logic.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Web.Resource;
 
 namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/workstations")]
     [Authorize]
+    [RequiredScope("user_impersonation")]
     public class WorkstationsController : ControllerBase
     {
         private readonly OfficeManagementLogic _officeManagementLogic;
