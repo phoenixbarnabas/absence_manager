@@ -1,10 +1,12 @@
 ﻿using Logic.Logic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/locations")]
+    [Authorize]
     public class LocationsController : ControllerBase
     {
         private readonly OfficeManagementLogic _officeManagementLogic;

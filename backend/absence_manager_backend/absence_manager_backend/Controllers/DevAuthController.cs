@@ -12,6 +12,7 @@ namespace Absence_Manager.Controllers
 {
     [ApiController]
     [Route("api/dev-auth")]
+    [Authorize]
     public class DevAuthController : ControllerBase
     {
         private readonly AbsenceManagerDbContext _dbContext;
