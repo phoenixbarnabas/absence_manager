@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -131,13 +131,25 @@ namespace Data.Migrations
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "113 - IT Office" });
+                values: new object[,]
+                {
+                    { "office-ft-1", "IT Office", 1, true, "loc-Fót", "113 - IT fejlesztés" },
+                    { "office-ft-2", "IT Office", 2, true, "loc-Fót", "110 - IT üzemeltetés" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
                 columns: new[] { "Id", "Code", "DisplayOrder", "IsActive", "Name", "OfficeId", "PositionX", "PositionY" },
                 values: new object[,]
                 {
+                    { "ws-01", "KM", 1, true, "1", "office-ft-2", 1m, 1m },
+                    { "ws-02", "VM", 2, true, "2", "office-ft-2", 2m, 1m },
+                    { "ws-03", "SZB", 3, true, "3", "office-ft-2", 3m, 1m },
+                    { "ws-04", "KK", 4, true, "4", "office-ft-2", 1m, 2m },
+                    { "ws-05", "F1", 5, true, "5", "office-ft-2", 2m, 2m },
+                    { "ws-06", "F2", 6, true, "6", "office-ft-2", 3m, 2m },
+                    { "ws-07", "F3", 7, true, "7", "office-ft-2", 1m, 3m },
+                    { "ws-08", "F4", 8, true, "8", "office-ft-2", 2m, 3m },
                     { "ws-1", "KL", 1, true, "1", "office-ft-1", 1m, 1m },
                     { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
                     { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },

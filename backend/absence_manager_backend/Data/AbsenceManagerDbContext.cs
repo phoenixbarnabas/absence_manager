@@ -400,9 +400,9 @@ namespace Data
 
 
             modelBuilder.Entity<Location>().HasData(location1);
-            modelBuilder.Entity<Office>().HasData(office1);
+            modelBuilder.Entity<Office>().HasData(office1, office2);
             modelBuilder.Entity<Workstation>().HasData(workstations);
-            
+
         }
     }
 }
