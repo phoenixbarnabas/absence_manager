@@ -7,12 +7,15 @@ import { WelcomePage } from './components/landing/welcome-page/welcome-page';
 import { authGuard } from './auth/guards/auth-guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'welcome', pathMatch: 'full' },
+  { path: '', redirectTo: 'desk-booking', pathMatch: 'full' },
+
   { path: 'welcome', component: WelcomePage },
   { path: 'login', redirectTo: 'welcome', pathMatch: 'full' },
+
   { path: 'desk-booking', component: DeskBooking, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
-  { path: '**', redirectTo: 'welcome' }
+
+  { path: '**', redirectTo: 'desk-booking' }
 ];
 
 @NgModule({
