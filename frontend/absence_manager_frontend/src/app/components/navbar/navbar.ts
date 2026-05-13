@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { UserProfile } from '../../models/app-user-models';
 import { AuthService } from '../../auth/auth-service';
 import { UserService } from '../../services/user.service';
@@ -16,30 +16,39 @@ export class Navbar implements OnInit, OnDestroy {
   isLoggedIn = false;
 
   private readonly destroy$ = new Subject<void>();
+  private profileLoaded = false;
 
   constructor(
     private userService: UserService,
     public authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.authService.account$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        distinctUntilChanged((prev, curr) =>
+          prev?.homeAccountId === curr?.homeAccountId
+        ),
+        takeUntil(this.destroy$)
+      )
       .subscribe((account) => {
         this.isLoggedIn = !!account;
 
         if (!account) {
           this.userProfile = null;
+          this.profileLoaded = false;
           this.loading = false;
           return;
         }
 
-        this.userProfile = {
-          displayName: account.name || account.username || 'Ismeretlen felhasználó',
-          email: account.username || '',
-          department: '',
-          jobTitle: ''
-        };
+        if (!this.profileLoaded && !this.userProfile) {
+          this.userProfile = {
+            displayName: account.name || account.username || 'Ismeretlen felhasználó',
+            email: account.username || '',
+            department: '',
+            jobTitle: ''
+          };
+        }
 
         this.loading = false;
         this.loadProfileData();
@@ -55,6 +64,7 @@ export class Navbar implements OnInit, OnDestroy {
     this.userService.getMe().subscribe({
       next: (profile) => {
         this.userProfile = profile;
+        this.profileLoaded = true;
       },
       error: (err) => {
         console.error(err);
