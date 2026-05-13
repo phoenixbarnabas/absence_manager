@@ -137,11 +137,20 @@ namespace Data.Migrations
                         new
                         {
                             Id = "office-ft-1",
-                            Description = "IT fejlesztés",
+                            Description = "IT Office",
                             DisplayOrder = 1,
                             IsActive = true,
                             LocationId = "loc-Fót",
-                            Name = "113 - IT Office"
+                            Name = "113 - IT fejlesztés"
+                        },
+                        new
+                        {
+                            Id = "office-ft-2",
+                            Description = "IT Office",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            LocationId = "loc-Fót",
+                            Name = "110 - IT üzemeltetés"
                         });
                 });
 
@@ -306,6 +315,94 @@ namespace Data.Migrations
                             IsActive = true,
                             Name = "7",
                             OfficeId = "office-ft-1",
+                            PositionX = 2m,
+                            PositionY = 3m
+                        },
+                        new
+                        {
+                            Id = "ws-01",
+                            Code = "KM",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Name = "1",
+                            OfficeId = "office-ft-2",
+                            PositionX = 1m,
+                            PositionY = 1m
+                        },
+                        new
+                        {
+                            Id = "ws-02",
+                            Code = "VM",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Name = "2",
+                            OfficeId = "office-ft-2",
+                            PositionX = 2m,
+                            PositionY = 1m
+                        },
+                        new
+                        {
+                            Id = "ws-03",
+                            Code = "SZB",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Name = "3",
+                            OfficeId = "office-ft-2",
+                            PositionX = 3m,
+                            PositionY = 1m
+                        },
+                        new
+                        {
+                            Id = "ws-04",
+                            Code = "KK",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            Name = "4",
+                            OfficeId = "office-ft-2",
+                            PositionX = 1m,
+                            PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-05",
+                            Code = "F1",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            Name = "5",
+                            OfficeId = "office-ft-2",
+                            PositionX = 2m,
+                            PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-06",
+                            Code = "F2",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            Name = "6",
+                            OfficeId = "office-ft-2",
+                            PositionX = 3m,
+                            PositionY = 2m
+                        },
+                        new
+                        {
+                            Id = "ws-07",
+                            Code = "F3",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            Name = "7",
+                            OfficeId = "office-ft-2",
+                            PositionX = 1m,
+                            PositionY = 3m
+                        },
+                        new
+                        {
+                            Id = "ws-08",
+                            Code = "F4",
+                            DisplayOrder = 8,
+                            IsActive = true,
+                            Name = "8",
+                            OfficeId = "office-ft-2",
                             PositionX = 2m,
                             PositionY = 3m
                         });
