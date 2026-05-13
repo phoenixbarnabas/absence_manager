@@ -188,13 +188,16 @@ namespace Data
                     .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Egy workstation egy adott napra csak egyszer foglalható
-                entity.HasIndex(x => new { x.WorkstationId, x.BookingDate, x.IsCancelled })
-                    .HasDatabaseName("IX_OfficeBookings_Workstation_BookingDate_IsCancelled");
+                
+                entity.HasIndex(x => new { x.WorkstationId, x.BookingDate })
+                    .IsUnique()
+                    .HasFilter("\"IsCancelled\" = false")
+                    .HasDatabaseName("UX_OfficeBookings_Workstation_Active_BookingDate");
 
-                // Egy user egy adott napra csak egy aktív foglalással rendelkezhet
-                entity.HasIndex(x => new { x.UserId, x.BookingDate, x.IsCancelled })
-                    .HasDatabaseName("IX_OfficeBookings_AppUser_BookingDate_IsCancelled");
+                entity.HasIndex(x => new { x.UserId, x.BookingDate })
+                    .IsUnique()
+                    .HasFilter("\"IsCancelled\" = false")
+                    .HasDatabaseName("UX_OfficeBookings_User_Active_BookingDate");
             });
 
             
