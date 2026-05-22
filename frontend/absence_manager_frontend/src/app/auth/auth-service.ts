@@ -10,7 +10,6 @@ export class AuthService {
   private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
   private initialized = false;
-  private redirectHandled = false;
 
   readonly account$ = this.accountSubject.asObservable();
   readonly token$ = this.tokenSubject.asObservable();
@@ -25,40 +24,17 @@ export class AuthService {
   async handleRedirect(): Promise<void> {
     await this.initialize();
 
-    if (this.redirectHandled) {
-      const activeAccount =
-        getMsalInstance().getActiveAccount() ??
-        getMsalInstance().getAllAccounts()[0] ??
-        null;
-
-      if (activeAccount) {
-        getMsalInstance().setActiveAccount(activeAccount);
-      }
-
-      this.setAccount(activeAccount);
-
-      if (!activeAccount) {
-        this.tokenSubject.next(null);
-      }
-
-      return;
-    }
-
-    this.redirectHandled = true;
-
-    const authResult: AuthenticationResult | null =
-      await getMsalInstance().handleRedirectPromise();
-
+    const authResult: AuthenticationResult | null = await getMsalInstance().handleRedirectPromise();
     const accounts = getMsalInstance().getAllAccounts();
 
     if (authResult?.account) {
       getMsalInstance().setActiveAccount(authResult.account);
-      this.setAccount(authResult.account);
+      this.accountSubject.next(authResult.account);
     } else if (accounts.length > 0) {
       getMsalInstance().setActiveAccount(accounts[0]);
-      this.setAccount(accounts[0]);
+      this.accountSubject.next(accounts[0]);
     } else {
-      this.setAccount(null);
+      this.accountSubject.next(null);
       this.tokenSubject.next(null);
     }
   }
@@ -103,16 +79,6 @@ export class AuthService {
 
     this.tokenSubject.next(result.accessToken);
     return result.accessToken;
-  }
-
-  private setAccount(account: AccountInfo | null): void {
-    const current = this.accountSubject.value;
-
-    if (current?.homeAccountId === account?.homeAccountId) {
-      return;
-    }
-
-    this.accountSubject.next(account);
   }
 
   getAccount(): AccountInfo | null {
