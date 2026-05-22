@@ -8,16 +8,13 @@ import { authGuard } from './auth/guards/auth-guard';
 import { CalendarPage } from './components/calendar-page/calendar-page';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'desk-booking', pathMatch: 'full' },
-
+  { path: '', redirectTo: 'welcome', pathMatch: 'full' },
   { path: 'welcome', component: WelcomePage },
   { path: 'login', redirectTo: 'welcome', pathMatch: 'full' },
-
   { path: 'desk-booking', component: DeskBooking, canActivate: [authGuard] },
   { path: 'calendar', component: CalendarPage, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
-
-  { path: '**', redirectTo: 'desk-booking' }
+  { path: '**', redirectTo: 'welcome' }
 ];
 
 @NgModule({

@@ -4,7 +4,6 @@ using Entities.Models;
 using Logic.Logic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
-using Npgsql;
 using System.Security.Claims;
 
 namespace Logic.Helper;
@@ -164,24 +163,21 @@ public class AppUserResolver : IAppUserResolver
             await _dbContext.SaveChangesAsync(cancellationToken);
             return user;
         }
-catch (DbUpdateException ex) when (
-    ex.InnerException is PostgresException pgEx &&
-    pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
-    pgEx.ConstraintName == "IX_AppUsers_EntraObjectId_TenantId")
-{
-    _dbContext.Entry(user).State = EntityState.Detached;
+        catch (DbUpdateException)
+        {
+            _dbContext.Entry(user).State = EntityState.Detached;
 
-    var existingUser = await _dbContext.AppUsers
-        .FirstOrDefaultAsync(
-            x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
-            cancellationToken);
+            var existingUser = await _dbContext.AppUsers
+                .FirstOrDefaultAsync(
+                    x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
+                    cancellationToken);
 
-    if (existingUser != null)
-    {
-        return existingUser;
-    }
+            if (existingUser != null)
+            {
+                return existingUser;
+            }
 
-    throw;
-}
+            throw;
+        }
     }
 }

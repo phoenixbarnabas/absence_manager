@@ -249,16 +249,13 @@ namespace Data
                     .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                
-                entity.HasIndex(x => new { x.WorkstationId, x.BookingDate })
-                    .IsUnique()
-                    .HasFilter("\"IsCancelled\" = false")
-                    .HasDatabaseName("UX_OfficeBookings_Workstation_Active_BookingDate");
+                // Egy workstation egy adott napra csak egyszer foglalható
+                entity.HasIndex(x => new { x.WorkstationId, x.BookingDate, x.IsCancelled })
+                    .HasDatabaseName("IX_OfficeBookings_Workstation_BookingDate_IsCancelled");
 
-                entity.HasIndex(x => new { x.UserId, x.BookingDate })
-                    .IsUnique()
-                    .HasFilter("\"IsCancelled\" = false")
-                    .HasDatabaseName("UX_OfficeBookings_User_Active_BookingDate");
+                // Egy user egy adott napra csak egy aktív foglalással rendelkezhet
+                entity.HasIndex(x => new { x.UserId, x.BookingDate, x.IsCancelled })
+                    .HasDatabaseName("IX_OfficeBookings_AppUser_BookingDate_IsCancelled");
             });
 
             
@@ -276,20 +273,10 @@ namespace Data
             {
                 Id = "office-ft-1",
                 LocationId = location1.Id,
-                Name = "113 - IT fejlesztés",
-                Description = "IT Office",
+                Name = "113 - IT Office",
+                Description = "IT fejlesztés",
                 IsActive = true,
                 DisplayOrder = 1
-            };
-
-            var office2 = new Office
-            {
-                Id = "office-ft-2",
-                LocationId = location1.Id,
-                Name = "110 - IT üzemeltetés",
-                Description = "IT Office",
-                IsActive = true,
-                DisplayOrder = 2
             };
 
             // ===== WORKSTATIONS =====
@@ -372,101 +359,13 @@ namespace Data
                     PositionY = 3
                 },
 
-                new Workstation
-                {
-                    Id = "ws-01",
-                    OfficeId = office2.Id,
-                    Code = "KM",
-                    Name = "1",
-                    IsActive = true,
-                    DisplayOrder = 1,
-                    PositionX = 1,
-                    PositionY = 1
-                },
-                new Workstation
-                {
-                    Id = "ws-02",
-                    OfficeId = office2.Id,
-                    Code = "VM",
-                    Name = "2",
-                    IsActive = true,
-                    DisplayOrder = 2,
-                    PositionX = 2,
-                    PositionY = 1
-                },
-                new Workstation
-                {
-                    Id = "ws-03",
-                    OfficeId = office2.Id,
-                    Code = "SZB",
-                    Name = "3",
-                    IsActive = true,
-                    DisplayOrder = 3,
-                    PositionX = 3,
-                    PositionY = 1
-                },
-                new Workstation{
-                    Id = "ws-04",
-                    OfficeId = office2.Id,
-                    Code = "KK",
-                    Name = "4",
-                    IsActive = true,
-                    DisplayOrder = 4,
-                    PositionX = 1,
-                    PositionY = 2
-                },
-                new Workstation
-                {
-                    Id = "ws-05",
-                    OfficeId = office2.Id,
-                    Code = "F1",
-                    Name = "5",
-                    IsActive = true,
-                    DisplayOrder = 5,
-                    PositionX = 2,
-                    PositionY = 2
-                },
-                new Workstation
-                {
-                    Id = "ws-06",
-                    OfficeId = office2.Id,
-                    Code = "F2",
-                    Name = "6",
-                    IsActive = true,
-                    DisplayOrder = 6,
-                    PositionX = 3,
-                    PositionY = 2
-                },
-                new Workstation
-                {
-                    Id = "ws-07",
-                    OfficeId = office2.Id,
-                    Code = "F3",
-                    Name = "7",
-                    IsActive = true,
-                    DisplayOrder = 7,
-                    PositionX = 1,
-                    PositionY = 3
-                },
-                new Workstation
-                {
-                    Id = "ws-08",
-                    OfficeId = office2.Id,
-                    Code = "F4",
-                    Name = "8",
-                    IsActive = true,
-                    DisplayOrder = 8,
-                    PositionX = 2,
-                    PositionY = 3
-                },
-
             };
 
 
             modelBuilder.Entity<Location>().HasData(location1);
-            modelBuilder.Entity<Office>().HasData(office1, office2);
+            modelBuilder.Entity<Office>().HasData(office1);
             modelBuilder.Entity<Workstation>().HasData(workstations);
-
+            
         }
     }
 }
