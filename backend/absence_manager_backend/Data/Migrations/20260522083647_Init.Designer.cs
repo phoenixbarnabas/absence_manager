@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    partial class AbsenceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522083647_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,10 +44,6 @@ namespace Data.Migrations
 
                     b.Property<DateOnly>("DateTo")
                         .HasColumnType("date");
-
-                    b.Property<string>("DecisionComment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(1000)
@@ -132,68 +131,6 @@ namespace Data.Migrations
                     b.ToTable("AppUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Entities.Models.AppUserManagerRelation", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ManagerEntraObjectId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("ManagerUserId")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("SyncedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TenantId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("UserEntraObjectId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("ValidFromUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ValidToUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ManagerEntraObjectId")
-                        .HasDatabaseName("IX_AppUserManagerRelations_ManagerEntraObjectId");
-
-                    b.HasIndex("ManagerUserId")
-                        .HasDatabaseName("IX_AppUserManagerRelations_ManagerUserId");
-
-                    b.HasIndex("UserEntraObjectId")
-                        .HasDatabaseName("IX_AppUserManagerRelations_UserEntraObjectId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasDatabaseName("UX_AppUserManagerRelations_OneActivePerUser")
-                        .HasFilter("\"IsActive\" = true");
-
-                    b.HasIndex("UserId", "IsActive")
-                        .HasDatabaseName("IX_AppUserManagerRelations_UserId_IsActive");
-
-                    b.ToTable("AppUserManagerRelations", (string)null);
-                });
-
             modelBuilder.Entity("Entities.Models.Location", b =>
                 {
                     b.Property<string>("Id")
@@ -262,20 +199,11 @@ namespace Data.Migrations
                         new
                         {
                             Id = "office-ft-1",
-                            Description = "IT Office",
+                            Description = "IT fejlesztés",
                             DisplayOrder = 1,
                             IsActive = true,
                             LocationId = "loc-Fót",
-                            Name = "113 - IT Fejlesztés"
-                        },
-                        new
-                        {
-                            Id = "office-ft-2",
-                            Description = "IT Office",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            LocationId = "loc-Fót",
-                            Name = "110 - IT Üzemeltetés"
+                            Name = "113 - IT Office"
                         });
                 });
 
@@ -357,7 +285,8 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfficeId", "Code");
+                    b.HasIndex("OfficeId", "Code")
+                        .IsUnique();
 
                     b.HasIndex("OfficeId", "Name")
                         .IsUnique();
@@ -441,39 +370,6 @@ namespace Data.Migrations
                             OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 3m
-                        },
-                        new
-                        {
-                            Id = "ws-8",
-                            Code = "Üres-3",
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            Name = "1",
-                            OfficeId = "office-ft-2",
-                            PositionX = 1m,
-                            PositionY = 1m
-                        },
-                        new
-                        {
-                            Id = "ws-9",
-                            Code = "Üres-4",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            Name = "2",
-                            OfficeId = "office-ft-2",
-                            PositionX = 2m,
-                            PositionY = 1m
-                        },
-                        new
-                        {
-                            Id = "ws-10",
-                            Code = "Üres-5",
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            Name = "3",
-                            OfficeId = "office-ft-2",
-                            PositionX = 3m,
-                            PositionY = 1m
                         });
                 });
 
@@ -491,24 +387,6 @@ namespace Data.Migrations
                         .IsRequired();
 
                     b.Navigation("ReviewedByUser");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Entities.Models.AppUserManagerRelation", b =>
-                {
-                    b.HasOne("Entities.Models.AppUser", "ManagerUser")
-                        .WithMany("DirectReportRelations")
-                        .HasForeignKey("ManagerUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Entities.Models.AppUser", "User")
-                        .WithMany("ManagerRelations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ManagerUser");
 
                     b.Navigation("User");
                 });
@@ -557,10 +435,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Entities.Models.AppUser", b =>
                 {
                     b.Navigation("AbsenceRequests");
-
-                    b.Navigation("DirectReportRelations");
-
-                    b.Navigation("ManagerRelations");
 
                     b.Navigation("OfficeBookings");
                 });
