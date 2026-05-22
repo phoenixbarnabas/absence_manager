@@ -11,9 +11,7 @@ import { AuthService } from './auth/auth-service';
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('absence_manager_frontend');
-
-  isLoginPage = true;
-  authBootstrapping = true;
+  isLoginPage = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -22,11 +20,8 @@ export class App implements OnInit, OnDestroy {
     private authService: AuthService
   ) {}
 
-  get showNavbar(): boolean {
-    return !this.isLoginPage && !this.authBootstrapping;
-  }
-
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    await this.initializeAuth();
     this.updateRouteState();
 
     this.router.events
@@ -34,11 +29,7 @@ export class App implements OnInit, OnDestroy {
         filter(event => event instanceof NavigationEnd),
         takeUntil(this.destroy$)
       )
-      .subscribe(() => {
-        this.updateRouteState();
-      });
-
-    void this.initializeAuth();
+      .subscribe(() => this.updateRouteState());
   }
 
   ngOnDestroy(): void {
@@ -54,29 +45,16 @@ export class App implements OnInit, OnDestroy {
       if (this.authService.isLoggedIn()) {
         await this.authService.acquireApiToken();
 
-        if (this.isAuthUrl(this.router.url)) {
-          await this.router.navigate(['/desk-booking'], {
-            replaceUrl: true
-          });
+        if (this.router.url === '/' || this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login')) {
+          await this.router.navigate(['/desk-booking']);
         }
       }
     } catch (err) {
       console.error('Auth init error', err);
-    } finally {
-      this.authBootstrapping = false;
-      this.updateRouteState();
     }
   }
 
   private updateRouteState(): void {
-    this.isLoginPage = this.isAuthUrl(this.router.url);
-  }
-
-  private isAuthUrl(url: string): boolean {
-    return (
-      url === '/' ||
-      url.startsWith('/welcome') ||
-      url.startsWith('/login')
-    );
+    this.isLoginPage = this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login');
   }
 }
