@@ -15,6 +15,42 @@ namespace Logic.Logic
             _dbContext = dbContext;
         }
 
+        public async Task<IReadOnlyList<AbsenceRequestViewDto>> GetMyAbsenceRequestsAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                throw new ArgumentException("Current user id is required.", nameof(currentUserId));
+            }
+
+            return await _dbContext.AbsenceRequests
+                .AsNoTracking()
+                .Include(x => x.User)
+                .Include(x => x.ReviewedByUser)
+                .Where(x => x.UserId == currentUserId)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .Select(x => new AbsenceRequestViewDto
+                {
+                    Id = x.Id,
+                    Type = x.Type.ToString(),
+                    Status = x.Status.ToString(),
+                    DateFrom = x.DateFrom,
+                    DateTo = x.DateTo,
+                    Reason = x.Reason,
+                    UserId = x.UserId,
+                    UserName = x.User.DisplayName,
+                    Department = x.User.Department,
+                    CreatedAtUtc = x.CreatedAtUtc,
+                    UpdatedAtUtc = x.UpdatedAtUtc,
+                    ReviewedAtUtc = x.ReviewedAtUtc,
+                    ReviewedByUserId = x.ReviewedByUserId,
+                    ReviewedByUserName = x.ReviewedByUser != null
+                        ? x.ReviewedByUser.DisplayName
+                        : null,
+                    DecisionComment = x.DecisionComment
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task ApproveAbsenceRequestAsync(string absenceRequestId, string managerUserId, string? decisionComment, CancellationToken cancellationToken = default)
         {
             await ReviewAbsenceRequestAsync(

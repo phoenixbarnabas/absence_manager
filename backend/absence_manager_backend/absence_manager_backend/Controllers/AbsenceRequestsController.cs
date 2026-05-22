@@ -203,5 +203,24 @@ namespace Absence_Manager.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyAbsenceRequests(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                var requests = await _absenceRequestLogic.GetMyAbsenceRequestsAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(requests);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
     }
 }
