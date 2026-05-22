@@ -1,5 +1,6 @@
 using Data;
 using Entities.Dtos.AppUserDtos;
+using Entities.Dtos.Graph;
 using Entities.Dtos.WorkStationDtos;
 using Entities.Models;
 using Logic.Helper;
@@ -14,11 +15,7 @@ namespace Logic.Logic
         private readonly AbsenceManagerDbContext _dbContext;
         private readonly IMsGraphLogic _graphLogic;
 
-        public UserLogic(
-            Repository<AppUser> userRepository,
-            DtoProvider dtoProvider,
-            AbsenceManagerDbContext dbContext,
-            IMsGraphLogic graphLogic)
+        public UserLogic(Repository<AppUser> userRepository, DtoProvider dtoProvider, AbsenceManagerDbContext dbContext, IMsGraphLogic graphLogic)
         {
             _userRepository = userRepository;
             _dtoProvider = dtoProvider;
@@ -39,35 +36,97 @@ namespace Logic.Logic
             return _dtoProvider.Mapper.Map<UserProfileDto>(user);
         }
 
+        public async Task<AppUserHierarchyDto> GetCurrentUserHierarchyAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                throw new ArgumentException("Current user id is required.", nameof(currentUserId));
+
+            var currentUser = await _dbContext.AppUsers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken)
+                ?? throw new KeyNotFoundException("User not found.");
+
+            if (!currentUser.IsActive)
+                throw new InvalidOperationException("User is not active.");
+
+            if (string.IsNullOrWhiteSpace(currentUser.EntraObjectId))
+                throw new InvalidOperationException("Current user has no Entra object id.");
+
+            var graphHierarchy = await _graphLogic.GetUserHierarchyAsync(
+                currentUser.EntraObjectId,
+                cancellationToken);
+
+            var graphUsers = new List<GraphUserDto>();
+
+            if (graphHierarchy.CurrentUser != null)
+                graphUsers.Add(graphHierarchy.CurrentUser);
+
+            if (graphHierarchy.Manager != null)
+                graphUsers.Add(graphHierarchy.Manager);
+
+            graphUsers.AddRange(graphHierarchy.DirectReports);
+
+            var localUsersByEntraObjectId = await GetLocalUsersByEntraObjectIdAsync(
+                graphUsers,
+                cancellationToken);
+
+            return new AppUserHierarchyDto
+            {
+                CurrentUser = ToGraphAppUserDto(graphHierarchy.CurrentUser, localUsersByEntraObjectId),
+                Manager = ToGraphAppUserDto(graphHierarchy.Manager, localUsersByEntraObjectId),
+                DirectReports = graphHierarchy.DirectReports
+                    .Select(x => ToGraphAppUserDto(x, localUsersByEntraObjectId))
+                    .Where(x => x != null)
+                    .Cast<GraphAppUserDto>()
+                    .ToList()
+            };
+        }
+
+        public async Task<GraphAppUserDto?> GetCurrentUserManagerAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            var hierarchy = await GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+            return hierarchy.Manager;
+        }
+
+        public async Task<IReadOnlyList<GraphAppUserDto>> GetCurrentUserDirectReportsAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            var hierarchy = await GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+            return hierarchy.DirectReports;
+        }
+
         public async Task RefreshUserProfileAsync(string userId, CancellationToken ct)
         {
             var user = await _dbContext.AppUsers.FindAsync(userId);
 
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
+
             var graphProfile = await _graphLogic.GetCurrentUserProfileAsync(ct);
 
-            if (graphProfile == null) return;
+            if (graphProfile == null)
+                return;
 
             var changed = false;
 
-            if (user.DisplayName != graphProfile.DisplayName)
+            if (user.DisplayName != graphProfile.DisplayName && !string.IsNullOrWhiteSpace(graphProfile.DisplayName))
             {
                 user.DisplayName = graphProfile.DisplayName;
                 changed = true;
             }
 
-            if (user.Email != graphProfile.Email)
+            if (user.Email != graphProfile.Email && !string.IsNullOrWhiteSpace(graphProfile.Email))
             {
                 user.Email = graphProfile.Email;
                 changed = true;
             }
 
-            if (user.Department != graphProfile.Department)
+            if (user.Department != graphProfile.Department && graphProfile.Department != null)
             {
                 user.Department = graphProfile.Department;
                 changed = true;
             }
 
-            if (user.JobTitle != graphProfile.JobTitle)
+            if (user.JobTitle != graphProfile.JobTitle && graphProfile.JobTitle != null)
             {
                 user.JobTitle = graphProfile.JobTitle;
                 changed = true;
@@ -77,6 +136,49 @@ namespace Logic.Logic
             {
                 await _dbContext.SaveChangesAsync(ct);
             }
+        }
+
+        private async Task<Dictionary<string, AppUser>> GetLocalUsersByEntraObjectIdAsync(IEnumerable<GraphUserDto> graphUsers, CancellationToken cancellationToken)
+        {
+            var entraObjectIds = graphUsers
+                .Where(x => !string.IsNullOrWhiteSpace(x.EntraObjectId))
+                .Select(x => x.EntraObjectId)
+                .Distinct()
+                .ToList();
+
+            if (entraObjectIds.Count == 0)
+                return new Dictionary<string, AppUser>();
+
+            var localUsers = await _dbContext.AppUsers
+                .AsNoTracking()
+                .Where(x => entraObjectIds.Contains(x.EntraObjectId))
+                .ToListAsync(cancellationToken);
+
+            return localUsers
+                .GroupBy(x => x.EntraObjectId)
+                .ToDictionary(x => x.Key, x => x.First());
+        }
+
+        private static GraphAppUserDto? ToGraphAppUserDto(GraphUserDto? graphUser, IReadOnlyDictionary<string, AppUser> localUsersByEntraObjectId)
+        {
+            if (graphUser == null || string.IsNullOrWhiteSpace(graphUser.EntraObjectId))
+                return null;
+
+            localUsersByEntraObjectId.TryGetValue(graphUser.EntraObjectId, out var localUser);
+
+            return new GraphAppUserDto
+            {
+                EntraObjectId = graphUser.EntraObjectId,
+                AppUserId = localUser?.Id,
+                DisplayName = localUser?.DisplayName ?? graphUser.DisplayName,
+                Email = localUser?.Email ?? graphUser.Email,
+                UserPrincipalName = graphUser.UserPrincipalName,
+                Department = localUser?.Department ?? graphUser.Department,
+                JobTitle = localUser?.JobTitle ?? graphUser.JobTitle,
+                OfficeLocation = graphUser.OfficeLocation,
+                IsKnownLocalUser = localUser != null,
+                IsActiveLocalUser = localUser?.IsActive == true
+            };
         }
     }
 }
