@@ -1,0 +1,351 @@
+@use '../../../../src/styles' as *
+
+.absence-approvals-page
+    width: 100%
+    max-width: 1100px
+    min-width: 0
+    margin: 0 auto
+    padding: 1.5rem 1rem 2rem
+    box-sizing: border-box
+
+.page-header
+    display: flex
+    justify-content: space-between
+    align-items: flex-start
+    gap: 1rem
+    margin-bottom: 1.25rem
+
+.page-eyebrow
+    margin: 0 0 0.25rem
+    font-size: 0.8rem
+    font-weight: 700
+    letter-spacing: 0.08em
+    text-transform: uppercase
+    color: $primary-600
+
+.page-title
+    margin: 0
+    font-size: 1.75rem
+    font-weight: 700
+    color: $dark-900
+
+.page-subtitle
+    margin: 0.45rem 0 0
+    color: $dark-700
+    font-size: 0.95rem
+
+.approval-card
+    width: 100%
+    max-width: 100%
+    min-width: 0
+    background: $light-500
+    border: 1px solid $border-color
+    border-radius: 16px
+    padding: 1.25rem
+    margin-bottom: 1rem
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04)
+    box-sizing: border-box
+    overflow: hidden
+
+.feedback-messages
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+    margin-bottom: 1rem
+
+.approval-alert
+    display: flex
+    align-items: center
+    gap: 0.6rem
+    padding: 0.85rem 1rem
+    border-radius: 12px
+    font-weight: 600
+
+.approval-alert--error
+    background: rgba(214, 69, 69, 0.1)
+    color: $danger-600
+    border: 1px solid rgba(214, 69, 69, 0.2)
+
+.approval-alert--success
+    background: rgba(46, 158, 111, 0.1)
+    color: $success-600
+    border: 1px solid rgba(46, 158, 111, 0.2)
+
+.loading-card
+    display: flex
+    align-items: center
+    justify-content: center
+    gap: 0.75rem
+    min-height: 140px
+    color: $dark-700
+    font-weight: 600
+
+.spinner
+    width: 24px
+    height: 24px
+    border-radius: 999px
+    border: 3px solid $light-300
+    border-top-color: $primary-500
+    animation: spin 0.8s linear infinite
+
+@keyframes spin
+    to
+        transform: rotate(360deg)
+
+.empty-card
+    min-height: 260px
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    text-align: center
+
+    h2
+        margin: 0.75rem 0 0.35rem
+        color: $dark-900
+        font-size: 1.25rem
+
+    p
+        margin: 0
+        color: $dark-700
+
+.empty-icon
+    width: 56px
+    height: 56px
+    border-radius: 999px
+    background: $primary-200
+    color: $primary-700
+    display: flex
+    align-items: center
+    justify-content: center
+    font-size: 1.5rem
+
+.approval-list
+    display: flex
+    flex-direction: column
+    gap: 1rem
+
+.request-card
+    margin-bottom: 0
+
+.request-header
+    display: flex
+    justify-content: space-between
+    align-items: flex-start
+    gap: 1rem
+    margin-bottom: 1rem
+
+.user-block
+    display: flex
+    align-items: center
+    gap: 0.85rem
+    min-width: 0
+
+.user-avatar
+    width: 44px
+    height: 44px
+    border-radius: 999px
+    background: $primary-500
+    color: $light-500
+    display: flex
+    align-items: center
+    justify-content: center
+    font-weight: 700
+    flex: 0 0 auto
+
+.user-meta
+    min-width: 0
+
+    h2
+        margin: 0
+        font-size: 1.1rem
+        color: $dark-900
+        font-weight: 700
+
+    p
+        margin: 0.2rem 0 0
+        color: $dark-700
+        font-size: 0.9rem
+        overflow-wrap: anywhere
+
+.status-pill
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    border-radius: 999px
+    padding: 0.35rem 0.75rem
+    background: $warning-400
+    color: $dark-950
+    font-size: 0.8rem
+    font-weight: 700
+    white-space: nowrap
+
+.request-grid
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: 0.75rem
+    margin-bottom: 1rem
+
+.request-field
+    background: $light-100
+    border: 1px solid $border-color
+    border-radius: 12px
+    padding: 0.85rem
+    min-width: 0
+
+    span
+        display: block
+        margin-bottom: 0.25rem
+        color: $dark-700
+        font-size: 0.8rem
+        font-weight: 600
+
+    strong
+        color: $dark-900
+        font-size: 0.95rem
+        overflow-wrap: anywhere
+
+.reason-block
+    background: $light-100
+    border: 1px solid $border-color
+    border-radius: 12px
+    padding: 0.85rem
+    margin-bottom: 1rem
+
+    span
+        display: block
+        margin-bottom: 0.35rem
+        color: $dark-700
+        font-size: 0.8rem
+        font-weight: 600
+
+    p
+        margin: 0
+        color: $dark-900
+        line-height: 1.45
+
+.decision-block
+    display: flex
+    flex-direction: column
+    gap: 0.45rem
+    margin-bottom: 1rem
+
+    label
+        font-weight: 600
+        color: $dark-800
+
+    textarea
+        width: 100%
+        min-width: 0
+        resize: vertical
+        border: 1px solid $light-300
+        border-radius: 12px
+        padding: 0.8rem 0.9rem
+        color: $dark-900
+        background: $light-500
+        box-sizing: border-box
+        outline: none
+        transition: border-color 0.15s ease, box-shadow 0.15s ease
+
+        &:focus
+            border-color: $primary-500
+            box-shadow: 0 0 0 3px rgba(0, 146, 123, 0.14)
+
+        &:disabled
+            background: $light-100
+            color: $dark-600
+
+.card-actions
+    display: flex
+    justify-content: flex-end
+    align-items: center
+    gap: 0.75rem
+    flex-wrap: wrap
+
+.approval-btn
+    min-height: 44px
+    padding: 0.7rem 1.1rem
+    border-radius: 12px
+    font-weight: 600
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: 0.5rem
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease
+    box-sizing: border-box
+    cursor: pointer
+
+    &:hover:not(:disabled)
+        transform: translateY(-1px)
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08)
+
+    &:disabled
+        opacity: 0.65
+        cursor: not-allowed
+
+.approval-btn--primary
+    background: $primary-500
+    border: 1px solid $primary-500
+    color: $light-500
+
+    &:hover:not(:disabled)
+        background: $primary-600
+
+.approval-btn--secondary
+    background: $light-500
+    border: 1px solid $light-300
+    color: $dark-800
+
+    &:hover:not(:disabled)
+        background: $light-100
+
+.approval-btn--danger
+    background: transparent
+    border: 1px solid $danger-500
+    color: $danger-500
+
+    &:hover:not(:disabled)
+        background: rgba(214, 69, 69, 0.08)
+
+@media (max-width: 768px)
+    .absence-approvals-page
+        padding: 1rem 0.875rem 1.5rem
+
+    .page-header
+        flex-direction: column
+        align-items: stretch
+
+    .page-title
+        font-size: 1.5rem
+
+    .approval-btn--secondary
+        width: 100%
+
+    .approval-card
+        padding: 1rem
+
+    .request-header
+        flex-direction: column
+
+    .request-grid
+        grid-template-columns: 1fr
+
+    .card-actions
+        justify-content: stretch
+
+    .approval-btn
+        width: 100%
+
+@media (max-width: 576px)
+    .absence-approvals-page
+        padding: 1rem 0.75rem 1.5rem
+
+    .approval-card
+        padding: 0.875rem
+
+    .user-block
+        align-items: flex-start
+
+    .user-avatar
+        width: 40px
+        height: 40px

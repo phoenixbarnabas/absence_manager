@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class NewOffice : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -44,6 +44,72 @@ namespace Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Locations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AbsenceRequests",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    DateFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    DateTo = table.Column<DateOnly>(type: "date", nullable: false),
+                    Reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AbsenceRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AbsenceRequests_AppUsers_ReviewedByUserId",
+                        column: x => x.ReviewedByUserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AbsenceRequests_AppUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppUserManagerRelations",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UserEntraObjectId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ManagerUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    ManagerEntraObjectId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    TenantId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    SyncedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ValidFromUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ValidToUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppUserManagerRelations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AppUserManagerRelations_AppUsers_ManagerUserId",
+                        column: x => x.ManagerUserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AppUserManagerRelations_AppUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -131,7 +197,11 @@ namespace Data.Migrations
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "113 - IT Office" });
+                values: new object[,]
+                {
+                    { "office-ft-1", "IT Office", 1, true, "loc-Fót", "113 - IT Fejlesztés" },
+                    { "office-ft-2", "IT Office", 2, true, "loc-Fót", "110 - IT Üzemeltetés" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
@@ -139,13 +209,53 @@ namespace Data.Migrations
                 values: new object[,]
                 {
                     { "ws-1", "KL", 1, true, "1", "office-ft-1", 1m, 1m },
+                    { "ws-10", "Üres-5", 3, true, "3", "office-ft-2", 3m, 1m },
                     { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
                     { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },
                     { "ws-4", "PB", 4, true, "4", "office-ft-1", 1m, 2m },
-                    { "ws-5", "F1", 5, true, "5", "office-ft-1", 2m, 2m },
+                    { "ws-5", "Üres-1", 5, true, "5", "office-ft-1", 2m, 2m },
                     { "ws-6", "Szp", 6, true, "6", "office-ft-1", 3m, 2m },
-                    { "ws-7", "F2", 7, true, "7", "office-ft-1", 2m, 3m }
+                    { "ws-7", "Üres-2", 7, true, "7", "office-ft-1", 2m, 3m },
+                    { "ws-8", "Üres-3", 1, true, "1", "office-ft-2", 1m, 1m },
+                    { "ws-9", "Üres-4", 2, true, "2", "office-ft-2", 2m, 1m }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbsenceRequests_ReviewedByUserId",
+                table: "AbsenceRequests",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbsenceRequests_User_DateRange_Status",
+                table: "AbsenceRequests",
+                columns: new[] { "UserId", "DateFrom", "DateTo", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUserManagerRelations_ManagerEntraObjectId",
+                table: "AppUserManagerRelations",
+                column: "ManagerEntraObjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUserManagerRelations_ManagerUserId",
+                table: "AppUserManagerRelations",
+                column: "ManagerUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUserManagerRelations_UserEntraObjectId",
+                table: "AppUserManagerRelations",
+                column: "UserEntraObjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUserManagerRelations_UserId_IsActive",
+                table: "AppUserManagerRelations",
+                columns: new[] { "UserId", "IsActive" });
+
+            migrationBuilder.CreateIndex(
+                name: "UX_AppUserManagerRelations_OneActivePerUser",
+                table: "AppUserManagerRelations",
+                column: "UserId",
+                unique: true,
+                filter: "\"IsActive\" = true");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppUsers_EntraObjectId_TenantId",
@@ -179,8 +289,7 @@ namespace Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Workstations_OfficeId_Code",
                 table: "Workstations",
-                columns: new[] { "OfficeId", "Code" },
-                unique: true);
+                columns: new[] { "OfficeId", "Code" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Workstations_OfficeId_Name",
@@ -192,6 +301,12 @@ namespace Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AbsenceRequests");
+
+            migrationBuilder.DropTable(
+                name: "AppUserManagerRelations");
+
             migrationBuilder.DropTable(
                 name: "OfficeBookings");
 
