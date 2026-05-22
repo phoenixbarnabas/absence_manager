@@ -101,6 +101,26 @@ public class AppUserResolver : IAppUserResolver
 
         if (user != null)
         {
+            try
+            {
+                var existingGraphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+
+                user.DisplayName = existingGraphProfile?.DisplayName ?? user.DisplayName;
+                user.Email = existingGraphProfile?.Email ?? user.Email;
+                user.Department = existingGraphProfile?.Department ?? user.Department;
+                user.JobTitle = existingGraphProfile?.JobTitle ?? user.JobTitle;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Graph profile refresh failed: {ex.Message}");
+            }
+
             return user;
         }
 
@@ -137,8 +157,27 @@ public class AppUserResolver : IAppUserResolver
         };
 
         _dbContext.AppUsers.Add(user);
-        await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return user;
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return user;
+        }
+        catch (DbUpdateException)
+        {
+            _dbContext.Entry(user).State = EntityState.Detached;
+
+            var existingUser = await _dbContext.AppUsers
+                .FirstOrDefaultAsync(
+                    x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
+                    cancellationToken);
+
+            if (existingUser != null)
+            {
+                return existingUser;
+            }
+
+            throw;
+        }
     }
 }

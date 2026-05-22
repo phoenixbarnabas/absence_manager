@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    partial class AbsenceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504190234_AbsenceRequest")]
+    partial class AbsenceRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -338,7 +341,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "Senki",
+                            Code = "F1",
                             DisplayOrder = 5,
                             IsActive = true,
                             Name = "5",
@@ -360,7 +363,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-7",
-                            Code = "Senki",
+                            Code = "F2",
                             DisplayOrder = 7,
                             IsActive = true,
                             Name = "7",
