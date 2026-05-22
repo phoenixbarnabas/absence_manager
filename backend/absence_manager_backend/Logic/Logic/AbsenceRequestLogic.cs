@@ -15,6 +15,50 @@ namespace Logic.Logic
             _dbContext = dbContext;
         }
 
+        public async Task<IReadOnlyList<AbsenceRequestApprovalDto>> GetPendingApprovalsForManagerAsync(string managerUserId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(managerUserId))
+            {
+                throw new ArgumentException("Manager user id is required.", nameof(managerUserId));
+            }
+
+            var directReportUserIds = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .Where(x => x.ManagerUserId == managerUserId && x.IsActive)
+                .Select(x => x.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (directReportUserIds.Count == 0)
+            {
+                return [];
+            }
+
+            return await _dbContext.AbsenceRequests
+                .AsNoTracking()
+                .Include(x => x.User)
+                .Where(x =>
+                    directReportUserIds.Contains(x.UserId) &&
+                    x.Status == AbsenceRequestStatus.Pending)
+                .OrderBy(x => x.DateFrom)
+                .ThenBy(x => x.CreatedAtUtc)
+                .Select(x => new AbsenceRequestApprovalDto
+                {
+                    Id = x.Id,
+                    UserId = x.UserId,
+                    UserDisplayName = x.User.DisplayName,
+                    UserEmail = x.User.Email,
+                    Type = x.Type,
+                    Status = x.Status,
+                    DateFrom = x.DateFrom,
+                    DateTo = x.DateTo,
+                    Reason = x.Reason,
+                    CreatedAtUtc = x.CreatedAtUtc,
+                    DecisionComment = x.DecisionComment
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<AbsenceRequestViewDto> CreateAsync(
             CreateAbsenceRequestDto dto,
             string currentUserId,
