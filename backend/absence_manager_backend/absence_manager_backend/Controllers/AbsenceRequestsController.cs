@@ -71,6 +71,52 @@ namespace Absence_Manager.Controllers
             }
         }
 
+        [HttpGet("pending-approvals")]
+        public async Task<IActionResult> GetPendingApprovals(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                var pendingApprovals = await _absenceRequestLogic.GetPendingApprovalsForManagerAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(pendingApprovals);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("reviewed-approvals")]
+        public async Task<IActionResult> GetReviewedApprovals(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                var reviewedApprovals = await _absenceRequestLogic.GetReviewedApprovalsForManagerAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(reviewedApprovals);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(
             string id,
@@ -108,29 +154,6 @@ namespace Absence_Manager.Controllers
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("pending-approvals")]
-        public async Task<IActionResult> GetPendingApprovals(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-
-                var pendingApprovals = await _absenceRequestLogic.GetPendingApprovalsForManagerAsync(
-                    currentUserId,
-                    cancellationToken);
-
-                return Ok(pendingApprovals);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
             }
             catch (KeyNotFoundException ex)
             {
