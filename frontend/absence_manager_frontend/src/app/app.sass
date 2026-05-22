@@ -5,6 +5,7 @@
     min-height: 100vh
     height: 100vh
     overflow: hidden
+    background: #f8faf9
 
 .app-sidebar
     width: 280px
@@ -14,8 +15,10 @@
     top: 0
     align-self: flex-start
     overflow: hidden
-    border-right: 1px solid #e5e7eb
-    background: #fff
+    border-right: 1px solid #e8eeec
+    background: #ffffff
+    box-shadow: 10px 0 30px rgba(47, 47, 47, 0.04)
+    z-index: 10
 
 .app-content
     flex: 1 1 auto
@@ -23,11 +26,14 @@
     overflow-y: auto
     overflow-x: hidden
     padding: 1rem
+    background: radial-gradient(circle at top right, rgba(0, 146, 123, 0.08), transparent 32rem), linear-gradient(180deg, #f8faf9 0%, #ffffff 100%)
 
 .app-shell.login-layout
     display: block
+    background: #ffffff
 
 .app-shell.login-layout .app-content
     height: auto
     min-height: 100vh
     padding: 0
+    background: #ffffff

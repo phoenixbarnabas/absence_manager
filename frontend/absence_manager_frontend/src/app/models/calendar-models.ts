@@ -81,4 +81,28 @@ export interface AbsenceRequestViewDto {
   userName: string;
   department?: string | null;
   createdAtUtc: string;
+
+  updatedAtUtc?: string | null;
+  reviewedAtUtc?: string | null;
+  reviewedByUserId?: string | null;
+  reviewedByUserName?: string | null;
+  decisionComment?: string | null;
+}
+
+export interface AbsenceRequestApprovalDto {
+  id: string;
+  userId: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+  type: CalendarAbsenceRequestType;
+  status: CalendarEventStatus;
+  dateFrom: string;
+  dateTo: string;
+  reason?: string | null;
+  createdAtUtc: string;
+  decisionComment?: string | null;
+}
+
+export interface AbsenceRequestDecisionDto {
+  decisionComment?: string | null;
 }

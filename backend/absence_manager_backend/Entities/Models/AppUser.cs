@@ -19,6 +19,8 @@ namespace Entities.Models
         public ICollection<OfficeBooking> OfficeBookings { get; set; } = new List<OfficeBooking>();
 
         public ICollection<AbsenceRequest> AbsenceRequests { get; set; } = new List<AbsenceRequest>();
+        public ICollection<AppUserManagerRelation> ManagerRelations { get; set; } = new List<AppUserManagerRelation>();
+        public ICollection<AppUserManagerRelation> DirectReportRelations { get; set; } = new List<AppUserManagerRelation>();
 
         public AppUser()
         {

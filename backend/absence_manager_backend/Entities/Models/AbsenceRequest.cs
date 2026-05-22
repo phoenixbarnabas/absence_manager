@@ -28,6 +28,7 @@ namespace Entities.Models
         public DateOnly DateTo { get; set; }
 
         public string? Reason { get; set; }
+        public string? DecisionComment { get; set; }
 
         public DateTime CreatedAtUtc { get; set; }
 

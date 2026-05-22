@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    partial class AbsenceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522110041_AddAbsenceRequestDecisionComment")]
+    partial class AddAbsenceRequestDecisionComment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -262,20 +265,11 @@ namespace Data.Migrations
                         new
                         {
                             Id = "office-ft-1",
-                            Description = "IT Office",
+                            Description = "IT fejlesztés",
                             DisplayOrder = 1,
                             IsActive = true,
                             LocationId = "loc-Fót",
-                            Name = "113 - IT Fejlesztés"
-                        },
-                        new
-                        {
-                            Id = "office-ft-2",
-                            Description = "IT Office",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            LocationId = "loc-Fót",
-                            Name = "110 - IT Üzemeltetés"
+                            Name = "113 - IT Office"
                         });
                 });
 
@@ -357,7 +351,8 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfficeId", "Code");
+                    b.HasIndex("OfficeId", "Code")
+                        .IsUnique();
 
                     b.HasIndex("OfficeId", "Name")
                         .IsUnique();
@@ -412,7 +407,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "üres-1",
+                            Code = "Üres-1",
                             DisplayOrder = 5,
                             IsActive = true,
                             Name = "5",
@@ -434,46 +429,13 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-7",
-                            Code = "üres-2",
+                            Code = "Üres-2",
                             DisplayOrder = 7,
                             IsActive = true,
                             Name = "7",
                             OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 3m
-                        },
-                        new
-                        {
-                            Id = "ws-8",
-                            Code = "Üres-3",
-                            DisplayOrder = 1,
-                            IsActive = true,
-                            Name = "1",
-                            OfficeId = "office-ft-2",
-                            PositionX = 1m,
-                            PositionY = 1m
-                        },
-                        new
-                        {
-                            Id = "ws-9",
-                            Code = "Üres-4",
-                            DisplayOrder = 2,
-                            IsActive = true,
-                            Name = "2",
-                            OfficeId = "office-ft-2",
-                            PositionX = 2m,
-                            PositionY = 1m
-                        },
-                        new
-                        {
-                            Id = "ws-10",
-                            Code = "Üres-5",
-                            DisplayOrder = 3,
-                            IsActive = true,
-                            Name = "3",
-                            OfficeId = "office-ft-2",
-                            PositionX = 3m,
-                            PositionY = 1m
                         });
                 });
 

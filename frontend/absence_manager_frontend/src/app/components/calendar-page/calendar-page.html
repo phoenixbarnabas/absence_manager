@@ -1,154 +1,157 @@
 <div class="calendar-page">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title d-flex align-items-center gap-2">
+  <header class="calendar-hero">
+    <div class="calendar-hero__content">
+      <span class="eyebrow">
         <i class="bi bi-calendar3"></i>
-        <span>Naptár</span>
-      </h1>
+        Központi naptár
+      </span>
 
-      <p class="page-subtitle">
-        Szabadság, home office, betegszabadság, egyéb távollét és helyfoglalás kezelése.
-      </p>
-    </div>
-
-    <button
-      type="button"
-      class="btn btn-outline-secondary"
-      (click)="reload()"
-      [disabled]="saving"
-    >
-      <i class="bi bi-arrow-clockwise"></i>
-      Frissítés
-    </button>
-  </div>
-
-  <div class="calendar-toolbar">
-    <div class="period-controls">
-      <button
-        type="button"
-        class="btn btn-light"
-        (click)="previousPeriod()"
-        [disabled]="saving"
-        aria-label="Előző időszak"
-      >
-        <i class="bi bi-chevron-left"></i>
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-light period-title"
-        (click)="goToToday()"
-        [disabled]="saving"
-      >
-        {{ periodTitle }}
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-light"
-        (click)="nextPeriod()"
-        [disabled]="saving"
-        aria-label="Következő időszak"
-      >
-        <i class="bi bi-chevron-right"></i>
-      </button>
-
-      <button
-        type="button"
-        class="btn btn-outline-primary"
-        (click)="goToToday()"
-        [disabled]="saving"
-      >
-        Ma
-      </button>
-    </div>
-
-    <div class="view-switcher" role="group" aria-label="Naptár nézet választó">
-      <button
-        type="button"
-        class="btn view-switcher__btn"
-        *ngFor="let mode of viewModes"
-        [class.view-switcher__btn--active]="viewMode === mode.value"
-        (click)="setViewMode(mode.value)"
-        [disabled]="saving"
-      >
-        <i class="bi" [ngClass]="mode.icon"></i>
-        {{ mode.label }}
-      </button>
-    </div>
-  </div>
-
-  <div class="filter-card">
-    <div class="filter-group filter-group--scope">
-      <label for="calendarScope" class="form-label">Láthatóság</label>
-
-      <select
-        id="calendarScope"
-        class="form-select"
-        [(ngModel)]="scope"
-        (ngModelChange)="onScopeChange($event)"
-        [disabled]="saving"
-      >
-        <option *ngFor="let option of scopeOptions" [ngValue]="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-
-      <small class="filter-hint">
-        {{ selectedScopeDescription }}
-      </small>
-    </div>
-
-    <div class="filter-group filter-group--types">
-      <div class="form-label">Eseménytípusok</div>
-
-      <div class="event-type-filters">
-        <label
-          class="event-type-filter"
-          *ngFor="let type of eventTypeOptions"
-          [ngClass]="'event-type-filter--' + type.value"
-        >
-          <input
-            type="checkbox"
-            [checked]="eventTypeSelection[type.value]"
-            (change)="onEventTypeToggle(type.value, $any($event.target).checked)"
-            [disabled]="saving"
-          />
-
-          <span class="event-type-dot"></span>
-
-          <i class="bi" [ngClass]="type.icon"></i>
-
-          <span>{{ type.label }}</span>
-        </label>
+      <div class="calendar-hero__title-row">
+        <div>
+          <h1>Naptár</h1>
+          <p>
+            Távollétek, home office napok, betegszabadságok és helyfoglalási információk
+            áttekintése egy letisztult, céges nézetben.
+          </p>
+        </div>
       </div>
     </div>
-  </div>
+  </header>
+
+  <section class="calendar-control-panel">
+    <div class="filter-card">
+      <div class="filter-card__scope">
+        <label for="calendarScope" class="form-label">Láthatóság</label>
+
+        <select
+          id="calendarScope"
+          class="form-select"
+          [(ngModel)]="scope"
+          (ngModelChange)="onScopeChange($event)"
+          [disabled]="saving"
+        >
+          <option *ngFor="let option of scopeOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+
+        <small>{{ selectedScopeDescription }}</small>
+      </div>
+
+      <div class="filter-card__types">
+        <div class="filter-card__label-row">
+          <span class="form-label mb-0">Eseménytípusok</span>
+          <span class="filter-count">{{ activeEventTypes.length }} aktív szűrő</span>
+        </div>
+
+        <div class="event-type-filters">
+          <label
+            class="event-type-filter"
+            *ngFor="let type of eventTypeOptions"
+            [ngClass]="[
+              'event-type-filter--' + type.value,
+              eventTypeSelection[type.value] ? 'event-type-filter--checked' : ''
+            ]"
+          >
+            <input
+              type="checkbox"
+              [checked]="eventTypeSelection[type.value]"
+              (change)="onEventTypeToggle(type.value, $any($event.target).checked)"
+              [disabled]="saving"
+            />
+
+            <span class="event-type-dot"></span>
+            <i class="bi" [ngClass]="type.icon"></i>
+            <span>{{ type.label }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <div class="calendar-alerts">
     <div class="alert alert-success" *ngIf="successMessage">
-      {{ successMessage }}
+      <i class="bi bi-check-circle"></i>
+      <span>{{ successMessage }}</span>
     </div>
 
     <div class="alert alert-warning" *ngIf="warningMessage">
-      {{ warningMessage }}
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ warningMessage }}</span>
     </div>
 
     <div class="alert alert-danger" *ngIf="errorMessage">
-      {{ errorMessage }}
+      <i class="bi bi-x-circle"></i>
+      <span>{{ errorMessage }}</span>
     </div>
   </div>
 
   <div class="loading-card" *ngIf="loading && !calendarDays.length">
     <div class="spinner-border" role="status" aria-hidden="true"></div>
-    <span>Naptár betöltése...</span>
+    <div>
+      <strong>Naptár betöltése</strong>
+      <span>Ünnepnapok és események lekérése...</span>
+    </div>
   </div>
 
   <div class="calendar-layout" *ngIf="calendarDays.length">
     <section class="calendar-card">
-      <div class="calendar-summary-row">
-        <span>{{ eventCount }} esemény</span>
-        <span>{{ selectedDateTitle }}</span>
+      <div class="calendar-card__header">
+        <div class="calendar-toolbar">
+          <div class="period-controls" aria-label="Időszak navigáció">
+            <button
+              type="button"
+              class="btn btn-light icon-button"
+              (click)="previousPeriod()"
+              [disabled]="saving"
+              aria-label="Előző időszak"
+            >
+              <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light period-title"
+              (click)="goToToday()"
+              [disabled]="saving"
+            >
+              {{ periodTitle }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light icon-button"
+              (click)="nextPeriod()"
+              [disabled]="saving"
+              aria-label="Következő időszak"
+            >
+              <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary today-button"
+              (click)="goToToday()"
+              [disabled]="saving"
+            >
+              Ma
+            </button>
+          </div>
+
+          <div class="view-switcher" role="group" aria-label="Naptár nézet választó">
+            <button
+              type="button"
+              class="btn view-switcher__btn"
+              *ngFor="let mode of viewModes"
+              [class.view-switcher__btn--active]="viewMode === mode.value"
+              (click)="setViewMode(mode.value)"
+              [disabled]="saving"
+            >
+              <i class="bi" [ngClass]="mode.icon"></i>
+              {{ mode.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="month-weekdays" *ngIf="viewMode === 'month'">
@@ -158,10 +161,12 @@
       </div>
 
       <div
+        class="calendar-grid"
         [class.month-grid]="viewMode === 'month'"
         [class.week-grid]="viewMode === 'week'"
       >
-        <div
+        <button
+          type="button"
           class="calendar-day"
           *ngFor="let day of calendarDays; trackBy: trackByDate"
           [class.calendar-day--month]="viewMode === 'month'"
@@ -170,47 +175,29 @@
           [class.calendar-day--today]="day.isToday"
           [class.calendar-day--selected]="day.isSelected"
           [class.calendar-day--non-working]="!day.isWorkingDay"
-          role="button"
-          tabindex="0"
           (click)="selectDay(day)"
-          (keydown.enter)="selectDay(day)"
         >
-          <div class="calendar-day__header">
-            <div>
+          <span class="calendar-day__topline">
+            <span>
               <span class="calendar-day__name" *ngIf="viewMode === 'week'">
                 {{ day.dayName }}
               </span>
+              <span class="calendar-day__number">{{ day.dayNumber }}</span>
+            </span>
 
-              <span class="calendar-day__number">
-                {{ day.dayNumber }}
-              </span>
-            </div>
+            <span class="calendar-day__badges">
+              <span class="day-badge day-badge--today" *ngIf="day.isToday">Ma</span>
+              <span class="day-badge day-badge--holiday" *ngIf="day.isHoliday">Ünnep</span>
+              <span class="day-badge day-badge--weekend" *ngIf="day.isWeekend && !day.isHoliday">Hétvége</span>
+            </span>
+          </span>
 
-            <div class="calendar-day__badges">
-              <span class="day-badge day-badge--today" *ngIf="day.isToday">
-                ma
-              </span>
-
-              <span class="day-badge day-badge--holiday" *ngIf="day.isHoliday">
-                ünnep
-              </span>
-
-              <span
-                class="day-badge day-badge--weekend"
-                *ngIf="day.isWeekend && !day.isHoliday"
-              >
-                hétvége
-              </span>
-            </div>
-          </div>
-
-          <div class="calendar-day__holiday" *ngIf="day.holidayName">
+          <span class="calendar-day__holiday" *ngIf="day.holidayName">
             {{ day.holidayName }}
-          </div>
+          </span>
 
-          <div class="event-list" *ngIf="day.events.length; else emptyDayBlock">
-            <button
-              type="button"
+          <span class="event-list" *ngIf="day.events.length; else emptyDayBlock">
+            <span
               class="event-pill"
               *ngFor="let event of day.events.slice(0, viewMode === 'month' ? 3 : 8); trackBy: trackByEvent"
               [ngClass]="[
@@ -219,42 +206,37 @@
               ]"
               (click)="selectEvent(event, $event)"
             >
-              <span class="event-pill__dot"></span>
+              <span class="event-pill__marker"></span>
 
               <span class="event-pill__content">
-                <span class="event-pill__text">
-                  {{ event.title }}
-                </span>
-
+                <strong>{{ event.title }}</strong>
                 <small *ngIf="viewMode === 'week'">
                   {{ event.userName }} · {{ getStatusLabel(event.status) }}
                 </small>
               </span>
-            </button>
-
-            <span
-              class="event-more"
-              *ngIf="day.events.length > (viewMode === 'month' ? 3 : 8)"
-            >
-              +{{ day.events.length - (viewMode === 'month' ? 3 : 8) }} további
             </span>
-          </div>
+
+            <span class="event-more" *ngIf="day.events.length > (viewMode === 'month' ? 3 : 8)">
+              +{{ day.events.length - (viewMode === 'month' ? 3 : 8) }} további esemény
+            </span>
+          </span>
 
           <ng-template #emptyDayBlock>
-            <div class="empty-day">
-              Kattints igényléshez
-            </div>
+            <span class="empty-day">
+              <i class="bi bi-plus-circle"></i>
+              Napi nézet
+            </span>
           </ng-template>
-        </div>
+        </button>
       </div>
     </section>
 
-    <aside class="event-details" *ngIf="selectedEvent as event">
-      <div class="event-details__header">
+    <aside class="side-panel" *ngIf="selectedEvent as event; else selectedDayPanel">
+      <div class="side-panel__header">
         <div>
           <span
-            class="event-details__type"
-            [ngClass]="'event-details__type--' + event.type"
+            class="event-type-chip"
+            [ngClass]="'event-type-chip--' + event.type"
           >
             <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
             {{ getEventTypeLabel(event.type) }}
@@ -271,7 +253,7 @@
         ></button>
       </div>
 
-      <dl class="event-details__list">
+      <dl class="details-list">
         <div>
           <dt>Időszak</dt>
           <dd>{{ getEventDateText(event) }}</dd>
@@ -289,7 +271,11 @@
 
         <div>
           <dt>Státusz</dt>
-          <dd>{{ getStatusLabel(event.status) }}</dd>
+          <dd>
+            <span class="status-badge" [ngClass]="'status-badge--' + event.status">
+              {{ getStatusLabel(event.status) }}
+            </span>
+          </dd>
         </div>
 
         <div *ngIf="event.locationName">
@@ -322,37 +308,67 @@
         Kapcsolódó oldal megnyitása
       </button>
     </aside>
-  </div>
 
-  <div class="selected-day-card" *ngIf="!loading && !selectedEvent && selectedDayEvents.length">
-    <h2>{{ selectedDateTitle }} eseményei</h2>
+    <ng-template #selectedDayPanel>
+      <aside class="side-panel selected-day-panel" *ngIf="selectedCalendarDay as selectedDay">
+        <div class="side-panel__header">
+          <div>
+            <span class="event-type-chip event-type-chip--day">
+              <i class="bi bi-calendar-day"></i>
+              Napi áttekintés
+            </span>
 
-    <button
-      type="button"
-      class="selected-day-event"
-      *ngFor="let event of selectedDayEvents; trackBy: trackByEvent"
-      [ngClass]="'selected-day-event--' + event.type"
-      (click)="selectEvent(event)"
-    >
-      <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
+            <h2>{{ selectedDateTitle }}</h2>
+          </div>
+        </div>
 
-      <span>{{ event.title }}</span>
+        <div class="day-summary-box" [class.day-summary-box--warning]="!selectedDay.isWorkingDay">
+          <div>
+            <strong>{{ getSelectedDayStatusTitle(selectedDay) }}</strong>
+            <span>{{ getSelectedDayStatusDescription(selectedDay) }}</span>
+          </div>
+        </div>
 
-      <small>
-        {{ event.userName }} · {{ getStatusLabel(event.status) }}
-      </small>
-    </button>
-  </div>
+        <div class="selected-day-events" *ngIf="selectedDay.events.length; else noSelectedDayEvents">
+          <button
+            type="button"
+            class="selected-day-event"
+            *ngFor="let event of selectedDay.events; trackBy: trackByEvent"
+            [ngClass]="'selected-day-event--' + event.type"
+            (click)="selectEvent(event)"
+          >
+            <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
 
-  <div class="empty-state" *ngIf="!loading && !eventCount && !errorMessage">
-    <i class="bi bi-calendar-check"></i>
+            <span>
+              <strong>{{ event.title }}</strong>
+              <small>{{ event.userName }} · {{ getStatusLabel(event.status) }}</small>
+            </span>
+          </button>
+        </div>
 
-    <h2>Nincs megjeleníthető esemény</h2>
+        <ng-template #noSelectedDayEvents>
+          <div class="day-empty-state">
+            <i class="bi bi-calendar2-check"></i>
+            <strong>Nincs esemény ezen a napon</strong>
+            <span>Innen indíthatsz új távollét vagy home office igényt.</span>
+          </div>
+        </ng-template>
 
-    <p>
-      A kiválasztott időszakban és szűrőkkel még nincs szabadság, home office,
-      betegszabadság, egyéb távollét vagy helyfoglalás.
-    </p>
+        <button
+          type="button"
+          class="btn btn-primary w-100 request-day-button"
+          (click)="openRequestModal(selectedDay)"
+          [disabled]="!canCreateRequestForDay(selectedDay)"
+        >
+          <i class="bi bi-plus-lg"></i>
+          Új igény erre a napra
+        </button>
+
+        <small class="request-disabled-hint" *ngIf="!canCreateRequestForDay(selectedDay)">
+          Korábbi napra már nem lehet új igényt leadni.
+        </small>
+      </aside>
+    </ng-template>
   </div>
 
   <div
@@ -369,12 +385,17 @@
     >
       <div class="request-modal__header">
         <div>
+          <span class="event-type-chip event-type-chip--day">
+            <i class="bi bi-send"></i>
+            Igénylés
+          </span>
+
           <h2 id="requestModalTitle">
             {{ requestModalTitle }}
           </h2>
 
           <p>
-            Válaszd ki, mit szeretnél erre a napra vagy időszakra igényelni.
+            Válaszd ki, milyen távollétet vagy home office napot szeretnél rögzíteni.
           </p>
         </div>
 
@@ -417,12 +438,9 @@
           <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
 
           <span>
-            {{ event.title }}
+            <strong>{{ event.title }}</strong>
+            <small>{{ event.userName }} · {{ getStatusLabel(event.status) }}</small>
           </span>
-
-          <small>
-            {{ event.userName }} · {{ getStatusLabel(event.status) }}
-          </small>
         </button>
       </div>
 

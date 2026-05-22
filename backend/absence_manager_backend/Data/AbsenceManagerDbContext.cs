@@ -11,6 +11,7 @@ namespace Data
         public DbSet<Workstation> Workstations => Set<Workstation>();
         public DbSet<OfficeBooking> OfficeBookings => Set<OfficeBooking>();
         public DbSet<AbsenceRequest> AbsenceRequests => Set<AbsenceRequest>();
+        public DbSet<AppUserManagerRelation> AppUserManagerRelations => Set<AppUserManagerRelation>();
 
         public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options)
             : base(options)
@@ -57,6 +58,78 @@ namespace Data
                 entity.HasIndex(x => new { x.EntraObjectId, x.TenantId })
                     .IsUnique()
                     .HasFilter("\"TenantId\" IS NOT NULL");
+            });
+
+            // -------------------------
+            // AppUserManagerRelation
+            // -------------------------
+            modelBuilder.Entity<AppUserManagerRelation>(entity =>
+            {
+                entity.ToTable("AppUserManagerRelations");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Id)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.UserId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.UserEntraObjectId)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(x => x.ManagerUserId)
+                    .HasMaxLength(50);
+
+                entity.Property(x => x.ManagerEntraObjectId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.TenantId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.SyncedAtUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.ValidFromUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.ValidToUtc);
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.HasOne(x => x.User)
+                    .WithMany(x => x.ManagerRelations)
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.ManagerUser)
+                    .WithMany(x => x.DirectReportRelations)
+                    .HasForeignKey(x => x.ManagerUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => x.UserId)
+                    .HasDatabaseName("IX_AppUserManagerRelations_UserId");
+
+                entity.HasIndex(x => x.ManagerUserId)
+                    .HasDatabaseName("IX_AppUserManagerRelations_ManagerUserId");
+
+                entity.HasIndex(x => x.UserEntraObjectId)
+                    .HasDatabaseName("IX_AppUserManagerRelations_UserEntraObjectId");
+
+                entity.HasIndex(x => x.ManagerEntraObjectId)
+                    .HasDatabaseName("IX_AppUserManagerRelations_ManagerEntraObjectId");
+
+                entity.HasIndex(x => new { x.UserId, x.IsActive })
+                    .HasDatabaseName("IX_AppUserManagerRelations_UserId_IsActive");
+
+                entity.HasIndex(x => x.UserId)
+                    .IsUnique()
+                    .HasFilter("\"IsActive\" = true")
+                    .HasDatabaseName("UX_AppUserManagerRelations_OneActivePerUser");
             });
 
             // -------------------------
@@ -211,6 +284,9 @@ namespace Data
 
                 entity.HasIndex(x => new { x.UserId, x.DateFrom, x.DateTo, x.Status })
                     .HasDatabaseName("IX_AbsenceRequests_User_DateRange_Status");
+
+                entity.Property(x => x.DecisionComment)
+                    .HasMaxLength(1000);
             });
 
             // -------------------------
@@ -272,10 +348,19 @@ namespace Data
             {
                 Id = "office-ft-1",
                 LocationId = location1.Id,
-                Name = "113 - IT Office",
-                Description = "IT fejlesztés",
+                Name = "113 - IT Fejlesztés",
+                Description = "IT Office",
                 IsActive = true,
                 DisplayOrder = 1
+            };
+            var office2 = new Office
+            {
+                Id = "office-ft-2",
+                LocationId = location1.Id,
+                Name = "110 - IT Üzemeltetés",
+                Description = "IT Office",
+                IsActive = true,
+                DisplayOrder = 2
             };
 
             // ===== WORKSTATIONS =====
@@ -357,12 +442,46 @@ namespace Data
                     PositionX = 2,
                     PositionY = 3
                 },
+                // -------Üzemeltetés-------
+                new Workstation
+                {
+                    Id = "ws-8",
+                    OfficeId = office2.Id,
+                    Code = "Üres-3",
+                    Name = "1",
+                    IsActive = true,
+                    DisplayOrder = 1,
+                    PositionX = 1,
+                    PositionY = 1
+                },
+                new Workstation
+                {
+                    Id = "ws-9",
+                    OfficeId = office2.Id,
+                    Code = "Üres-4",
+                    Name = "2",
+                    IsActive = true,
+                    DisplayOrder = 2,
+                    PositionX = 2,
+                    PositionY = 1
+                },
+                new Workstation
+                {
+                    Id = "ws-10",
+                    OfficeId = office2.Id,
+                    Code = "Üres-5",
+                    Name = "3",
+                    IsActive = true,
+                    DisplayOrder = 3,
+                    PositionX = 3,
+                    PositionY = 1
+                }
 
             };
 
 
             modelBuilder.Entity<Location>().HasData(location1);
-            modelBuilder.Entity<Office>().HasData(office1);
+            modelBuilder.Entity<Office>().HasData(office1, office2);
             modelBuilder.Entity<Workstation>().HasData(workstations);
             
         }
