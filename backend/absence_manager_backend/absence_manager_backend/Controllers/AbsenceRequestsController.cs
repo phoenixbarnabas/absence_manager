@@ -116,5 +116,28 @@ namespace Absence_Manager.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        [HttpGet("pending-approvals")]
+        public async Task<IActionResult> GetPendingApprovals(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                var pendingApprovals = await _absenceRequestLogic.GetPendingApprovalsForManagerAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(pendingApprovals);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }
