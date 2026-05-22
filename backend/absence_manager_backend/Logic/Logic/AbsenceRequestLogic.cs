@@ -15,42 +15,6 @@ namespace Logic.Logic
             _dbContext = dbContext;
         }
 
-        public async Task<IReadOnlyList<AbsenceRequestViewDto>> GetMyAbsenceRequestsAsync(string currentUserId, CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(currentUserId))
-            {
-                throw new ArgumentException("Current user id is required.", nameof(currentUserId));
-            }
-
-            return await _dbContext.AbsenceRequests
-                .AsNoTracking()
-                .Include(x => x.User)
-                .Include(x => x.ReviewedByUser)
-                .Where(x => x.UserId == currentUserId)
-                .OrderByDescending(x => x.CreatedAtUtc)
-                .Select(x => new AbsenceRequestViewDto
-                {
-                    Id = x.Id,
-                    Type = x.Type.ToString(),
-                    Status = x.Status.ToString(),
-                    DateFrom = x.DateFrom,
-                    DateTo = x.DateTo,
-                    Reason = x.Reason,
-                    UserId = x.UserId,
-                    UserName = x.User.DisplayName,
-                    Department = x.User.Department,
-                    CreatedAtUtc = x.CreatedAtUtc,
-                    UpdatedAtUtc = x.UpdatedAtUtc,
-                    ReviewedAtUtc = x.ReviewedAtUtc,
-                    ReviewedByUserId = x.ReviewedByUserId,
-                    ReviewedByUserName = x.ReviewedByUser != null
-                        ? x.ReviewedByUser.DisplayName
-                        : null,
-                    DecisionComment = x.DecisionComment
-                })
-                .ToListAsync(cancellationToken);
-        }
-
         public async Task ApproveAbsenceRequestAsync(string absenceRequestId, string managerUserId, string? decisionComment, CancellationToken cancellationToken = default)
         {
             await ReviewAbsenceRequestAsync(
@@ -282,20 +246,26 @@ namespace Logic.Logic
             };
         }
 
-        public static AbsenceRequestViewDto ToViewDto(AbsenceRequest request)
+        private static AbsenceRequestViewDto ToViewDto(AbsenceRequest request)
         {
             return new AbsenceRequestViewDto
             {
                 Id = request.Id,
-                Type = ToTypeKey(request.Type),
-                Status = ToStatusKey(request.Status),
+                Type = request.Type.ToString(),
+                Status = request.Status.ToString(),
                 DateFrom = request.DateFrom,
                 DateTo = request.DateTo,
                 Reason = request.Reason,
                 UserId = request.UserId,
                 UserName = request.User.DisplayName,
                 Department = request.User.Department,
-                CreatedAtUtc = request.CreatedAtUtc
+                CreatedAtUtc = request.CreatedAtUtc,
+
+                UpdatedAtUtc = request.UpdatedAtUtc,
+                ReviewedAtUtc = request.ReviewedAtUtc,
+                ReviewedByUserId = request.ReviewedByUserId,
+                ReviewedByUserName = request.ReviewedByUser?.DisplayName,
+                DecisionComment = request.DecisionComment
             };
         }
 
