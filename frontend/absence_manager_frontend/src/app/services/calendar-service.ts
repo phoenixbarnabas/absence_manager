@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
+  AbsenceRequestApprovalDto,
+  AbsenceRequestDecisionDto,
   AbsenceRequestViewDto,
   CalendarDayInfoDto,
   CalendarEventDto,
@@ -63,6 +65,40 @@ export class CalendarService {
   cancelAbsenceRequest(id: string): Observable<void> {
     return this.http.delete<void>(
       `${this.configService.apiUrl}/absence-requests/${id}`
+    );
+  }
+
+  getPendingApprovals(): Observable<AbsenceRequestApprovalDto[]> {
+    return this.http.get<AbsenceRequestApprovalDto[]>(
+      `${this.configService.apiUrl}/absence-requests/pending-approvals`
+    );
+  }
+
+  approveAbsenceRequest(
+    id: string,
+    decisionComment?: string | null
+  ): Observable<void> {
+    const body: AbsenceRequestDecisionDto = {
+      decisionComment: decisionComment?.trim() || null
+    };
+
+    return this.http.post<void>(
+      `${this.configService.apiUrl}/absence-requests/${id}/approve`,
+      body
+    );
+  }
+
+  rejectAbsenceRequest(
+    id: string,
+    decisionComment?: string | null
+  ): Observable<void> {
+    const body: AbsenceRequestDecisionDto = {
+      decisionComment: decisionComment?.trim() || null
+    };
+
+    return this.http.post<void>(
+      `${this.configService.apiUrl}/absence-requests/${id}/reject`,
+      body
     );
   }
 }
