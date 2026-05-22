@@ -58,14 +58,27 @@ namespace Logic.Logic
                 .OrderBy(w => w.DisplayOrder)
                 .ToList();
 
+            // Ezek csak az aktuális office foglalásai.
+            // Erre a workstation foglaltság miatt van szükség.
             var bookings = _officeBookingRepository.GetAll()
                 .Include(b => b.Workstation)
-                .Include(b=>b.User)
+                .Include(b => b.User)
                 .Where(b =>
                     b.Workstation.OfficeId == officeId &&
                     b.BookingDate == date &&
                     !b.IsCancelled)
                 .ToList();
+
+            // Ez viszont NEM office-szűrt.
+            // Ez a javítás lényege: ha a user másik office-ban már foglalt,
+            // akkor itt is látnunk kell.
+            var currentUserBooking = _officeBookingRepository.GetAll()
+                .Include(b => b.Workstation)
+                .ThenInclude(w => w.Office)
+                .FirstOrDefault(b =>
+                    b.UserId == currentUserId &&
+                    b.BookingDate == date &&
+                    !b.IsCancelled);
 
             var workstationDtos = workstations
                 .Select(w =>
@@ -80,7 +93,7 @@ namespace Logic.Logic
                         DisplayOrder = w.DisplayOrder,
                         IsActive = w.IsActive,
                         IsBooked = booking != null,
-                        IsBookedByCurrentUser = booking != null && booking.UserId == currentUserId,
+                        IsBookedByCurrentUser = currentUserBooking?.WorkstationId == w.Id,
                         BookingId = booking?.Id,
                         BookedByUserId = booking?.UserId,
                         BookedByUserName = booking?.User?.DisplayName,
@@ -89,8 +102,6 @@ namespace Logic.Logic
                     };
                 })
                 .ToList();
-
-            var currentUserBooking = bookings.FirstOrDefault(b => b.UserId == currentUserId);
 
             return new OfficeDayAvailabilityDto
             {
@@ -102,13 +113,15 @@ namespace Logic.Logic
                 TotalWorkstations = workstationDtos.Count,
                 BookedWorkstations = workstationDtos.Count(x => x.IsBooked),
                 FreeWorkstations = workstationDtos.Count(x => !x.IsBooked),
+
+                // Ez most már office-tól függetlenül igaz lesz.
                 CurrentUserHasBooking = currentUserBooking != null,
                 CurrentUserBookingId = currentUserBooking?.Id,
                 CurrentUserWorkstationId = currentUserBooking?.WorkstationId,
+
                 Workstations = workstationDtos
             };
         }
-
         public IEnumerable<DaySummaryDto> GetOfficeDaySummaries(string officeId, DateOnly fromDate, DateOnly toDate, string currentUserId)
         {
             if (toDate < fromDate)
@@ -124,6 +137,7 @@ namespace Logic.Logic
             var totalWorkstations = _workstationRepository.GetAll()
                 .Count(w => w.OfficeId == officeId && w.IsActive);
 
+            // Office-specifikus foglalások: ezekből számoljuk a szabad/foglalt helyeket.
             var bookings = _officeBookingRepository.GetAll()
                 .Include(b => b.Workstation)
                 .Where(b =>
@@ -132,6 +146,17 @@ namespace Logic.Logic
                     b.BookingDate <= toDate &&
                     !b.IsCancelled)
                 .ToList();
+
+            // User-specifikus foglalások: ez NEM office-szűrt.
+            // Így másik office foglalása is számít.
+            var currentUserBookingDates = _officeBookingRepository.GetAll()
+                .Where(b =>
+                    b.UserId == currentUserId &&
+                    b.BookingDate >= fromDate &&
+                    b.BookingDate <= toDate &&
+                    !b.IsCancelled)
+                .Select(b => b.BookingDate)
+                .ToHashSet();
 
             var result = new List<DaySummaryDto>();
 
@@ -145,13 +170,14 @@ namespace Logic.Logic
                     TotalWorkstations = totalWorkstations,
                     BookedWorkstations = dayBookings.Count,
                     FreeWorkstations = totalWorkstations - dayBookings.Count,
-                    CurrentUserHasBooking = dayBookings.Any(b => b.UserId == currentUserId)
+
+                    // Ez most már office-tól függetlenül jelzi a user napi foglalását.
+                    CurrentUserHasBooking = currentUserBookingDates.Contains(date)
                 });
             }
 
             return result;
         }
-
         //javitsd hogy a date formatumot is vizsgalja a create ha nem jo a formatum dobjon exceptiont
         public OfficeBookingViewDto CreateBooking(CreateOfficeBookingDto dto, string currentUserId)
         {
@@ -169,6 +195,7 @@ namespace Logic.Logic
                 .ThenInclude(o => o.Location)
                 .FirstOrDefault(w => w.Id == dto.WorkstationId);
 
+
             if (workstation == null)
                 throw new KeyNotFoundException("Workstation not found.");
 
@@ -181,17 +208,28 @@ namespace Logic.Logic
             if (!workstation.Office.Location.IsActive)
                 throw new InvalidOperationException("Location is not active.");
 
-            var userAlreadyHasBooking = _officeBookingRepository.GetAll()
-                .Any(b => b.UserId == currentUserId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
 
-            if (userAlreadyHasBooking)
-                throw new InvalidOperationException("The user already has a booking for this date.");
+
+            var userActiveBookingForDate = _officeBookingRepository.GetAll()
+                .Include(x => x.Workstation)
+                .ThenInclude(x => x.Office)
+                .FirstOrDefault(x =>
+                    x.UserId == currentUserId &&
+                    x.BookingDate == dto.BookingDate &&
+                    !x.IsCancelled);
+
+            if (userActiveBookingForDate != null)
+            {
+                throw new InvalidOperationException(
+                    $"Erre a napra már van aktív foglalásod: {userActiveBookingForDate.Workstation.Office.Name} / {userActiveBookingForDate.Workstation.Name}. Egy napra csak egy munkaállomás foglalható.");
+            }
 
             var workstationAlreadyBooked = _officeBookingRepository.GetAll()
                 .Any(b => b.WorkstationId == dto.WorkstationId && b.BookingDate == dto.BookingDate && !b.IsCancelled);
 
             if (workstationAlreadyBooked)
                 throw new InvalidOperationException("This workstation is already booked for the selected date.");
+
 
             var booking = _dtoProvider.Mapper.Map<OfficeBooking>(dto);
 

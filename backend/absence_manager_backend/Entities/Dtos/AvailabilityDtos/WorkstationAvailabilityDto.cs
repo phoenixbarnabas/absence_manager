@@ -22,5 +22,6 @@ namespace Entities.Dtos.Availability
         public decimal? PositionY { get; set; }
         public string? BookingId { get; set; }
         public string? BookedByUserName { get; set; }
+        public bool CanCurrentUserBook { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using Data;
 using Logic.Helper;
 using Logic.Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped(typeof(Repository<>));
 builder.Services.AddSingleton<DtoProvider>();
+
 builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
 builder.Services.AddScoped<UserLogic>();
@@ -44,7 +46,13 @@ builder.Services
     .AddMicrosoftGraph(builder.Configuration.GetSection("Graph"))
     .AddInMemoryTokenCaches();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -56,6 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAngular");
 
 app.UseAuthentication();
