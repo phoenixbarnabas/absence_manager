@@ -78,7 +78,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     { value: 'vacation', label: 'Szabadság', icon: 'bi-suitcase-lg' },
     { value: 'homeOffice', label: 'Home office', icon: 'bi-house-door' },
     { value: 'sickLeave', label: 'Betegszabadság', icon: 'bi-heart-pulse' },
-    { value: 'otherAbsence', label: 'Egyéb távollét', icon: 'bi-calendar-x' }
+    { value: 'otherAbsence', label: 'Egyéb távollét', icon: 'bi-calendar-x' },
   ];
 
   readonly absenceTypeOptions: { value: CalendarAbsenceRequestType; label: string; icon: string }[] = [
@@ -171,9 +171,12 @@ export class CalendarPage implements OnInit, OnDestroy {
     return this.formatLongDate(this.parseDateKey(this.selectedDateKey));
   }
 
+  get selectedCalendarDay(): CalendarDayView | null {
+    return this.calendarDays.find(day => day.dateKey === this.selectedDateKey) ?? null;
+  }
+
   get selectedDayEvents(): CalendarEventDto[] {
-    const selectedDay = this.calendarDays.find(day => day.dateKey === this.selectedDateKey);
-    return selectedDay?.events ?? [];
+    return this.selectedCalendarDay?.events ?? [];
   }
 
   get activeEventTypes(): CalendarEventType[] {
@@ -280,6 +283,7 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   selectDay(day: CalendarDayView): void {
+    this.clearMessages();
     this.selectedDateKey = day.dateKey;
     this.selectedEvent = null;
 
@@ -288,7 +292,6 @@ export class CalendarPage implements OnInit, OnDestroy {
       isSelected: calendarDay.dateKey === day.dateKey
     }));
 
-    this.openRequestModal(day);
     this.refreshView();
   }
 
@@ -430,6 +433,39 @@ export class CalendarPage implements OnInit, OnDestroy {
 
     return `${this.formatLongDate(this.parseDateKey(event.dateFrom))} - ${this.formatLongDate(this.parseDateKey(event.dateTo))}`;
   }
+
+  canCreateRequestForDay(day: CalendarDayView): boolean {
+    return !this.saving && day.dateKey >= this.formatDateForApi(new Date());
+  }
+
+  getSelectedDayStatusTitle(day: CalendarDayView): string {
+    if (day.isHoliday) {
+      return day.holidayName || 'Ünnepnap';
+    }
+
+    if (day.isWeekend) {
+      return 'Hétvégi nap';
+    }
+
+    return 'Munkanap';
+  }
+
+  getSelectedDayStatusDescription(day: CalendarDayView): string {
+    if (day.isHoliday) {
+      return 'Az ünnepnap adat az ünnepnap API-ból érkezik, ezért az igénylés előtt külön jelölve jelenik meg.';
+    }
+
+    if (day.isWeekend) {
+      return 'Nem munkanapként jelölt dátum. Igénylés előtt ellenőrizd, hogy valóban erre a napra szeretnél-e rögzíteni.';
+    }
+
+    if (day.events.length) {
+      return `${day.events.length} esemény látható ezen a napon.`;
+    }
+
+    return 'Nincs látható esemény, innen indítható új igény erre a napra.';
+  }
+
 
   private loadCalendar(): void {
     this.reloadRequested$.next();
