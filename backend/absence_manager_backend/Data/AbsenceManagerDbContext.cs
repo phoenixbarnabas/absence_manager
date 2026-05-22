@@ -220,8 +220,7 @@ namespace Data
                     .HasForeignKey(x => x.OfficeId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(x => new { x.OfficeId, x.Code })
-                    .IsUnique();
+                entity.HasIndex(x => new { x.OfficeId, x.Code });
 
                 entity.HasIndex(x => new { x.OfficeId, x.Name })
                     .IsUnique();
@@ -346,10 +345,19 @@ namespace Data
             {
                 Id = "office-ft-1",
                 LocationId = location1.Id,
-                Name = "113 - IT Office",
-                Description = "IT fejlesztés",
+                Name = "113 - IT Fejlesztés",
+                Description = "IT Office",
                 IsActive = true,
                 DisplayOrder = 1
+            };
+            var office2 = new Office
+            {
+                Id = "office-ft-2",
+                LocationId = location1.Id,
+                Name = "110 - IT Üzemeltetés",
+                Description = "IT Office",
+                IsActive = true,
+                DisplayOrder = 2
             };
 
             // ===== WORKSTATIONS =====
@@ -431,12 +439,46 @@ namespace Data
                     PositionX = 2,
                     PositionY = 3
                 },
+                // -------Üzemeltetés-------
+                new Workstation
+                {
+                    Id = "ws-8",
+                    OfficeId = office2.Id,
+                    Code = "Üres-3",
+                    Name = "1",
+                    IsActive = true,
+                    DisplayOrder = 1,
+                    PositionX = 1,
+                    PositionY = 1
+                },
+                new Workstation
+                {
+                    Id = "ws-9",
+                    OfficeId = office2.Id,
+                    Code = "Üres-4",
+                    Name = "2",
+                    IsActive = true,
+                    DisplayOrder = 2,
+                    PositionX = 2,
+                    PositionY = 1
+                },
+                new Workstation
+                {
+                    Id = "ws-10",
+                    OfficeId = office2.Id,
+                    Code = "Üres-5",
+                    Name = "3",
+                    IsActive = true,
+                    DisplayOrder = 3,
+                    PositionX = 3,
+                    PositionY = 1
+                }
 
             };
 
 
             modelBuilder.Entity<Location>().HasData(location1);
-            modelBuilder.Entity<Office>().HasData(office1);
+            modelBuilder.Entity<Office>().HasData(office1, office2);
             modelBuilder.Entity<Workstation>().HasData(workstations);
             
         }
