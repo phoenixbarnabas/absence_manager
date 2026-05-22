@@ -79,7 +79,6 @@ export class CalendarPage implements OnInit, OnDestroy {
     { value: 'homeOffice', label: 'Home office', icon: 'bi-house-door' },
     { value: 'sickLeave', label: 'Betegszabadság', icon: 'bi-heart-pulse' },
     { value: 'otherAbsence', label: 'Egyéb távollét', icon: 'bi-calendar-x' },
-    { value: 'deskBooking', label: 'Helyfoglalás', icon: 'bi-pc-display' }
   ];
 
   readonly absenceTypeOptions: { value: CalendarAbsenceRequestType; label: string; icon: string }[] = [
