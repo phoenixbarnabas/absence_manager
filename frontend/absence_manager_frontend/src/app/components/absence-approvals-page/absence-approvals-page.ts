@@ -22,6 +22,12 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   decisionComments: Record<string, string> = {};
 
+  reviewedApprovals: AbsenceRequestApprovalDto[] = [];
+  reviewedLoading = false;
+  reviewedExpanded = false;
+  reviewedLoaded = false;
+  reviewedErrorMessage = '';
+
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -69,6 +75,42 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
           this.errorMessage = this.getApiErrorMessage(
             err,
             'Nem sikerült betölteni a jóváhagyásra váró kérelmeket.'
+          );
+        }
+      });
+  }
+
+  toggleReviewedApprovals(): void {
+    this.reviewedExpanded = !this.reviewedExpanded;
+
+    if (this.reviewedExpanded && !this.reviewedLoaded) {
+      this.loadReviewedApprovals();
+    }
+  }
+
+  loadReviewedApprovals(): void {
+    this.reviewedLoading = true;
+    this.reviewedErrorMessage = '';
+
+    this.calendarService.getReviewedApprovals()
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.reviewedLoading = false;
+          this.reviewedLoaded = true;
+          this.cdr.detectChanges();
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: approvals => {
+          this.reviewedApprovals = approvals.map(approval => this.normalizeApproval(approval));
+        },
+        error: err => {
+          console.error('Reviewed approvals load failed', err);
+          this.reviewedErrorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült betölteni az elbírált kérelmeket.'
           );
         }
       });
@@ -189,6 +231,12 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
           this.successMessage = action === 'approve'
             ? 'A kérelem jóváhagyása sikerült.'
             : 'A kérelem elutasítása sikerült.';
+
+          if (this.reviewedExpanded) {
+            this.loadReviewedApprovals();
+          } else {
+            this.reviewedLoaded = false;
+          }
         },
         error: err => {
           console.error('Approval decision failed', err);
