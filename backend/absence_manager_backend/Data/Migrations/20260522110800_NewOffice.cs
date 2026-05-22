@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class UserAppRelations : Migration
+    public partial class NewOffice : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -197,7 +197,11 @@ namespace Data.Migrations
             migrationBuilder.InsertData(
                 table: "Offices",
                 columns: new[] { "Id", "Description", "DisplayOrder", "IsActive", "LocationId", "Name" },
-                values: new object[] { "office-ft-1", "IT fejlesztés", 1, true, "loc-Fót", "113 - IT Office" });
+                values: new object[,]
+                {
+                    { "office-ft-1", "IT Office", 1, true, "loc-Fót", "113 - IT Fejlesztés" },
+                    { "office-ft-2", "IT Office", 2, true, "loc-Fót", "110 - IT Üzemeltetés" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Workstations",
@@ -205,12 +209,15 @@ namespace Data.Migrations
                 values: new object[,]
                 {
                     { "ws-1", "KL", 1, true, "1", "office-ft-1", 1m, 1m },
+                    { "ws-10", "Üres-5", 3, true, "3", "office-ft-2", 3m, 1m },
                     { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
                     { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },
                     { "ws-4", "PB", 4, true, "4", "office-ft-1", 1m, 2m },
                     { "ws-5", "Üres-1", 5, true, "5", "office-ft-1", 2m, 2m },
                     { "ws-6", "Szp", 6, true, "6", "office-ft-1", 3m, 2m },
-                    { "ws-7", "Üres-2", 7, true, "7", "office-ft-1", 2m, 3m }
+                    { "ws-7", "Üres-2", 7, true, "7", "office-ft-1", 2m, 3m },
+                    { "ws-8", "Üres-3", 1, true, "1", "office-ft-2", 1m, 1m },
+                    { "ws-9", "Üres-4", 2, true, "2", "office-ft-2", 2m, 1m }
                 });
 
             migrationBuilder.CreateIndex(
@@ -282,8 +289,7 @@ namespace Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Workstations_OfficeId_Code",
                 table: "Workstations",
-                columns: new[] { "OfficeId", "Code" },
-                unique: true);
+                columns: new[] { "OfficeId", "Code" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Workstations_OfficeId_Name",

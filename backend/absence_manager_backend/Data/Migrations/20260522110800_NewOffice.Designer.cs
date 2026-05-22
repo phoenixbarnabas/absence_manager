@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260522085913_UserAppRelations")]
-    partial class UserAppRelations
+    [Migration("20260522110800_NewOffice")]
+    partial class NewOffice
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -261,11 +261,20 @@ namespace Data.Migrations
                         new
                         {
                             Id = "office-ft-1",
-                            Description = "IT fejlesztés",
+                            Description = "IT Office",
                             DisplayOrder = 1,
                             IsActive = true,
                             LocationId = "loc-Fót",
-                            Name = "113 - IT Office"
+                            Name = "113 - IT Fejlesztés"
+                        },
+                        new
+                        {
+                            Id = "office-ft-2",
+                            Description = "IT Office",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            LocationId = "loc-Fót",
+                            Name = "110 - IT Üzemeltetés"
                         });
                 });
 
@@ -347,8 +356,7 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfficeId", "Code")
-                        .IsUnique();
+                    b.HasIndex("OfficeId", "Code");
 
                     b.HasIndex("OfficeId", "Name")
                         .IsUnique();
@@ -432,6 +440,39 @@ namespace Data.Migrations
                             OfficeId = "office-ft-1",
                             PositionX = 2m,
                             PositionY = 3m
+                        },
+                        new
+                        {
+                            Id = "ws-8",
+                            Code = "Üres-3",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Name = "1",
+                            OfficeId = "office-ft-2",
+                            PositionX = 1m,
+                            PositionY = 1m
+                        },
+                        new
+                        {
+                            Id = "ws-9",
+                            Code = "Üres-4",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Name = "2",
+                            OfficeId = "office-ft-2",
+                            PositionX = 2m,
+                            PositionY = 1m
+                        },
+                        new
+                        {
+                            Id = "ws-10",
+                            Code = "Üres-5",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Name = "3",
+                            OfficeId = "office-ft-2",
+                            PositionX = 3m,
+                            PositionY = 1m
                         });
                 });
 
