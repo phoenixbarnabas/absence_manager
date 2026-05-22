@@ -147,8 +147,7 @@ namespace Data
                     .HasForeignKey(x => x.OfficeId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(x => new { x.OfficeId, x.Code })
-                    .IsUnique();
+                entity.HasIndex(x => new { x.OfficeId, x.Code });
 
                 entity.HasIndex(x => new { x.OfficeId, x.Name })
                     .IsUnique();
@@ -329,7 +328,7 @@ namespace Data
                 {
                     Id = "ws-5",
                     OfficeId = office1.Id,
-                    Code = "Senki",
+                    Code = "üres-1",
                     Name = "5",
                     IsActive = true,
                     DisplayOrder = 5,
@@ -351,7 +350,7 @@ namespace Data
                 {
                     Id = "ws-7",
                     OfficeId = office1.Id,
-                    Code = "Senki",
+                    Code = "üres-2",
                     Name = "7",
                     IsActive = true,
                     DisplayOrder = 7,

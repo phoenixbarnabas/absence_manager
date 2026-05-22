@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -44,6 +44,40 @@ namespace Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Locations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AbsenceRequests",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    DateFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    DateTo = table.Column<DateOnly>(type: "date", nullable: false),
+                    Reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReviewedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AbsenceRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AbsenceRequests_AppUsers_ReviewedByUserId",
+                        column: x => x.ReviewedByUserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AbsenceRequests_AppUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AppUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -142,10 +176,20 @@ namespace Data.Migrations
                     { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
                     { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },
                     { "ws-4", "PB", 4, true, "4", "office-ft-1", 1m, 2m },
-                    { "ws-5", "F1", 5, true, "5", "office-ft-1", 2m, 2m },
+                    { "ws-5", "üres-1", 5, true, "5", "office-ft-1", 2m, 2m },
                     { "ws-6", "Szp", 6, true, "6", "office-ft-1", 3m, 2m },
-                    { "ws-7", "F2", 7, true, "7", "office-ft-1", 2m, 3m }
+                    { "ws-7", "üres-2", 7, true, "7", "office-ft-1", 2m, 3m }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbsenceRequests_ReviewedByUserId",
+                table: "AbsenceRequests",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbsenceRequests_User_DateRange_Status",
+                table: "AbsenceRequests",
+                columns: new[] { "UserId", "DateFrom", "DateTo", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppUsers_EntraObjectId_TenantId",
@@ -192,6 +236,9 @@ namespace Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AbsenceRequests");
+
             migrationBuilder.DropTable(
                 name: "OfficeBookings");
 

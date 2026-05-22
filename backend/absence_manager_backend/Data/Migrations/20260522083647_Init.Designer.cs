@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260417114046_Initial")]
-    partial class Initial
+    [Migration("20260522083647_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,65 @@ namespace Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Entities.Models.AbsenceRequest", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateOnly>("DateFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("DateTo")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("UserId", "DateFrom", "DateTo", "Status")
+                        .HasDatabaseName("IX_AbsenceRequests_User_DateRange_Status");
+
+                    b.ToTable("AbsenceRequests", (string)null);
+                });
 
             modelBuilder.Entity("Entities.Models.AppUser", b =>
                 {
@@ -282,7 +341,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "F1",
+                            Code = "üres-1",
                             DisplayOrder = 5,
                             IsActive = true,
                             Name = "5",
@@ -304,7 +363,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-7",
-                            Code = "F2",
+                            Code = "üres-2",
                             DisplayOrder = 7,
                             IsActive = true,
                             Name = "7",
@@ -312,6 +371,24 @@ namespace Data.Migrations
                             PositionX = 2m,
                             PositionY = 3m
                         });
+                });
+
+            modelBuilder.Entity("Entities.Models.AbsenceRequest", b =>
+                {
+                    b.HasOne("Entities.Models.AppUser", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Entities.Models.AppUser", "User")
+                        .WithMany("AbsenceRequests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Entities.Models.Office", b =>
@@ -357,6 +434,8 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Entities.Models.AppUser", b =>
                 {
+                    b.Navigation("AbsenceRequests");
+
                     b.Navigation("OfficeBookings");
                 });
 
