@@ -74,6 +74,12 @@ export class CalendarService {
     );
   }
 
+  getReviewedApprovals(): Observable<AbsenceRequestApprovalDto[]> {
+    return this.http.get<AbsenceRequestApprovalDto[]>(
+      `${this.configService.apiUrl}/absence-requests/reviewed-approvals`
+    );
+  }
+
   approveAbsenceRequest(
     id: string,
     decisionComment?: string | null
