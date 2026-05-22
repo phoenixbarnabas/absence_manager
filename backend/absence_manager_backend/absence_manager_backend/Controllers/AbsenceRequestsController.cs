@@ -93,9 +93,7 @@ namespace Absence_Manager.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Cancel(
-            string id,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(string id, CancellationToken cancellationToken)
         {
             try
             {
@@ -137,6 +135,72 @@ namespace Absence_Manager.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> ApproveAbsenceRequest(string id, [FromBody] AbsenceRequestDecisionDto? decision, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                await _absenceRequestLogic.ApproveAbsenceRequestAsync(
+                    id,
+                    currentUserId,
+                    decision?.DecisionComment,
+                    cancellationToken);
+
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/reject")]
+        public async Task<IActionResult> RejectAbsenceRequest(string id, [FromBody] AbsenceRequestDecisionDto? decision, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                await _absenceRequestLogic.RejectAbsenceRequestAsync(
+                    id,
+                    currentUserId,
+                    decision?.DecisionComment,
+                    cancellationToken);
+
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
