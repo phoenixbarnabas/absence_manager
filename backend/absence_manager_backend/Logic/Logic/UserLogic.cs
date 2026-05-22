@@ -70,6 +70,12 @@ namespace Logic.Logic
                 graphUsers,
                 cancellationToken);
 
+            await SyncHierarchyRelationsAsync(
+                currentUser,
+                graphHierarchy,
+                localUsersByEntraObjectId,
+                cancellationToken);
+
             return new AppUserHierarchyDto
             {
                 CurrentUser = ToGraphAppUserDto(graphHierarchy.CurrentUser, localUsersByEntraObjectId),
@@ -179,6 +185,91 @@ namespace Logic.Logic
                 IsKnownLocalUser = localUser != null,
                 IsActiveLocalUser = localUser?.IsActive == true
             };
+        }
+
+        private async Task SyncHierarchyRelationsAsync(AppUser currentUser, GraphUserHierarchyDto graphHierarchy, IReadOnlyDictionary<string, AppUser> localUsersByEntraObjectId, CancellationToken cancellationToken)
+        {
+            await SyncUserManagerRelationAsync(
+                currentUser,
+                graphHierarchy.Manager,
+                localUsersByEntraObjectId,
+                cancellationToken);
+
+            foreach (var directReport in graphHierarchy.DirectReports)
+            {
+                if (string.IsNullOrWhiteSpace(directReport.EntraObjectId))
+                    continue;
+
+                if (!localUsersByEntraObjectId.TryGetValue(directReport.EntraObjectId, out var localDirectReport))
+                    continue;
+
+                await SyncUserManagerRelationAsync(
+                    localDirectReport,
+                    graphHierarchy.CurrentUser,
+                    localUsersByEntraObjectId,
+                    cancellationToken);
+            }
+        }
+
+        private async Task SyncUserManagerRelationAsync(AppUser user, GraphUserDto? manager, IReadOnlyDictionary<string, AppUser> localUsersByEntraObjectId, CancellationToken cancellationToken)
+        {
+            var now = DateTime.UtcNow;
+
+            var managerEntraObjectId = manager?.EntraObjectId;
+
+            AppUser? localManager = null;
+
+            if (!string.IsNullOrWhiteSpace(managerEntraObjectId))
+            {
+                localUsersByEntraObjectId.TryGetValue(managerEntraObjectId, out localManager);
+            }
+
+            var resolvedManagerUserId = localManager?.Id;
+
+            var currentActiveRelation = await _dbContext.AppUserManagerRelations
+                .FirstOrDefaultAsync(x => x.UserId == user.Id && x.IsActive, cancellationToken);
+
+            if (currentActiveRelation != null && SameNullable(currentActiveRelation.ManagerEntraObjectId, managerEntraObjectId))
+            {
+                currentActiveRelation.UserEntraObjectId = user.EntraObjectId;
+                currentActiveRelation.ManagerUserId = resolvedManagerUserId;
+                currentActiveRelation.TenantId = user.TenantId;
+                currentActiveRelation.SyncedAtUtc = now;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                return;
+            }
+
+            if (currentActiveRelation != null)
+            {
+                currentActiveRelation.IsActive = false;
+                currentActiveRelation.ValidToUtc = now;
+                currentActiveRelation.SyncedAtUtc = now;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            var newRelation = new AppUserManagerRelation
+            {
+                UserId = user.Id,
+                UserEntraObjectId = user.EntraObjectId,
+                ManagerUserId = resolvedManagerUserId,
+                ManagerEntraObjectId = managerEntraObjectId,
+                TenantId = user.TenantId,
+                SyncedAtUtc = now,
+                ValidFromUtc = now,
+                ValidToUtc = null,
+                IsActive = true
+            };
+
+            _dbContext.AppUserManagerRelations.Add(newRelation);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        private static bool SameNullable(string? left, string? right)
+        {
+            return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
