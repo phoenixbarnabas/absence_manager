@@ -284,6 +284,9 @@ namespace Data
 
                 entity.HasIndex(x => new { x.UserId, x.DateFrom, x.DateTo, x.Status })
                     .HasDatabaseName("IX_AbsenceRequests_User_DateRange_Status");
+
+                entity.Property(x => x.DecisionComment)
+                    .HasMaxLength(1000);
             });
 
             // -------------------------

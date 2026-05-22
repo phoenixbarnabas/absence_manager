@@ -15,6 +15,70 @@ namespace Logic.Logic
             _dbContext = dbContext;
         }
 
+        public async Task ApproveAbsenceRequestAsync(string absenceRequestId, string managerUserId, string? decisionComment, CancellationToken cancellationToken = default)
+        {
+            await ReviewAbsenceRequestAsync(
+                absenceRequestId,
+                managerUserId,
+                AbsenceRequestStatus.Approved,
+                decisionComment,
+                cancellationToken);
+        }
+
+        public async Task RejectAbsenceRequestAsync(string absenceRequestId, string managerUserId, string? decisionComment, CancellationToken cancellationToken = default)
+        {
+            await ReviewAbsenceRequestAsync(
+                absenceRequestId,
+                managerUserId,
+                AbsenceRequestStatus.Rejected,
+                decisionComment,
+                cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<AbsenceRequestApprovalDto>> GetPendingApprovalsForManagerAsync(string managerUserId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(managerUserId))
+            {
+                throw new ArgumentException("Manager user id is required.", nameof(managerUserId));
+            }
+
+            var directReportUserIds = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .Where(x => x.ManagerUserId == managerUserId && x.IsActive)
+                .Select(x => x.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (directReportUserIds.Count == 0)
+            {
+                return [];
+            }
+
+            return await _dbContext.AbsenceRequests
+                .AsNoTracking()
+                .Include(x => x.User)
+                .Where(x =>
+                    directReportUserIds.Contains(x.UserId) &&
+                    x.Status == AbsenceRequestStatus.Pending)
+                .OrderBy(x => x.DateFrom)
+                .ThenBy(x => x.CreatedAtUtc)
+                .Select(x => new AbsenceRequestApprovalDto
+                {
+                    Id = x.Id,
+                    UserId = x.UserId,
+                    UserDisplayName = x.User.DisplayName,
+                    UserEmail = x.User.Email,
+                    Type = x.Type,
+                    Status = x.Status,
+                    DateFrom = x.DateFrom,
+                    DateTo = x.DateTo,
+                    Reason = x.Reason,
+                    CreatedAtUtc = x.CreatedAtUtc,
+                    DecisionComment = x.DecisionComment
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<AbsenceRequestViewDto> CreateAsync(
             CreateAbsenceRequestDto dto,
             string currentUserId,
@@ -104,10 +168,7 @@ namespace Logic.Logic
             return ToViewDto(request);
         }
 
-        public async Task CancelAsync(
-            string id,
-            string currentUserId,
-            CancellationToken cancellationToken = default)
+        public async Task CancelAsync(string id, string currentUserId, CancellationToken cancellationToken = default)
         {
             var request = await _dbContext.AbsenceRequests
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
@@ -185,20 +246,26 @@ namespace Logic.Logic
             };
         }
 
-        public static AbsenceRequestViewDto ToViewDto(AbsenceRequest request)
+        private static AbsenceRequestViewDto ToViewDto(AbsenceRequest request)
         {
             return new AbsenceRequestViewDto
             {
                 Id = request.Id,
-                Type = ToTypeKey(request.Type),
-                Status = ToStatusKey(request.Status),
+                Type = request.Type.ToString(),
+                Status = request.Status.ToString(),
                 DateFrom = request.DateFrom,
                 DateTo = request.DateTo,
                 Reason = request.Reason,
                 UserId = request.UserId,
                 UserName = request.User.DisplayName,
                 Department = request.User.Department,
-                CreatedAtUtc = request.CreatedAtUtc
+                CreatedAtUtc = request.CreatedAtUtc,
+
+                UpdatedAtUtc = request.UpdatedAtUtc,
+                ReviewedAtUtc = request.ReviewedAtUtc,
+                ReviewedByUserId = request.ReviewedByUserId,
+                ReviewedByUserName = request.ReviewedByUser?.DisplayName,
+                DecisionComment = request.DecisionComment
             };
         }
 
@@ -234,6 +301,63 @@ namespace Logic.Logic
                 || title.Contains("admin", StringComparison.OrdinalIgnoreCase)
                 || title.Contains("administrator", StringComparison.OrdinalIgnoreCase)
                 || title.Contains("people", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task ReviewAbsenceRequestAsync(string absenceRequestId, string managerUserId, AbsenceRequestStatus targetStatus, string? decisionComment, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(absenceRequestId))
+            {
+                throw new ArgumentException("Absence request id is required.", nameof(absenceRequestId));
+            }
+
+            if (string.IsNullOrWhiteSpace(managerUserId))
+            {
+                throw new ArgumentException("Manager user id is required.", nameof(managerUserId));
+            }
+
+            if (targetStatus != AbsenceRequestStatus.Approved &&
+                targetStatus != AbsenceRequestStatus.Rejected)
+            {
+                throw new ArgumentException("Target status must be Approved or Rejected.", nameof(targetStatus));
+            }
+
+            var absenceRequest = await _dbContext.AbsenceRequests
+                .FirstOrDefaultAsync(x => x.Id == absenceRequestId, cancellationToken);
+
+            if (absenceRequest == null)
+            {
+                throw new KeyNotFoundException("Absence request was not found.");
+            }
+
+            if (absenceRequest.Status != AbsenceRequestStatus.Pending)
+            {
+                throw new InvalidOperationException("Only pending absence requests can be reviewed.");
+            }
+
+            var isActiveManager = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.UserId == absenceRequest.UserId &&
+                    x.ManagerUserId == managerUserId &&
+                    x.IsActive,
+                    cancellationToken);
+
+            if (!isActiveManager)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to review this absence request.");
+            }
+
+            var now = DateTime.UtcNow;
+
+            absenceRequest.Status = targetStatus;
+            absenceRequest.ReviewedByUserId = managerUserId;
+            absenceRequest.ReviewedAtUtc = now;
+            absenceRequest.UpdatedAtUtc = now;
+            absenceRequest.DecisionComment = string.IsNullOrWhiteSpace(decisionComment)
+                ? null
+                : decisionComment.Trim();
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }
