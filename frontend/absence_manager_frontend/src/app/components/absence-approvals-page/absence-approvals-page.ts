@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { AbsenceRequestApprovalDto } from '../../models/calendar-models';
+import { AbsenceApprovalStatusValue, AbsenceApprovalTypeValue, AbsenceRequestApprovalDto } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
 import { finalize, Subject, takeUntil, timeout } from 'rxjs';
 
@@ -21,6 +21,12 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
   successMessage = '';
 
   decisionComments: Record<string, string> = {};
+
+  reviewedApprovals: AbsenceRequestApprovalDto[] = [];
+  reviewedLoading = false;
+  reviewedExpanded = false;
+  reviewedLoaded = false;
+  reviewedErrorMessage = '';
 
   private readonly destroy$ = new Subject<void>();
 
@@ -74,6 +80,42 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
       });
   }
 
+  toggleReviewedApprovals(): void {
+    this.reviewedExpanded = !this.reviewedExpanded;
+
+    if (this.reviewedExpanded && !this.reviewedLoaded) {
+      this.loadReviewedApprovals();
+    }
+  }
+
+  loadReviewedApprovals(): void {
+    this.reviewedLoading = true;
+    this.reviewedErrorMessage = '';
+
+    this.calendarService.getReviewedApprovals()
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.reviewedLoading = false;
+          this.reviewedLoaded = true;
+          this.cdr.detectChanges();
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: approvals => {
+          this.reviewedApprovals = approvals.map(approval => this.normalizeApproval(approval));
+        },
+        error: err => {
+          console.error('Reviewed approvals load failed', err);
+          this.reviewedErrorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült betölteni az elbírált kérelmeket.'
+          );
+        }
+      });
+  }
+
   approve(request: AbsenceRequestApprovalDto): void {
     this.submitDecision(request, 'approve');
   }
@@ -86,41 +128,49 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
     return approval.id;
   }
 
-  getTypeLabel(type: string): string {
+  getTypeLabel(type: AbsenceApprovalTypeValue): string {
     switch (type) {
+      case 1:
       case 'Vacation':
       case 'vacation':
         return 'Szabadság';
+      case 2:
       case 'HomeOffice':
       case 'homeOffice':
         return 'Home office';
+      case 3:
       case 'SickLeave':
       case 'sickLeave':
         return 'Betegszabadság';
+      case 4:
       case 'OtherAbsence':
       case 'otherAbsence':
         return 'Egyéb távollét';
       default:
-        return type;
+        return String(type);
     }
   }
 
-  getStatusLabel(status: string): string {
+  getStatusLabel(status: AbsenceApprovalStatusValue): string {
     switch (status) {
+      case 1:
       case 'Pending':
       case 'pending':
         return 'Függőben';
+      case 2:
       case 'Approved':
       case 'approved':
         return 'Jóváhagyva';
+      case 3:
       case 'Rejected':
       case 'rejected':
         return 'Elutasítva';
+      case 4:
       case 'Cancelled':
       case 'cancelled':
         return 'Lemondva';
       default:
-        return status;
+        return String(status);
     }
   }
 
@@ -181,6 +231,12 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
           this.successMessage = action === 'approve'
             ? 'A kérelem jóváhagyása sikerült.'
             : 'A kérelem elutasítása sikerült.';
+
+          if (this.reviewedExpanded) {
+            this.loadReviewedApprovals();
+          } else {
+            this.reviewedLoaded = false;
+          }
         },
         error: err => {
           console.error('Approval decision failed', err);
@@ -204,17 +260,21 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
     };
   }
 
-  private normalizeType(type: string): any {
+  private normalizeType(type: AbsenceApprovalTypeValue): AbsenceApprovalTypeValue {
     switch (type) {
+      case 1:
       case 'Vacation':
       case 'vacation':
         return 'vacation';
+      case 2:
       case 'HomeOffice':
       case 'homeOffice':
         return 'homeOffice';
+      case 3:
       case 'SickLeave':
       case 'sickLeave':
         return 'sickLeave';
+      case 4:
       case 'OtherAbsence':
       case 'otherAbsence':
         return 'otherAbsence';
@@ -223,17 +283,21 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
     }
   }
 
-  private normalizeStatus(status: string): any {
+  private normalizeStatus(status: AbsenceApprovalStatusValue): AbsenceApprovalStatusValue {
     switch (status) {
+      case 1:
       case 'Pending':
       case 'pending':
         return 'pending';
+      case 2:
       case 'Approved':
       case 'approved':
         return 'approved';
+      case 3:
       case 'Rejected':
       case 'rejected':
         return 'rejected';
+      case 4:
       case 'Cancelled':
       case 'cancelled':
         return 'cancelled';
