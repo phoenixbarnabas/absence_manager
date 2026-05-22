@@ -1,0 +1,533 @@
+<div class="calendar-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title d-flex align-items-center gap-2">
+        <i class="bi bi-calendar3"></i>
+        <span>Naptár</span>
+      </h1>
+
+      <p class="page-subtitle">
+        Szabadság, home office, betegszabadság, egyéb távollét és helyfoglalás kezelése.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      (click)="reload()"
+      [disabled]="saving"
+    >
+      <i class="bi bi-arrow-clockwise"></i>
+      Frissítés
+    </button>
+  </div>
+
+  <div class="calendar-toolbar">
+    <div class="period-controls">
+      <button
+        type="button"
+        class="btn btn-light"
+        (click)="previousPeriod()"
+        [disabled]="saving"
+        aria-label="Előző időszak"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-light period-title"
+        (click)="goToToday()"
+        [disabled]="saving"
+      >
+        {{ periodTitle }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-light"
+        (click)="nextPeriod()"
+        [disabled]="saving"
+        aria-label="Következő időszak"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        (click)="goToToday()"
+        [disabled]="saving"
+      >
+        Ma
+      </button>
+    </div>
+
+    <div class="view-switcher" role="group" aria-label="Naptár nézet választó">
+      <button
+        type="button"
+        class="btn view-switcher__btn"
+        *ngFor="let mode of viewModes"
+        [class.view-switcher__btn--active]="viewMode === mode.value"
+        (click)="setViewMode(mode.value)"
+        [disabled]="saving"
+      >
+        <i class="bi" [ngClass]="mode.icon"></i>
+        {{ mode.label }}
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-group filter-group--scope">
+      <label for="calendarScope" class="form-label">Láthatóság</label>
+
+      <select
+        id="calendarScope"
+        class="form-select"
+        [(ngModel)]="scope"
+        (ngModelChange)="onScopeChange($event)"
+        [disabled]="saving"
+      >
+        <option *ngFor="let option of scopeOptions" [ngValue]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+
+      <small class="filter-hint">
+        {{ selectedScopeDescription }}
+      </small>
+    </div>
+
+    <div class="filter-group filter-group--types">
+      <div class="form-label">Eseménytípusok</div>
+
+      <div class="event-type-filters">
+        <label
+          class="event-type-filter"
+          *ngFor="let type of eventTypeOptions"
+          [ngClass]="'event-type-filter--' + type.value"
+        >
+          <input
+            type="checkbox"
+            [checked]="eventTypeSelection[type.value]"
+            (change)="onEventTypeToggle(type.value, $any($event.target).checked)"
+            [disabled]="saving"
+          />
+
+          <span class="event-type-dot"></span>
+
+          <i class="bi" [ngClass]="type.icon"></i>
+
+          <span>{{ type.label }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="calendar-alerts">
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-warning" *ngIf="warningMessage">
+      {{ warningMessage }}
+    </div>
+
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <div class="loading-card" *ngIf="loading && !calendarDays.length">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+    <span>Naptár betöltése...</span>
+  </div>
+
+  <div class="calendar-layout" *ngIf="calendarDays.length">
+    <section class="calendar-card">
+      <div class="calendar-summary-row">
+        <span>{{ eventCount }} esemény</span>
+        <span>{{ selectedDateTitle }}</span>
+      </div>
+
+      <div class="month-weekdays" *ngIf="viewMode === 'month'">
+        <div *ngFor="let dayName of weekDayNames">
+          {{ dayName }}
+        </div>
+      </div>
+
+      <div
+        [class.month-grid]="viewMode === 'month'"
+        [class.week-grid]="viewMode === 'week'"
+      >
+        <div
+          class="calendar-day"
+          *ngFor="let day of calendarDays; trackBy: trackByDate"
+          [class.calendar-day--month]="viewMode === 'month'"
+          [class.calendar-day--week]="viewMode === 'week'"
+          [class.calendar-day--other-month]="!day.isCurrentMonth"
+          [class.calendar-day--today]="day.isToday"
+          [class.calendar-day--selected]="day.isSelected"
+          [class.calendar-day--non-working]="!day.isWorkingDay"
+          role="button"
+          tabindex="0"
+          (click)="selectDay(day)"
+          (keydown.enter)="selectDay(day)"
+        >
+          <div class="calendar-day__header">
+            <div>
+              <span class="calendar-day__name" *ngIf="viewMode === 'week'">
+                {{ day.dayName }}
+              </span>
+
+              <span class="calendar-day__number">
+                {{ day.dayNumber }}
+              </span>
+            </div>
+
+            <div class="calendar-day__badges">
+              <span class="day-badge day-badge--today" *ngIf="day.isToday">
+                ma
+              </span>
+
+              <span class="day-badge day-badge--holiday" *ngIf="day.isHoliday">
+                ünnep
+              </span>
+
+              <span
+                class="day-badge day-badge--weekend"
+                *ngIf="day.isWeekend && !day.isHoliday"
+              >
+                hétvége
+              </span>
+            </div>
+          </div>
+
+          <div class="calendar-day__holiday" *ngIf="day.holidayName">
+            {{ day.holidayName }}
+          </div>
+
+          <div class="event-list" *ngIf="day.events.length; else emptyDayBlock">
+            <button
+              type="button"
+              class="event-pill"
+              *ngFor="let event of day.events.slice(0, viewMode === 'month' ? 3 : 8); trackBy: trackByEvent"
+              [ngClass]="[
+                'event-pill--' + event.type,
+                'event-pill--' + event.status
+              ]"
+              (click)="selectEvent(event, $event)"
+            >
+              <span class="event-pill__dot"></span>
+
+              <span class="event-pill__content">
+                <span class="event-pill__text">
+                  {{ event.title }}
+                </span>
+
+                <small *ngIf="viewMode === 'week'">
+                  {{ event.userName }} · {{ getStatusLabel(event.status) }}
+                </small>
+              </span>
+            </button>
+
+            <span
+              class="event-more"
+              *ngIf="day.events.length > (viewMode === 'month' ? 3 : 8)"
+            >
+              +{{ day.events.length - (viewMode === 'month' ? 3 : 8) }} további
+            </span>
+          </div>
+
+          <ng-template #emptyDayBlock>
+            <div class="empty-day">
+              Kattints igényléshez
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </section>
+
+    <aside class="event-details" *ngIf="selectedEvent as event">
+      <div class="event-details__header">
+        <div>
+          <span
+            class="event-details__type"
+            [ngClass]="'event-details__type--' + event.type"
+          >
+            <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
+            {{ getEventTypeLabel(event.type) }}
+          </span>
+
+          <h2>{{ event.title }}</h2>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Bezárás"
+          (click)="selectedEvent = null"
+        ></button>
+      </div>
+
+      <dl class="event-details__list">
+        <div>
+          <dt>Időszak</dt>
+          <dd>{{ getEventDateText(event) }}</dd>
+        </div>
+
+        <div>
+          <dt>Felhasználó</dt>
+          <dd>{{ event.userName }}</dd>
+        </div>
+
+        <div *ngIf="event.department">
+          <dt>Csapat / részleg</dt>
+          <dd>{{ event.department }}</dd>
+        </div>
+
+        <div>
+          <dt>Státusz</dt>
+          <dd>{{ getStatusLabel(event.status) }}</dd>
+        </div>
+
+        <div *ngIf="event.locationName">
+          <dt>Telephely</dt>
+          <dd>{{ event.locationName }}</dd>
+        </div>
+
+        <div *ngIf="event.officeName">
+          <dt>Iroda</dt>
+          <dd>{{ event.officeName }}</dd>
+        </div>
+
+        <div *ngIf="event.workstationName">
+          <dt>Munkaállomás</dt>
+          <dd>{{ event.workstationName }}</dd>
+        </div>
+
+        <div *ngIf="event.description">
+          <dt>Leírás</dt>
+          <dd>{{ event.description }}</dd>
+        </div>
+      </dl>
+
+      <button
+        type="button"
+        class="btn btn-primary w-100"
+        (click)="openSelectedEvent()"
+        [disabled]="!event.detailsUrl"
+      >
+        Kapcsolódó oldal megnyitása
+      </button>
+    </aside>
+  </div>
+
+  <div class="selected-day-card" *ngIf="!loading && !selectedEvent && selectedDayEvents.length">
+    <h2>{{ selectedDateTitle }} eseményei</h2>
+
+    <button
+      type="button"
+      class="selected-day-event"
+      *ngFor="let event of selectedDayEvents; trackBy: trackByEvent"
+      [ngClass]="'selected-day-event--' + event.type"
+      (click)="selectEvent(event)"
+    >
+      <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
+
+      <span>{{ event.title }}</span>
+
+      <small>
+        {{ event.userName }} · {{ getStatusLabel(event.status) }}
+      </small>
+    </button>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading && !eventCount && !errorMessage">
+    <i class="bi bi-calendar-check"></i>
+
+    <h2>Nincs megjeleníthető esemény</h2>
+
+    <p>
+      A kiválasztott időszakban és szűrőkkel még nincs szabadság, home office,
+      betegszabadság, egyéb távollét vagy helyfoglalás.
+    </p>
+  </div>
+
+  <div
+    class="request-modal-backdrop"
+    *ngIf="requestModalOpen"
+    (click)="closeRequestModal()"
+  >
+    <div
+      class="request-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="requestModalTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="request-modal__header">
+        <div>
+          <h2 id="requestModalTitle">
+            {{ requestModalTitle }}
+          </h2>
+
+          <p>
+            Válaszd ki, mit szeretnél erre a napra vagy időszakra igényelni.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Bezárás"
+          (click)="closeRequestModal()"
+          [disabled]="saving"
+        ></button>
+      </div>
+
+      <div class="request-modal__day-info" *ngIf="requestModalDay as day">
+        <span class="day-info-pill" *ngIf="day.isWorkingDay">
+          <i class="bi bi-briefcase"></i>
+          Munkanap
+        </span>
+
+        <span class="day-info-pill day-info-pill--warning" *ngIf="day.isWeekend">
+          <i class="bi bi-calendar-week"></i>
+          Hétvége
+        </span>
+
+        <span class="day-info-pill day-info-pill--danger" *ngIf="day.isHoliday">
+          <i class="bi bi-flag"></i>
+          {{ day.holidayName || 'Ünnepnap' }}
+        </span>
+      </div>
+
+      <div class="request-modal__existing" *ngIf="requestModalDay?.events?.length">
+        <h3>Ezen a napon már látható események</h3>
+
+        <button
+          type="button"
+          class="modal-existing-event"
+          *ngFor="let event of requestModalDay?.events; trackBy: trackByEvent"
+          [ngClass]="'modal-existing-event--' + event.type"
+          (click)="selectEvent(event); closeRequestModal()"
+        >
+          <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
+
+          <span>
+            {{ event.title }}
+          </span>
+
+          <small>
+            {{ event.userName }} · {{ getStatusLabel(event.status) }}
+          </small>
+        </button>
+      </div>
+
+      <form class="request-form" (ngSubmit)="submitRequest()">
+        <div class="form-group">
+          <label for="requestType" class="form-label">
+            Igény típusa
+          </label>
+
+          <select
+            id="requestType"
+            name="requestType"
+            class="form-select"
+            [(ngModel)]="requestForm.type"
+            [disabled]="saving"
+            required
+          >
+            <option *ngFor="let type of absenceTypeOptions" [ngValue]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="request-form__dates">
+          <div class="form-group">
+            <label for="requestDateFrom" class="form-label">
+              Kezdő dátum
+            </label>
+
+            <input
+              id="requestDateFrom"
+              name="requestDateFrom"
+              type="date"
+              class="form-control"
+              [(ngModel)]="requestForm.dateFrom"
+              [disabled]="saving"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="requestDateTo" class="form-label">
+              Záró dátum
+            </label>
+
+            <input
+              id="requestDateTo"
+              name="requestDateTo"
+              type="date"
+              class="form-control"
+              [(ngModel)]="requestForm.dateTo"
+              [disabled]="saving"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="requestReason" class="form-label">
+            Megjegyzés
+          </label>
+
+          <textarea
+            id="requestReason"
+            name="requestReason"
+            class="form-control"
+            rows="3"
+            placeholder="Opcionális megjegyzés..."
+            [(ngModel)]="requestForm.reason"
+            [disabled]="saving"
+          ></textarea>
+        </div>
+
+        <div class="request-modal__actions">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="closeRequestModal()"
+            [disabled]="saving"
+          >
+            Mégse
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!canSubmitRequest"
+          >
+            <span
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+              *ngIf="saving"
+            ></span>
+
+            <span *ngIf="!saving">
+              Igény leadása
+            </span>
+
+            <span *ngIf="saving">
+              Mentés...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

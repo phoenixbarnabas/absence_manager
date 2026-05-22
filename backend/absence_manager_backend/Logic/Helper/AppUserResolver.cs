@@ -102,6 +102,26 @@ public class AppUserResolver : IAppUserResolver
 
         if (user != null)
         {
+            try
+            {
+                var existingGraphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+
+                user.DisplayName = existingGraphProfile?.DisplayName ?? user.DisplayName;
+                user.Email = existingGraphProfile?.Email ?? user.Email;
+                user.Department = existingGraphProfile?.Department ?? user.Department;
+                user.JobTitle = existingGraphProfile?.JobTitle ?? user.JobTitle;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Graph profile refresh failed: {ex.Message}");
+            }
+
             return user;
         }
 
@@ -144,24 +164,24 @@ public class AppUserResolver : IAppUserResolver
             await _dbContext.SaveChangesAsync(cancellationToken);
             return user;
         }
-        catch (DbUpdateException ex) when (
-            ex.InnerException is PostgresException pgEx &&
-            pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
-            pgEx.ConstraintName == "IX_AppUsers_EntraObjectId_TenantId")
-        {
-            _dbContext.Entry(user).State = EntityState.Detached;
+catch (DbUpdateException ex) when (
+    ex.InnerException is PostgresException pgEx &&
+    pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
+    pgEx.ConstraintName == "IX_AppUsers_EntraObjectId_TenantId")
+{
+    _dbContext.Entry(user).State = EntityState.Detached;
 
-            var existingUser = await _dbContext.AppUsers
-                .FirstOrDefaultAsync(
-                    x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
-                    cancellationToken);
+    var existingUser = await _dbContext.AppUsers
+        .FirstOrDefaultAsync(
+            x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
+            cancellationToken);
 
-            if (existingUser is null)
-            {
-                throw;
-            }
+    if (existingUser != null)
+    {
+        return existingUser;
+    }
 
-            return existingUser;
-        }
+    throw;
+}
     }
 }
