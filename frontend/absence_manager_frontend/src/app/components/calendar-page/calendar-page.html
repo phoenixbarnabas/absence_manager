@@ -19,62 +19,6 @@
   </header>
 
   <section class="calendar-control-panel">
-    <div class="calendar-toolbar">
-      <div class="period-controls" aria-label="Időszak navigáció">
-        <button
-          type="button"
-          class="btn btn-light icon-button"
-          (click)="previousPeriod()"
-          [disabled]="saving"
-          aria-label="Előző időszak"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-light period-title"
-          (click)="goToToday()"
-          [disabled]="saving"
-        >
-          {{ periodTitle }}
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-light icon-button"
-          (click)="nextPeriod()"
-          [disabled]="saving"
-          aria-label="Következő időszak"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary today-button"
-          (click)="goToToday()"
-          [disabled]="saving"
-        >
-          Ma
-        </button>
-      </div>
-
-      <div class="view-switcher" role="group" aria-label="Naptár nézet választó">
-        <button
-          type="button"
-          class="btn view-switcher__btn"
-          *ngFor="let mode of viewModes"
-          [class.view-switcher__btn--active]="viewMode === mode.value"
-          (click)="setViewMode(mode.value)"
-          [disabled]="saving"
-        >
-          <i class="bi" [ngClass]="mode.icon"></i>
-          {{ mode.label }}
-        </button>
-      </div>
-    </div>
-
     <div class="filter-card">
       <div class="filter-card__scope">
         <label for="calendarScope" class="form-label">Láthatóság</label>
@@ -153,15 +97,61 @@
   <div class="calendar-layout" *ngIf="calendarDays.length">
     <section class="calendar-card">
       <div class="calendar-card__header">
-        <div>
-          <span class="calendar-card__meta">{{ eventCount }} esemény ebben az időszakban</span>
-          <h2>{{ periodTitle }}</h2>
-        </div>
+        <div class="calendar-toolbar">
+          <div class="period-controls" aria-label="Időszak navigáció">
+            <button
+              type="button"
+              class="btn btn-light icon-button"
+              (click)="previousPeriod()"
+              [disabled]="saving"
+              aria-label="Előző időszak"
+            >
+              <i class="bi bi-chevron-left"></i>
+            </button>
 
-        <span class="selected-date-chip">
-          <i class="bi bi-calendar-check"></i>
-          {{ selectedDateTitle }}
-        </span>
+            <button
+              type="button"
+              class="btn btn-light period-title"
+              (click)="goToToday()"
+              [disabled]="saving"
+            >
+              {{ periodTitle }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light icon-button"
+              (click)="nextPeriod()"
+              [disabled]="saving"
+              aria-label="Következő időszak"
+            >
+              <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary today-button"
+              (click)="goToToday()"
+              [disabled]="saving"
+            >
+              Ma
+            </button>
+          </div>
+
+          <div class="view-switcher" role="group" aria-label="Naptár nézet választó">
+            <button
+              type="button"
+              class="btn view-switcher__btn"
+              *ngFor="let mode of viewModes"
+              [class.view-switcher__btn--active]="viewMode === mode.value"
+              (click)="setViewMode(mode.value)"
+              [disabled]="saving"
+            >
+              <i class="bi" [ngClass]="mode.icon"></i>
+              {{ mode.label }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="month-weekdays" *ngIf="viewMode === 'month'">
@@ -379,17 +369,6 @@
         </small>
       </aside>
     </ng-template>
-  </div>
-
-  <div class="empty-state" *ngIf="!loading && !eventCount && !errorMessage">
-    <i class="bi bi-calendar-check"></i>
-
-    <h2>Nincs megjeleníthető esemény</h2>
-
-    <p>
-      A kiválasztott időszakban és szűrőkkel még nincs szabadság, home office,
-      betegszabadság, egyéb távollét vagy helyfoglalás.
-    </p>
   </div>
 
   <div
