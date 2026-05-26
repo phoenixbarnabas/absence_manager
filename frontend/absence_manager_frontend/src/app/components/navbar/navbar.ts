@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { UserProfile } from '../../models/app-user-models';
 import { AuthService } from '../../auth/auth-service';
 import { UserService } from '../../services/user.service';
+import { AccountInfo } from '@azure/msal-browser';
 
 @Component({
   selector: 'app-navbar',
@@ -17,15 +18,15 @@ export class Navbar implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
-  constructor(
-    private userService: UserService,
-    public authService: AuthService
-  ) {}
+  constructor(public authService: AuthService) { }
 
   ngOnInit(): void {
     this.authService.account$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
+      .pipe(
+        distinctUntilChanged((previous, current) => previous?.homeAccountId === current?.homeAccountId),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(account => {
         this.isLoggedIn = !!account;
 
         if (!account) {
@@ -34,32 +35,14 @@ export class Navbar implements OnInit, OnDestroy {
           return;
         }
 
-        this.userProfile = {
-          displayName: account.name || account.username || 'Ismeretlen felhasználó',
-          email: account.username || '',
-          department: '',
-          jobTitle: ''
-        };
-
+        this.userProfile = this.createProfileFromAccount(account);
         this.loading = false;
-        this.loadProfileData();
       });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private loadProfileData(): void {
-    this.userService.getMe().subscribe({
-      next: (profile) => {
-        this.userProfile = profile;
-      },
-      error: (err) => {
-        console.error(err);
-      }
-    });
   }
 
   getInitials(displayName: string): string {
@@ -73,5 +56,14 @@ export class Navbar implements OnInit, OnDestroy {
 
   async logout(): Promise<void> {
     await this.authService.logout();
+  }
+
+  private createProfileFromAccount(account: AccountInfo): UserProfile {
+    return {
+      displayName: account.name || account.username || 'Ismeretlen felhasználó',
+      email: account.username || '',
+      department: '',
+      jobTitle: ''
+    };
   }
 }
