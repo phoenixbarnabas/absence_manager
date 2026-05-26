@@ -4,13 +4,6 @@ import { CalendarService } from '../../services/calendar-service';
 import { finalize, Subject, takeUntil, timeout } from 'rxjs';
 
 type ApprovalAction = 'approve' | 'reject';
-type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-interface PageNotification {
-  type: NotificationType;
-  title: string;
-  message: string;
-}
 
 @Component({
   selector: 'app-absence-approvals-page',
@@ -24,7 +17,8 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
   loading = false;
   savingRequestId: string | null = null;
 
-  notification: PageNotification | null = null;
+  errorMessage = '';
+  successMessage = '';
 
   decisionComments: Record<string, string> = {};
 
@@ -32,7 +26,7 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
   reviewedLoading = false;
   reviewedExpanded = false;
   reviewedLoaded = false;
-  reviewedNotification: PageNotification | null = null;
+  reviewedErrorMessage = '';
 
   private readonly destroy$ = new Subject<void>();
 
@@ -52,7 +46,8 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   loadPendingApprovals(): void {
     this.loading = true;
-    this.notification = null;
+    this.errorMessage = '';
+    this.successMessage = '';
 
     this.calendarService.getPendingApprovals()
       .pipe(
@@ -77,14 +72,9 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Pending approvals load failed', err);
-
-          this.showNotification(
-            'error',
-            'Betöltési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült betölteni a jóváhagyásra váró kérelmeket.'
-            )
+          this.errorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült betölteni a jóváhagyásra váró kérelmeket.'
           );
         }
       });
@@ -100,7 +90,7 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   loadReviewedApprovals(): void {
     this.reviewedLoading = true;
-    this.reviewedNotification = null;
+    this.reviewedErrorMessage = '';
 
     this.calendarService.getReviewedApprovals()
       .pipe(
@@ -118,14 +108,9 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Reviewed approvals load failed', err);
-
-          this.showReviewedNotification(
-            'error',
-            'Betöltési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült betölteni az elbírált kérelmeket.'
-            )
+          this.reviewedErrorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült betölteni az elbírált kérelmeket.'
           );
         }
       });
@@ -137,14 +122,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   reject(request: AbsenceRequestApprovalDto): void {
     this.submitDecision(request, 'reject');
-  }
-
-  clearNotification(): void {
-    this.notification = null;
-  }
-
-  clearReviewedNotification(): void {
-    this.reviewedNotification = null;
   }
 
   trackByApprovalId(_: number, approval: AbsenceRequestApprovalDto): string {
@@ -227,7 +204,8 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.notification = null;
+    this.errorMessage = '';
+    this.successMessage = '';
     this.savingRequestId = request.id;
 
     const comment = this.decisionComments[request.id]?.trim() || null;
@@ -250,13 +228,9 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
           this.approvals = this.approvals.filter(x => x.id !== request.id);
           delete this.decisionComments[request.id];
 
-          this.showNotification(
-            'success',
-            'Döntés mentve',
-            action === 'approve'
-              ? 'A kérelem jóváhagyása sikerült.'
-              : 'A kérelem elutasítása sikerült.'
-          );
+          this.successMessage = action === 'approve'
+            ? 'A kérelem jóváhagyása sikerült.'
+            : 'A kérelem elutasítása sikerült.';
 
           if (this.reviewedExpanded) {
             this.loadReviewedApprovals();
@@ -266,41 +240,12 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Approval decision failed', err);
-
-          this.showNotification(
-            'error',
-            'Mentési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült menteni a döntést.'
-            )
+          this.errorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült menteni a döntést.'
           );
         }
       });
-  }
-
-  private showNotification(
-    type: NotificationType,
-    title: string,
-    message: string
-  ): void {
-    this.notification = {
-      type,
-      title,
-      message
-    };
-  }
-
-  private showReviewedNotification(
-    type: NotificationType,
-    title: string,
-    message: string
-  ): void {
-    this.reviewedNotification = {
-      type,
-      title,
-      message
-    };
   }
 
   private normalizeApproval(
