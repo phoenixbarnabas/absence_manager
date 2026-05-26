@@ -62,6 +62,12 @@ export class CalendarService {
     );
   }
 
+  getMyAbsenceRequests(): Observable<AbsenceRequestViewDto[]> {
+    return this.http.get<AbsenceRequestViewDto[]>(
+      `${this.configService.apiUrl}/absence-requests/my`
+    );
+  }
+
   cancelAbsenceRequest(id: string): Observable<void> {
     return this.http.delete<void>(
       `${this.configService.apiUrl}/absence-requests/${id}`
@@ -79,6 +85,9 @@ export class CalendarService {
       `${this.configService.apiUrl}/absence-requests/reviewed-approvals`
     );
   }
+
+
+  
 
   approveAbsenceRequest(
     id: string,

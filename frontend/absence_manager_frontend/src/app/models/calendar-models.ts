@@ -70,10 +70,12 @@ export interface CreateAbsenceRequestDto {
   reason?: string | null;
 }
 
+
+
 export interface AbsenceRequestViewDto {
   id: string;
-  type: CalendarAbsenceRequestType;
-  status: CalendarEventStatus;
+  type: AbsenceApprovalTypeValue;
+  status: AbsenceApprovalStatusValue;
   dateFrom: string;
   dateTo: string;
   reason?: string | null;
