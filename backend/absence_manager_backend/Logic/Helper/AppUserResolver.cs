@@ -16,10 +16,13 @@ public interface IAppUserResolver
 public class AppUserResolver : IAppUserResolver
 {
     private readonly AbsenceManagerDbContext _dbContext;
+    private readonly IMsGraphLogic _graphLogic;
 
-    public AppUserResolver(AbsenceManagerDbContext dbContext)
+    public AppUserResolver(AbsenceManagerDbContext dbContext, IMsGraphLogic graphLogic)
     {
         _dbContext = dbContext;
+        _graphLogic = graphLogic;
+
     }
 
     public async Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
@@ -34,7 +37,6 @@ public class AppUserResolver : IAppUserResolver
             foreach (var claimType in claimTypes)
             {
                 var value = principal.FindFirstValue(claimType);
-
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     return value;
@@ -46,26 +48,36 @@ public class AppUserResolver : IAppUserResolver
 
         var entraObjectId = FindClaim(
             "oid",
-            "entra_oid",
             ClaimConstants.ObjectId,
             "http://schemas.microsoft.com/identity/claims/objectidentifier"
         );
 
         if (string.IsNullOrWhiteSpace(entraObjectId))
         {
-            throw new UnauthorizedAccessException("Missing Entra object id claim.");
+            var availableClaims = string.Join(
+                ", ",
+                principal.Claims.Select(c => $"{c.Type}={c.Value}")
+            );
+
+            throw new UnauthorizedAccessException(
+                $"Missing 'oid' claim. Available claims: {availableClaims}");
         }
 
         var tenantId = FindClaim(
             "tid",
-            "tenant_id",
             ClaimConstants.TenantId,
             "http://schemas.microsoft.com/identity/claims/tenantid"
         );
 
         if (string.IsNullOrWhiteSpace(tenantId))
         {
-            throw new UnauthorizedAccessException("Missing tenant id claim.");
+            var availableClaims = string.Join(
+                ", ",
+                principal.Claims.Select(c => $"{c.Type}={c.Value}")
+            );
+
+            throw new UnauthorizedAccessException(
+                $"Missing 'tid' claim. Available claims: {availableClaims}");
         }
 
         var displayName = FindClaim(
@@ -82,9 +94,6 @@ public class AppUserResolver : IAppUserResolver
             "upn"
         );
 
-        var department = FindClaim("department") ?? string.Empty;
-        var jobTitle = FindClaim("job_title", "jobTitle") ?? string.Empty;
-
         var user = await _dbContext.AppUsers
             .FirstOrDefaultAsync(
                 x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
@@ -92,48 +101,57 @@ public class AppUserResolver : IAppUserResolver
 
         if (user != null)
         {
-            var changed = false;
-
-            if (!string.IsNullOrWhiteSpace(displayName) && user.DisplayName != displayName)
+            try
             {
-                user.DisplayName = displayName;
-                changed = true;
-            }
+                var existingGraphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(email) && user.Email != email)
-            {
-                user.Email = email;
-                changed = true;
-            }
+                user.DisplayName = existingGraphProfile?.DisplayName ?? user.DisplayName;
+                user.Email = existingGraphProfile?.Email ?? user.Email;
+                user.Department = existingGraphProfile?.Department ?? user.Department;
+                user.JobTitle = existingGraphProfile?.JobTitle ?? user.JobTitle;
 
-            if (!string.IsNullOrWhiteSpace(department) && user.Department != department)
-            {
-                user.Department = department;
-                changed = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(jobTitle) && user.JobTitle != jobTitle)
-            {
-                user.JobTitle = jobTitle;
-                changed = true;
-            }
-
-            if (changed)
-            {
                 await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Graph profile refresh failed: {ex.Message}");
             }
 
             return user;
         }
 
+        GraphUserProfileDto? graphProfile = null;
+
+        try
+        {
+            graphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Graph profile retrieval failed: {ex.Message}");
+        }
+
+        var resolvedDisplayName = graphProfile?.DisplayName ?? displayName;
+        var resolvedEmail = graphProfile?.Email ?? email;
+        var resolvedDepartment = graphProfile?.Department ?? string.Empty;
+        var resolvedJobTitle = graphProfile?.JobTitle ?? string.Empty;
+
         user = new AppUser
         {
             EntraObjectId = entraObjectId,
             TenantId = tenantId,
-            DisplayName = displayName,
-            Email = email,
-            Department = department,
-            JobTitle = jobTitle,
+            DisplayName = resolvedDisplayName,
+            Email = resolvedEmail,
+            Department = resolvedDepartment,
+            JobTitle = resolvedJobTitle,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };

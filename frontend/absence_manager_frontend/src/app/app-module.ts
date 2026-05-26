@@ -16,7 +16,6 @@ import { authInterceptor } from './auth/auth-interceptor';
 import { ConfigService } from './services/config-service';
 import { CalendarPage } from './components/calendar-page/calendar-page';
 import { AbsenceApprovalsPage } from './components/absence-approvals-page/absence-approvals-page';
-import { MyAbsenceRequestsPage } from './components/my-absence-requests-page/my-absence-requests-page';
 
 @NgModule({
   declarations: [
@@ -28,7 +27,6 @@ import { MyAbsenceRequestsPage } from './components/my-absence-requests-page/my-
     WorkstationList,
     CalendarPage,
     AbsenceApprovalsPage,
-    MyAbsenceRequestsPage,
   ],
   imports: [
     FormsModule,
