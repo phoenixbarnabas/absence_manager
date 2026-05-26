@@ -89,17 +89,37 @@ export interface AbsenceRequestViewDto {
   decisionComment?: string | null;
 }
 
+export type AbsenceApprovalTypeValue =
+  | CalendarAbsenceRequestType
+  | 'Vacation'
+  | 'HomeOffice'
+  | 'SickLeave'
+  | 'OtherAbsence'
+  | number;
+
+export type AbsenceApprovalStatusValue =
+  | CalendarEventStatus
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Cancelled'
+  | number;
+
 export interface AbsenceRequestApprovalDto {
   id: string;
   userId: string;
   userDisplayName?: string | null;
   userEmail?: string | null;
-  type: CalendarAbsenceRequestType;
-  status: CalendarEventStatus;
+  type: AbsenceApprovalTypeValue;
+  status: AbsenceApprovalStatusValue;
   dateFrom: string;
   dateTo: string;
   reason?: string | null;
   createdAtUtc: string;
+
+  reviewedAtUtc?: string | null;
+  reviewedByUserId?: string | null;
+  reviewedByUserName?: string | null;
   decisionComment?: string | null;
 }
 

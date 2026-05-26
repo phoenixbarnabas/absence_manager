@@ -27,6 +27,12 @@ namespace Entities.Dtos.AbsenceRequestDtos
 
         public DateTime CreatedAtUtc { get; set; }
 
+        public DateTime? ReviewedAtUtc { get; set; }
+
+        public string? ReviewedByUserId { get; set; }
+
+        public string? ReviewedByUserName { get; set; }
+
         public string? DecisionComment { get; set; }
     }
 }
