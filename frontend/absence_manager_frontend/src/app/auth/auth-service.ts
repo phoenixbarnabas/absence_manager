@@ -9,10 +9,25 @@ import { getApiScope, getMsalInstance, getPostLogoutRedirectUri } from './entra-
 export class AuthService {
   private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
+
   private initialized = false;
+  private bootstrapPromise: Promise<void> | null = null;
 
   readonly account$ = this.accountSubject.asObservable();
   readonly token$ = this.tokenSubject.asObservable();
+
+  async bootstrap(): Promise<void> {
+    if (!this.bootstrapPromise) {
+      this.bootstrapPromise = this.bootstrapInternal();
+    }
+
+    return this.bootstrapPromise;
+  }
+
+  private async bootstrapInternal(): Promise<void> {
+    await this.initialize();
+    await this.handleRedirect();
+  }
 
   async initialize(): Promise<void> {
     if (!this.initialized) {
@@ -22,21 +37,32 @@ export class AuthService {
   }
 
   async handleRedirect(): Promise<void> {
-    await this.initialize();
+    const authResult: AuthenticationResult | null =
+      await getMsalInstance().handleRedirectPromise();
 
-    const authResult: AuthenticationResult | null = await getMsalInstance().handleRedirectPromise();
     const accounts = getMsalInstance().getAllAccounts();
 
     if (authResult?.account) {
       getMsalInstance().setActiveAccount(authResult.account);
       this.accountSubject.next(authResult.account);
-    } else if (accounts.length > 0) {
+      return;
+    }
+
+    const activeAccount = getMsalInstance().getActiveAccount();
+
+    if (activeAccount) {
+      this.accountSubject.next(activeAccount);
+      return;
+    }
+
+    if (accounts.length > 0) {
       getMsalInstance().setActiveAccount(accounts[0]);
       this.accountSubject.next(accounts[0]);
-    } else {
-      this.accountSubject.next(null);
-      this.tokenSubject.next(null);
+      return;
     }
+
+    this.accountSubject.next(null);
+    this.tokenSubject.next(null);
   }
 
   async login(): Promise<void> {
@@ -52,6 +78,7 @@ export class AuthService {
 
     this.accountSubject.next(null);
     this.tokenSubject.next(null);
+    this.bootstrapPromise = null;
 
     await getMsalInstance().logoutRedirect({
       postLogoutRedirectUri: getPostLogoutRedirectUri()
@@ -72,13 +99,19 @@ export class AuthService {
       return null;
     }
 
-    const result = await getMsalInstance().acquireTokenSilent({
-      account,
-      scopes: [getApiScope()]
-    });
+    try {
+      const result = await getMsalInstance().acquireTokenSilent({
+        account,
+        scopes: [getApiScope()]
+      });
 
-    this.tokenSubject.next(result.accessToken);
-    return result.accessToken;
+      this.tokenSubject.next(result.accessToken);
+      return result.accessToken;
+    } catch (error) {
+      console.error('Silent token acquisition failed', error);
+      this.tokenSubject.next(null);
+      return null;
+    }
   }
 
   getAccount(): AccountInfo | null {
@@ -90,7 +123,9 @@ export class AuthService {
   }
 
   getActiveAccount(): AccountInfo | null {
-    return getMsalInstance().getActiveAccount() ?? getMsalInstance().getAllAccounts()[0] ?? null;
+    return getMsalInstance().getActiveAccount()
+      ?? getMsalInstance().getAllAccounts()[0]
+      ?? null;
   }
 
   isLoggedIn(): boolean {

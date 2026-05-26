@@ -1,20 +1,20 @@
-import { inject } from '@angular/core';
+import { inject } from '@angular/core/primitives/di';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../auth-service';
 
-export const authGuard: CanActivateFn = async () => {
+export const guestGuardGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   try {
     await authService.bootstrap();
   } catch (error) {
-    console.error('Auth bootstrap failed', error);
+    console.error('Guest guard bootstrap failed', error);
   }
 
   if (authService.isLoggedIn()) {
-    return true;
+    return router.createUrlTree(['/desk-booking']);
   }
 
-  return router.createUrlTree(['/welcome']);
+  return true;
 };
