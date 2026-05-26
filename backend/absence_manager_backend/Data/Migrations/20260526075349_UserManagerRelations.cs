@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations
 {
     /// <inheritdoc />
-    public partial class NewOffice : Migration
+    public partial class UserManagerRelations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -57,6 +57,7 @@ namespace Data.Migrations
                     DateFrom = table.Column<DateOnly>(type: "date", nullable: false),
                     DateTo = table.Column<DateOnly>(type: "date", nullable: false),
                     Reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    DecisionComment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedByUserId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -213,9 +214,9 @@ namespace Data.Migrations
                     { "ws-2", "GV", 2, true, "2", "office-ft-1", 2m, 1m },
                     { "ws-3", "KI", 3, true, "3", "office-ft-1", 3m, 1m },
                     { "ws-4", "PB", 4, true, "4", "office-ft-1", 1m, 2m },
-                    { "ws-5", "Üres-1", 5, true, "5", "office-ft-1", 2m, 2m },
+                    { "ws-5", "üres-1", 5, true, "5", "office-ft-1", 2m, 2m },
                     { "ws-6", "Szp", 6, true, "6", "office-ft-1", 3m, 2m },
-                    { "ws-7", "Üres-2", 7, true, "7", "office-ft-1", 2m, 3m },
+                    { "ws-7", "üres-2", 7, true, "7", "office-ft-1", 2m, 3m },
                     { "ws-8", "Üres-3", 1, true, "1", "office-ft-2", 1m, 1m },
                     { "ws-9", "Üres-4", 2, true, "2", "office-ft-2", 2m, 1m }
                 });

@@ -1,7 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserProfile } from '../../models/app-user-models';
 import { AuthService } from '../../auth/auth-service';
+import { takeUntil } from 'rxjs/internal/operators/takeUntil';
+import { Subject } from 'rxjs/internal/Subject';
 
 @Component({
   selector: 'app-profile',
@@ -9,10 +11,12 @@ import { AuthService } from '../../auth/auth-service';
   templateUrl: './profile.html',
   styleUrl: './profile.sass',
 })
-export class Profile implements OnInit {
+export class Profile implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private userService: UserService,
@@ -21,7 +25,7 @@ export class Profile implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const account = this.authService.getAccount();
+    const account = this.authService.getAccount() ?? this.authService.getActiveAccount();
 
     if (!account) {
       this.error = 'Nincs bejelentkezett felhasználó.';
@@ -36,20 +40,27 @@ export class Profile implements OnInit {
       jobTitle: ''
     };
 
-    this.userService.getMe().subscribe({
-      next: profile => {
-        this.userProfile = profile;
-        this.loading = false;
-        this.error = null;
-        this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error(err);
-        this.error = 'Hiba a profil betöltése közben.';
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
-    });
+    this.userService.getMe()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: profile => {
+          this.userProfile = profile;
+          this.loading = false;
+          this.error = null;
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          console.error(err);
+          this.error = 'Hiba a profil betöltése közben.';
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getInitials(displayName: string): string {
