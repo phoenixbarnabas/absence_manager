@@ -10,22 +10,23 @@ namespace Logic.Helper;
 
 public interface IAppUserResolver
 {
-    Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default);
+    Task<AppUser> ResolveCurrentUserAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default);
 }
 
 public class AppUserResolver : IAppUserResolver
 {
     private readonly AbsenceManagerDbContext _dbContext;
-    private readonly IMsGraphLogic _graphLogic;
 
-    public AppUserResolver(AbsenceManagerDbContext dbContext, IMsGraphLogic graphLogic)
+    public AppUserResolver(AbsenceManagerDbContext dbContext)
     {
         _dbContext = dbContext;
-        _graphLogic = graphLogic;
-
     }
 
-    public async Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    public async Task<AppUser> ResolveCurrentUserAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
     {
         if (principal?.Identity?.IsAuthenticated != true)
         {
@@ -37,6 +38,7 @@ public class AppUserResolver : IAppUserResolver
             foreach (var claimType in claimTypes)
             {
                 var value = principal.FindFirstValue(claimType);
+
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     return value;
@@ -48,36 +50,26 @@ public class AppUserResolver : IAppUserResolver
 
         var entraObjectId = FindClaim(
             "oid",
+            "entra_oid",
             ClaimConstants.ObjectId,
             "http://schemas.microsoft.com/identity/claims/objectidentifier"
         );
 
         if (string.IsNullOrWhiteSpace(entraObjectId))
         {
-            var availableClaims = string.Join(
-                ", ",
-                principal.Claims.Select(c => $"{c.Type}={c.Value}")
-            );
-
-            throw new UnauthorizedAccessException(
-                $"Missing 'oid' claim. Available claims: {availableClaims}");
+            throw new UnauthorizedAccessException("Missing Entra object id claim.");
         }
 
         var tenantId = FindClaim(
             "tid",
+            "tenant_id",
             ClaimConstants.TenantId,
             "http://schemas.microsoft.com/identity/claims/tenantid"
         );
 
         if (string.IsNullOrWhiteSpace(tenantId))
         {
-            var availableClaims = string.Join(
-                ", ",
-                principal.Claims.Select(c => $"{c.Type}={c.Value}")
-            );
-
-            throw new UnauthorizedAccessException(
-                $"Missing 'tid' claim. Available claims: {availableClaims}");
+            throw new UnauthorizedAccessException("Missing tenant id claim.");
         }
 
         var displayName = FindClaim(
@@ -94,6 +86,9 @@ public class AppUserResolver : IAppUserResolver
             "upn"
         );
 
+        var department = FindClaim("department") ?? string.Empty;
+        var jobTitle = FindClaim("job_title", "jobTitle") ?? string.Empty;
+
         var user = await _dbContext.AppUsers
             .FirstOrDefaultAsync(
                 x => x.EntraObjectId == entraObjectId && x.TenantId == tenantId,
@@ -101,57 +96,48 @@ public class AppUserResolver : IAppUserResolver
 
         if (user != null)
         {
-            try
+            var changed = false;
+
+            if (!string.IsNullOrWhiteSpace(displayName) && user.DisplayName != displayName)
             {
-                var existingGraphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
+                user.DisplayName = displayName;
+                changed = true;
+            }
 
-                user.DisplayName = existingGraphProfile?.DisplayName ?? user.DisplayName;
-                user.Email = existingGraphProfile?.Email ?? user.Email;
-                user.Department = existingGraphProfile?.Department ?? user.Department;
-                user.JobTitle = existingGraphProfile?.JobTitle ?? user.JobTitle;
+            if (!string.IsNullOrWhiteSpace(email) && user.Email != email)
+            {
+                user.Email = email;
+                changed = true;
+            }
 
+            if (!string.IsNullOrWhiteSpace(department) && user.Department != department)
+            {
+                user.Department = department;
+                changed = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(jobTitle) && user.JobTitle != jobTitle)
+            {
+                user.JobTitle = jobTitle;
+                changed = true;
+            }
+
+            if (changed)
+            {
                 await _dbContext.SaveChangesAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Graph profile refresh failed: {ex.Message}");
             }
 
             return user;
         }
 
-        GraphUserProfileDto? graphProfile = null;
-
-        try
-        {
-            graphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Graph profile retrieval failed: {ex.Message}");
-        }
-
-        var resolvedDisplayName = graphProfile?.DisplayName ?? displayName;
-        var resolvedEmail = graphProfile?.Email ?? email;
-        var resolvedDepartment = graphProfile?.Department ?? string.Empty;
-        var resolvedJobTitle = graphProfile?.JobTitle ?? string.Empty;
-
         user = new AppUser
         {
             EntraObjectId = entraObjectId,
             TenantId = tenantId,
-            DisplayName = resolvedDisplayName,
-            Email = resolvedEmail,
-            Department = resolvedDepartment,
-            JobTitle = resolvedJobTitle,
+            DisplayName = displayName,
+            Email = email,
+            Department = department,
+            JobTitle = jobTitle,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
