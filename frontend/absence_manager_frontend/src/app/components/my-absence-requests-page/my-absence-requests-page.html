@@ -1,0 +1,198 @@
+<div class="absence-approvals-page">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">Saját kérelmek</p>
+      <h1 class="page-title">Saját távollét kérelmeim</h1>
+      <p class="page-subtitle">
+        Itt láthatod a saját szabadság, home office és egyéb távollét kérelmeidet.
+        A még aktuális kérelmeket vissza tudod vonni.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="approval-btn approval-btn--secondary"
+      (click)="loadRequests()"
+      [disabled]="loading || !!cancellingRequestId"
+    >
+      <i class="bi bi-arrow-clockwise"></i>
+      Frissítés
+    </button>
+  </div>
+
+  <div class="feedback-messages">
+    <div class="approval-alert approval-alert--error" *ngIf="errorMessage">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <div class="approval-alert approval-alert--success" *ngIf="successMessage">
+      <i class="bi bi-check-circle"></i>
+      <span>{{ successMessage }}</span>
+    </div>
+  </div>
+
+  <section class="approval-card loading-card" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Kérelmek betöltése...</span>
+  </section>
+
+  <section class="approval-card empty-card" *ngIf="!loading && activeRequests.length === 0">
+    <div class="empty-icon">
+      <i class="bi bi-inbox"></i>
+    </div>
+    <h2>Nincs aktuális saját kérelmed</h2>
+    <p>Jelenleg nincs függőben lévő vagy jóváhagyott jövőbeli távollét kérelmed.</p>
+  </section>
+
+  <section class="approval-list" *ngIf="!loading && activeRequests.length > 0">
+    <article
+      class="approval-card request-card"
+      *ngFor="let request of activeRequests; trackBy: trackByRequestId"
+      [class.request-card--highlighted]="request.id === highlightedRequestId"
+    >
+      <div class="request-header">
+        <div class="user-block">
+          <div class="user-avatar">
+            {{ getTypeLabel(request.type).charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="user-meta">
+            <h2>{{ getTypeLabel(request.type) }}</h2>
+            <p>{{ request.department || 'Saját kérelem' }}</p>
+          </div>
+        </div>
+
+        <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+          {{ getStatusLabel(request.status) }}
+        </span>
+      </div>
+
+      <div class="request-grid">
+        <div class="request-field">
+          <span>Típus</span>
+          <strong>{{ getTypeLabel(request.type) }}</strong>
+        </div>
+
+        <div class="request-field">
+          <span>Időszak</span>
+          <strong>{{ getDateRangeText(request) }}</strong>
+        </div>
+
+        <div class="request-field">
+          <span>Létrehozva</span>
+          <strong>{{ formatDate(request.createdAtUtc) }}</strong>
+        </div>
+      </div>
+
+      <div class="reason-block" *ngIf="request.reason">
+        <span>Indoklás</span>
+        <p>{{ request.reason }}</p>
+      </div>
+
+      <div class="reason-block decision-comment-block" *ngIf="request.decisionComment">
+        <span>Döntési megjegyzés</span>
+        <p>{{ request.decisionComment }}</p>
+      </div>
+
+      <div class="card-actions">
+        <button
+          type="button"
+          class="approval-btn approval-btn--danger"
+          (click)="cancelRequest(request)"
+          [disabled]="!canCancel(request) || !!cancellingRequestId"
+        >
+          <i class="bi bi-trash"></i>
+          {{ cancellingRequestId === request.id ? 'Visszavonás...' : 'Kérelem visszavonása' }}
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <section class="reviewed-section">
+    <button
+      type="button"
+      class="reviewed-toggle"
+      (click)="toggleArchivedRequests()"
+      [attr.aria-expanded]="archivedExpanded"
+    >
+      <div>
+        <h2>Korábbi / lezárt saját kérelmek</h2>
+        <p>Elutasított, visszavont vagy már elmúlt kérelmek.</p>
+      </div>
+
+      <div class="reviewed-toggle__meta">
+        <span *ngIf="archivedRequests.length > 0">
+          {{ archivedRequests.length }} db
+        </span>
+
+        <i class="bi" [ngClass]="archivedExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </div>
+    </button>
+
+    <div class="reviewed-content" *ngIf="archivedExpanded">
+      <div
+        class="approval-card empty-card reviewed-empty"
+        *ngIf="!loading && archivedRequests.length === 0"
+      >
+        <div class="empty-icon">
+          <i class="bi bi-archive"></i>
+        </div>
+        <h2>Még nincs lezárt saját kérelmed</h2>
+        <p>A korábbi, elutasított vagy visszavont kérelmek később itt jelennek meg.</p>
+      </div>
+
+      <div class="reviewed-list" *ngIf="!loading && archivedRequests.length > 0">
+        <article
+          class="approval-card reviewed-card"
+          *ngFor="let request of archivedRequests; trackBy: trackByRequestId"
+          [class.request-card--highlighted]="request.id === highlightedRequestId"
+        >
+          <div class="request-header">
+            <div class="user-block">
+              <div class="user-avatar user-avatar--muted">
+                {{ getTypeLabel(request.type).charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="user-meta">
+                <h2>{{ getTypeLabel(request.type) }}</h2>
+                <p>{{ request.department || 'Saját kérelem' }}</p>
+              </div>
+            </div>
+
+            <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+              {{ getStatusLabel(request.status) }}
+            </span>
+          </div>
+
+          <div class="request-grid">
+            <div class="request-field">
+              <span>Típus</span>
+              <strong>{{ getTypeLabel(request.type) }}</strong>
+            </div>
+
+            <div class="request-field">
+              <span>Időszak</span>
+              <strong>{{ getDateRangeText(request) }}</strong>
+            </div>
+
+            <div class="request-field">
+              <span>Létrehozva</span>
+              <strong>{{ formatDate(request.createdAtUtc) }}</strong>
+            </div>
+          </div>
+
+          <div class="reason-block" *ngIf="request.reason">
+            <span>Indoklás</span>
+            <p>{{ request.reason }}</p>
+          </div>
+
+          <div class="reason-block decision-comment-block" *ngIf="request.decisionComment">
+            <span>Döntési megjegyzés</span>
+            <p>{{ request.decisionComment }}</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>
