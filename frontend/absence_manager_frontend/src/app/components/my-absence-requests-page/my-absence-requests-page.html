@@ -8,16 +8,6 @@
         A még aktuális kérelmeket vissza tudod vonni.
       </p>
     </div>
-
-    <button
-      type="button"
-      class="approval-btn approval-btn--secondary"
-      (click)="loadRequests()"
-      [disabled]="loading || !!cancellingRequestId"
-    >
-      <i class="bi bi-arrow-clockwise"></i>
-      Frissítés
-    </button>
   </div>
 
   <div class="feedback-messages">
