@@ -10,15 +10,33 @@
     </div>
   </div>
 
-  <div class="feedback-messages">
-    <div class="approval-alert approval-alert--error" *ngIf="errorMessage">
-      <i class="bi bi-exclamation-triangle"></i>
-      <span>{{ errorMessage }}</span>
-    </div>
+  <div class="notification-stack" *ngIf="notification as currentNotification">
+    <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
+      <div class="page-notification__icon">
+        <i
+          class="bi"
+          [ngClass]="{
+            'bi-check-circle-fill': currentNotification.type === 'success',
+            'bi-exclamation-triangle-fill': currentNotification.type === 'error',
+            'bi-info-circle-fill': currentNotification.type === 'info',
+            'bi-exclamation-circle-fill': currentNotification.type === 'warning'
+          }"
+        ></i>
+      </div>
 
-    <div class="approval-alert approval-alert--success" *ngIf="successMessage">
-      <i class="bi bi-check-circle"></i>
-      <span>{{ successMessage }}</span>
+      <div class="page-notification__body">
+        <strong>{{ currentNotification.title }}</strong>
+        <span>{{ currentNotification.message }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="page-notification__close"
+        aria-label="Értesítés bezárása"
+        (click)="clearNotification()"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
   </div>
 
@@ -89,7 +107,7 @@
         <button
           type="button"
           class="approval-btn approval-btn--danger"
-          (click)="cancelRequest(request)"
+          (click)="openCancelModal(request)"
           [disabled]="!canCancel(request) || !!cancellingRequestId"
         >
           <i class="bi bi-trash"></i>
@@ -185,4 +203,80 @@
       </div>
     </div>
   </section>
+</div>
+
+<div
+  class="custom-modal-backdrop"
+  *ngIf="requestToCancel"
+  (click)="closeCancelModal()"
+></div>
+
+<div class="custom-modal" *ngIf="requestToCancel" role="dialog" aria-modal="true">
+  <div class="custom-modal__panel">
+    <div class="custom-modal__header">
+      <div class="custom-modal__icon custom-modal__icon--danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+
+      <button
+        type="button"
+        class="custom-modal__close"
+        aria-label="Ablak bezárása"
+        (click)="closeCancelModal()"
+        [disabled]="!!cancellingRequestId"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="custom-modal__content">
+      <h2>Kérelem visszavonása</h2>
+
+      <p>
+        Biztosan visszavonod ezt a kérelmet?
+      </p>
+
+      <div class="cancel-summary">
+        <div>
+          <span>Típus</span>
+          <strong>{{ getTypeLabel(requestToCancel.type) }}</strong>
+        </div>
+
+        <div>
+          <span>Időszak</span>
+          <strong>{{ getDateRangeText(requestToCancel) }}</strong>
+        </div>
+
+        <div>
+          <span>Állapot</span>
+          <strong>{{ getStatusLabel(requestToCancel.status) }}</strong>
+        </div>
+      </div>
+
+      <p class="custom-modal__warning">
+        A visszavont kérelmet később már nem lehet újra aktiválni.
+      </p>
+    </div>
+
+    <div class="custom-modal__actions">
+      <button
+        type="button"
+        class="approval-btn approval-btn--secondary"
+        (click)="closeCancelModal()"
+        [disabled]="!!cancellingRequestId"
+      >
+        Mégsem
+      </button>
+
+      <button
+        type="button"
+        class="approval-btn approval-btn--danger"
+        (click)="confirmCancelRequest()"
+        [disabled]="!!cancellingRequestId"
+      >
+        <i class="bi bi-trash"></i>
+        {{ cancellingRequestId ? 'Visszavonás...' : 'Igen, visszavonom' }}
+      </button>
+    </div>
+  </div>
 </div>

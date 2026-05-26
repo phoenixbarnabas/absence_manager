@@ -9,6 +9,14 @@ import {
 } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
 
+type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
+interface PageNotification {
+  type: NotificationType;
+  title: string;
+  message: string;
+}
+
 @Component({
   selector: 'app-my-absence-requests-page',
   standalone: false,
@@ -23,8 +31,8 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   loading = false;
   cancellingRequestId: string | null = null;
 
-  errorMessage = '';
-  successMessage = '';
+  notification: PageNotification | null = null;
+  requestToCancel: AbsenceRequestViewDto | null = null;
 
   archivedExpanded = false;
   highlightedRequestId: string | null = null;
@@ -58,8 +66,7 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
 
   loadRequests(): void {
     this.loading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.notification = null;
 
     this.calendarService.getMyAbsenceRequests()
       .pipe(
@@ -77,29 +84,47 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('My absence requests load failed', err);
-          this.errorMessage = this.getApiErrorMessage(
-            err,
-            'Nem sikerült betölteni a saját kérelmeidet.'
+
+          this.showNotification(
+            'error',
+            'Betöltési hiba',
+            this.getApiErrorMessage(
+              err,
+              'Nem sikerült betölteni a saját kérelmeidet.'
+            )
           );
         }
       });
   }
 
-  cancelRequest(request: AbsenceRequestViewDto): void {
+  openCancelModal(request: AbsenceRequestViewDto): void {
     if (!this.canCancel(request) || this.cancellingRequestId) {
       return;
     }
 
-    const confirmed = confirm(
-      `Biztosan visszavonod ezt a kérelmet?\n\n${this.getTypeLabel(request.type)}: ${this.getDateRangeText(request)}`
-    );
+    this.requestToCancel = request;
+  }
 
-    if (!confirmed) {
+  cancelRequest(request: AbsenceRequestViewDto): void {
+    this.openCancelModal(request);
+  }
+
+  closeCancelModal(): void {
+    if (this.cancellingRequestId) {
       return;
     }
 
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.requestToCancel = null;
+  }
+
+  confirmCancelRequest(): void {
+    const request = this.requestToCancel;
+
+    if (!request || !this.canCancel(request) || this.cancellingRequestId) {
+      return;
+    }
+
+    this.notification = null;
     this.cancellingRequestId = request.id;
 
     this.calendarService.cancelAbsenceRequest(request.id)
@@ -107,6 +132,7 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
         timeout(15000),
         finalize(() => {
           this.cancellingRequestId = null;
+          this.requestToCancel = null;
           this.cdr.detectChanges();
         }),
         takeUntil(this.destroy$)
@@ -125,17 +151,31 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
             };
           });
 
-          this.successMessage = 'A kérelem visszavonása sikerült.';
+          this.showNotification(
+            'success',
+            'Kérelem visszavonva',
+            'A kérelem visszavonása sikerült.'
+          );
+
           this.applyRequestLists();
         },
         error: err => {
           console.error('Absence request cancel failed', err);
-          this.errorMessage = this.getApiErrorMessage(
-            err,
-            'Nem sikerült visszavonni a kérelmet.'
+
+          this.showNotification(
+            'error',
+            'Visszavonási hiba',
+            this.getApiErrorMessage(
+              err,
+              'Nem sikerült visszavonni a kérelmet.'
+            )
           );
         }
       });
+  }
+
+  clearNotification(): void {
+    this.notification = null;
   }
 
   toggleArchivedRequests(): void {
@@ -238,6 +278,18 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
 
     const date = new Date(parts[0], parts[1] - 1, parts[2]);
     return date.toLocaleDateString('hu-HU');
+  }
+
+  private showNotification(
+    type: NotificationType,
+    title: string,
+    message: string
+  ): void {
+    this.notification = {
+      type,
+      title,
+      message
+    };
   }
 
   private applyRequestLists(): void {
