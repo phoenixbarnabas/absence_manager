@@ -7,23 +7,35 @@
         Itt láthatók az aktív beosztottak függőben lévő távollét kérelmei.
       </p>
     </div>
-
-    <button type="button" class="approval-btn approval-btn--secondary" (click)="loadPendingApprovals()"
-      [disabled]="loading || !!savingRequestId">
-      <i class="bi bi-arrow-clockwise"></i>
-      Frissítés
-    </button>
   </div>
 
-  <div class="feedback-messages">
-    <div class="approval-alert approval-alert--error" *ngIf="errorMessage">
-      <i class="bi bi-exclamation-triangle"></i>
-      <span>{{ errorMessage }}</span>
-    </div>
+  <div class="notification-stack" *ngIf="notification as currentNotification">
+    <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
+      <div class="page-notification__icon">
+        <i
+          class="bi"
+          [ngClass]="{
+            'bi-check-circle-fill': currentNotification.type === 'success',
+            'bi-exclamation-triangle-fill': currentNotification.type === 'error',
+            'bi-info-circle-fill': currentNotification.type === 'info',
+            'bi-exclamation-circle-fill': currentNotification.type === 'warning'
+          }"
+        ></i>
+      </div>
 
-    <div class="approval-alert approval-alert--success" *ngIf="successMessage">
-      <i class="bi bi-check-circle"></i>
-      <span>{{ successMessage }}</span>
+      <div class="page-notification__body">
+        <strong>{{ currentNotification.title }}</strong>
+        <span>{{ currentNotification.message }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="page-notification__close"
+        aria-label="Értesítés bezárása"
+        (click)="clearNotification()"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
   </div>
 
@@ -42,7 +54,6 @@
 
   <section class="approval-list" *ngIf="!loading && approvals.length > 0">
     <article class="approval-card request-card" *ngFor="let approval of approvals; trackBy: trackByApprovalId">
-
       <div class="request-header">
         <div class="user-block">
           <div class="user-avatar">
@@ -87,20 +98,32 @@
           Döntési megjegyzés
         </label>
 
-        <textarea [id]="'decision-comment-' + approval.id" rows="3" [(ngModel)]="decisionComments[approval.id]"
-          [disabled]="savingRequestId === approval.id" placeholder="Opcionális megjegyzés a döntéshez">
-        </textarea>
+        <textarea
+          [id]="'decision-comment-' + approval.id"
+          rows="3"
+          [(ngModel)]="decisionComments[approval.id]"
+          [disabled]="savingRequestId === approval.id"
+          placeholder="Opcionális megjegyzés a döntéshez"
+        ></textarea>
       </div>
 
       <div class="card-actions">
-        <button type="button" class="approval-btn approval-btn--danger" (click)="reject(approval)"
-          [disabled]="!!savingRequestId">
+        <button
+          type="button"
+          class="approval-btn approval-btn--danger"
+          (click)="reject(approval)"
+          [disabled]="!!savingRequestId"
+        >
           <i class="bi bi-x-circle"></i>
           Elutasítás
         </button>
 
-        <button type="button" class="approval-btn approval-btn--primary" (click)="approve(approval)"
-          [disabled]="!!savingRequestId">
+        <button
+          type="button"
+          class="approval-btn approval-btn--primary"
+          (click)="approve(approval)"
+          [disabled]="!!savingRequestId"
+        >
           <i class="bi bi-check-circle"></i>
           Jóváhagyás
         </button>
@@ -109,8 +132,12 @@
   </section>
 
   <section class="reviewed-section">
-    <button type="button" class="reviewed-toggle" (click)="toggleReviewedApprovals()"
-      [attr.aria-expanded]="reviewedExpanded">
+    <button
+      type="button"
+      class="reviewed-toggle"
+      (click)="toggleReviewedApprovals()"
+      [attr.aria-expanded]="reviewedExpanded"
+    >
       <div>
         <h2>Elbírált kérelmek</h2>
         <p>Korábban jóváhagyott vagy elutasított távollét kérelmek.</p>
@@ -121,15 +148,39 @@
           {{ reviewedApprovals.length }} db
         </span>
 
-        <i class="bi" [ngClass]="reviewedExpanded ? 'bi-chevron-up' : 'bi-chevron-down'">
-        </i>
+        <i class="bi" [ngClass]="reviewedExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       </div>
     </button>
 
     <div class="reviewed-content" *ngIf="reviewedExpanded">
-      <div class="approval-alert approval-alert--error" *ngIf="reviewedErrorMessage">
-        <i class="bi bi-exclamation-triangle"></i>
-        <span>{{ reviewedErrorMessage }}</span>
+      <div class="notification-stack notification-stack--inline" *ngIf="reviewedNotification as currentReviewedNotification">
+        <div class="page-notification" [ngClass]="'page-notification--' + currentReviewedNotification.type">
+          <div class="page-notification__icon">
+            <i
+              class="bi"
+              [ngClass]="{
+                'bi-check-circle-fill': currentReviewedNotification.type === 'success',
+                'bi-exclamation-triangle-fill': currentReviewedNotification.type === 'error',
+                'bi-info-circle-fill': currentReviewedNotification.type === 'info',
+                'bi-exclamation-circle-fill': currentReviewedNotification.type === 'warning'
+              }"
+            ></i>
+          </div>
+
+          <div class="page-notification__body">
+            <strong>{{ currentReviewedNotification.title }}</strong>
+            <span>{{ currentReviewedNotification.message }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="page-notification__close"
+            aria-label="Értesítés bezárása"
+            (click)="clearReviewedNotification()"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
       <div class="loading-card reviewed-loading" *ngIf="reviewedLoading">
@@ -137,8 +188,10 @@
         <span>Elbírált kérelmek betöltése...</span>
       </div>
 
-      <div class="approval-card empty-card reviewed-empty"
-        *ngIf="!reviewedLoading && reviewedApprovals.length === 0 && !reviewedErrorMessage">
+      <div
+        class="approval-card empty-card reviewed-empty"
+        *ngIf="!reviewedLoading && reviewedApprovals.length === 0 && !reviewedNotification"
+      >
         <div class="empty-icon">
           <i class="bi bi-archive"></i>
         </div>
@@ -147,9 +200,10 @@
       </div>
 
       <div class="reviewed-list" *ngIf="!reviewedLoading && reviewedApprovals.length > 0">
-        <article class="approval-card reviewed-card"
-          *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId">
-
+        <article
+          class="approval-card reviewed-card"
+          *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId"
+        >
           <div class="request-header">
             <div class="user-block">
               <div class="user-avatar user-avatar--muted">
@@ -162,10 +216,13 @@
               </div>
             </div>
 
-            <span class="status-pill" [ngClass]="{
-              'status-pill--approved': approval.status === 'approved' || approval.status === 'Approved' || approval.status === 2,
-              'status-pill--rejected': approval.status === 'rejected' || approval.status === 'Rejected' || approval.status === 3
-            }">
+            <span
+              class="status-pill"
+              [ngClass]="{
+                'status-pill--approved': approval.status === 'approved' || approval.status === 'Approved' || approval.status === 2,
+                'status-pill--rejected': approval.status === 'rejected' || approval.status === 'Rejected' || approval.status === 3
+              }"
+            >
               {{ getStatusLabel(approval.status) }}
             </span>
           </div>

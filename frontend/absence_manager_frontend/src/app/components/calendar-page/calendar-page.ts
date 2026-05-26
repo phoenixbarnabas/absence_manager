@@ -452,11 +452,11 @@ export class CalendarPage implements OnInit, OnDestroy {
 
   getSelectedDayStatusDescription(day: CalendarDayView): string {
     if (day.isHoliday) {
-      return 'Az ünnepnap adat az ünnepnap API-ból érkezik, ezért az igénylés előtt külön jelölve jelenik meg.';
+      return 'Ünnepnapnak jelölt dátum. Igénylés előtt ellenőrizd, hogy valóban erre a napra szeretnél-e rögzíteni.';
     }
 
     if (day.isWeekend) {
-      return 'Nem munkanapként jelölt dátum. Igénylés előtt ellenőrizd, hogy valóban erre a napra szeretnél-e rögzíteni.';
+      return 'Hétvégének jelölt dátum. Igénylés előtt ellenőrizd, hogy valóban erre a napra szeretnél-e rögzíteni.';
     }
 
     if (day.events.length) {

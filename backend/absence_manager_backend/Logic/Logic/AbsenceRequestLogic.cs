@@ -228,10 +228,14 @@ namespace Logic.Logic
                 throw new UnauthorizedAccessException("You can only cancel your own request.");
 
             if (request.Status == AbsenceRequestStatus.Cancelled)
-                throw new InvalidOperationException("Request is already cancelled.");
+                throw new InvalidOperationException("A kérelem már vissza van vonva.");
+
+            if (request.Status != AbsenceRequestStatus.Pending &&
+                request.Status != AbsenceRequestStatus.Approved)
+                throw new InvalidOperationException("Csak függőben lévő vagy jóváhagyott kérelmet lehet visszavonni.");
 
             if (request.DateFrom < DateOnly.FromDateTime(DateTime.Today))
-                throw new InvalidOperationException("Past requests cannot be cancelled.");
+                throw new InvalidOperationException("Múltbeli kérelmet nem lehet visszavonni.");
 
             request.Status = AbsenceRequestStatus.Cancelled;
             request.UpdatedAtUtc = DateTime.UtcNow;

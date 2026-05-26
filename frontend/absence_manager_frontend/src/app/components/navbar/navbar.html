@@ -10,20 +10,27 @@
             <span>Profil</span>
         </a>
 
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
-            <i class="bi bi-grid-3x2-gap"></i>
-            <span>Helyfoglalás</span>
-        </a>
-
         <a class="nav-link d-flex align-items-center gap-2" routerLink="/calendar" routerLinkActive="active"
             *ngIf="isLoggedIn">
             <i class="bi bi-calendar"></i>
             <span>Naptár</span>
         </a>
+    
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/my-absence-requests" routerLinkActive="active"
+            *ngIf="isLoggedIn">
+            <i class="bi bi-calendar-check"></i>
+            <span>Saját kérelmek</span>
+        </a>
 
-        <a routerLink="/absence-approvals" routerLinkActive="active" class="nav-link">
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/absence-approvals" routerLinkActive="active"
+            *ngIf="isLoggedIn">
             <i class="bi bi-check2-square"></i>
             <span> Jóváhagyások</span>
+        </a>
+
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
+            <i class="bi bi-grid-3x2-gap"></i>
+            <span>Helyfoglalás</span>
         </a>
     </nav>
 
