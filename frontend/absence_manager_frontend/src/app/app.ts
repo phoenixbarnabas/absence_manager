@@ -11,17 +11,14 @@ import { AuthService } from './auth/auth-service';
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('absence_manager_frontend');
+
   isLoginPage = false;
 
   private readonly destroy$ = new Subject<void>();
 
-  constructor(
-    private router: Router,
-    private authService: AuthService
-  ) {}
+  constructor(private router: Router) { }
 
-  async ngOnInit(): Promise<void> {
-    await this.initializeAuth();
+  ngOnInit(): void {
     this.updateRouteState();
 
     this.router.events
@@ -37,24 +34,9 @@ export class App implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private async initializeAuth(): Promise<void> {
-    try {
-      await this.authService.initialize();
-      await this.authService.handleRedirect();
-
-      if (this.authService.isLoggedIn()) {
-        await this.authService.acquireApiToken();
-
-        if (this.router.url === '/' || this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login')) {
-          await this.router.navigate(['/desk-booking']);
-        }
-      }
-    } catch (err) {
-      console.error('Auth init error', err);
-    }
-  }
-
   private updateRouteState(): void {
-    this.isLoginPage = this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login');
+    this.isLoginPage =
+      this.router.url.startsWith('/welcome') ||
+      this.router.url.startsWith('/login');
   }
 }

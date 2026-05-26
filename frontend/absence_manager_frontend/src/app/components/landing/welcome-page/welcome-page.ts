@@ -12,7 +12,7 @@ import { AuthService } from '../../../auth/auth-service';
   styleUrl: './welcome-page.sass',
 })
 export class WelcomePage implements OnInit {
-userProfile: UserProfile | null = null;
+  userProfile: UserProfile | null = null;
   loading = true;
   error: string | null = null;
 
@@ -25,21 +25,9 @@ userProfile: UserProfile | null = null;
   constructor(
     private userService: UserService,
     public authService: AuthService
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
-    try {
-      await this.authService.initialize();
-      await this.authService.handleRedirect();
-
-      if (this.authService.isLoggedIn()) {
-        await this.authService.acquireApiToken();
-        this.loadEntraData();
-      }
-    } catch (error) {
-      console.error(error);
-      this.entraError = 'Hiba a bejelentkezés vagy a token kezelés közben.';
-    }
   }
 
   async login(): Promise<void> {
