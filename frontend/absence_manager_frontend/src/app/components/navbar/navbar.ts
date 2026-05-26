@@ -23,9 +23,7 @@ export class Navbar implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.authService.account$
       .pipe(
-        distinctUntilChanged((previous, current) =>
-          previous?.homeAccountId === current?.homeAccountId
-        ),
+        distinctUntilChanged((previous, current) => previous?.homeAccountId === current?.homeAccountId),
         takeUntil(this.destroy$)
       )
       .subscribe(account => {
