@@ -120,7 +120,7 @@ namespace Logic.Logic
                 .ThenBy(x => x.User.DisplayName)
                 .ToListAsync(cancellationToken);
 
-            return requests.Select(ToAbsenceCalendarEvent);
+            return requests.Select(request => ToAbsenceCalendarEvent(request, currentUser.Id));
         }
 
         private async Task<IEnumerable<CalendarEventDto>> GetDeskBookingEventsAsync(
@@ -192,7 +192,7 @@ namespace Logic.Logic
             };
         }
 
-        private static CalendarEventDto ToAbsenceCalendarEvent(AbsenceRequest request)
+        private static CalendarEventDto ToAbsenceCalendarEvent(AbsenceRequest request, string currentUserId)
         {
             var typeKey = AbsenceRequestLogic.ToTypeKey(request.Type);
             var typeLabel = AbsenceRequestLogic.GetTypeLabel(request.Type);
@@ -210,7 +210,9 @@ namespace Logic.Logic
                 UserName = request.User.DisplayName,
                 Department = request.User.Department,
                 Description = request.Reason,
-                DetailsUrl = $"/calendar?requestId={request.Id}"
+                DetailsUrl = request.UserId == currentUserId
+                    ? $"/my-absence-requests?requestId={request.Id}"
+                    : null
             };
         }
 
