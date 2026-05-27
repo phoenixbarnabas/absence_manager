@@ -115,5 +115,33 @@ namespace Absence_Manager.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("me/sync-graph-profile")]
+        public async Task<IActionResult> SyncMyGraphProfile(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+                await _userLogic.RefreshUserProfileAsync(currentUserId, cancellationToken);
+
+                return NoContent();
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499, new { message = "A kérés megszakadt." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

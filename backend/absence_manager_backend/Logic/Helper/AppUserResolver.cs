@@ -10,7 +10,9 @@ namespace Logic.Helper;
 
 public interface IAppUserResolver
 {
-    Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default);
+    Task<AppUser> ResolveCurrentUserAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default);
 }
 
 public class AppUserResolver : IAppUserResolver
@@ -22,7 +24,9 @@ public class AppUserResolver : IAppUserResolver
         _dbContext = dbContext;
     }
 
-    public async Task<AppUser> ResolveCurrentUserAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    public async Task<AppUser> ResolveCurrentUserAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
     {
         if (principal?.Identity?.IsAuthenticated != true)
         {
