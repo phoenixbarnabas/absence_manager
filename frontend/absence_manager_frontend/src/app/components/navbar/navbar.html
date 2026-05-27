@@ -10,7 +10,10 @@
             <span>Profil</span>
         </a>
 
-        
+        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
+            <i class="bi bi-grid-3x2-gap"></i>
+            <span>Helyfoglalás</span>
+        </a>
 
         <a class="nav-link d-flex align-items-center gap-2" routerLink="/calendar" routerLinkActive="active"
             *ngIf="isLoggedIn">
@@ -31,11 +34,6 @@
         <a routerLink="/absence-approvals" routerLinkActive="active" class="nav-link">
             <i class="bi bi-check2-square"></i>
             <span> Jóváhagyások</span>
-        </a>
-
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
-            <i class="bi bi-grid-3x2-gap"></i>
-            <span>Helyfoglalás</span>
         </a>
     </nav>
 

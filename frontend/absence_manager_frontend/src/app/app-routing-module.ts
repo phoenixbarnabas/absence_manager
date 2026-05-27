@@ -19,7 +19,6 @@ const routes: Routes = [
   { path: 'desk-booking', component: DeskBooking, canActivate: [authGuard] },
   { path: 'calendar', component: CalendarPage, canActivate: [authGuard] },
   { path: 'absence-approvals', component: AbsenceApprovalsPage, canActivate: [authGuard] },
-  { path: 'my-absence-requests', component: MyAbsenceRequestsPage, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   
   { path: '**', redirectTo: 'welcome' }

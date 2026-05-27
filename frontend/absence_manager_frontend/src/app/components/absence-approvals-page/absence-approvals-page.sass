@@ -162,6 +162,29 @@
     .page-notification__icon
         background: rgba(0, 146, 123, 0.12)
         color: $primary-600
+.feedback-messages
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+    margin-bottom: 1rem
+
+.approval-alert
+    display: flex
+    align-items: center
+    gap: 0.6rem
+    padding: 0.85rem 1rem
+    border-radius: 12px
+    font-weight: 600
+
+.approval-alert--error
+    background: rgba(214, 69, 69, 0.1)
+    color: $danger-600
+    border: 1px solid rgba(214, 69, 69, 0.2)
+
+.approval-alert--success
+    background: rgba(46, 158, 111, 0.1)
+    color: $success-600
+    border: 1px solid rgba(46, 158, 111, 0.2)
 
 .loading-card
     display: flex
@@ -179,6 +202,10 @@
     border: 3px solid $light-300
     border-top-color: $primary-500
     animation: spin 0.8s linear infinite
+
+@keyframes spin
+    to
+        transform: rotate(360deg)
 
 .empty-card
     min-height: 260px
@@ -395,6 +422,49 @@
     &:hover:not(:disabled)
         background: rgba(214, 69, 69, 0.08)
 
+@media (max-width: 768px)
+    .absence-approvals-page
+        padding: 1rem 0.875rem 1.5rem
+
+    .page-header
+        flex-direction: column
+        align-items: stretch
+
+    .page-title
+        font-size: 1.5rem
+
+    .approval-btn--secondary
+        width: 100%
+
+    .approval-card
+        padding: 1rem
+
+    .request-header
+        flex-direction: column
+
+    .request-grid
+        grid-template-columns: 1fr
+
+    .card-actions
+        justify-content: stretch
+
+    .approval-btn
+        width: 100%
+
+@media (max-width: 576px)
+    .absence-approvals-page
+        padding: 1rem 0.75rem 1.5rem
+
+    .approval-card
+        padding: 0.875rem
+
+    .user-block
+        align-items: flex-start
+
+    .user-avatar
+        width: 40px
+        height: 40px
+
 .reviewed-section
     margin-top: 1.5rem
 
@@ -484,180 +554,7 @@
     border-color: rgba(0, 146, 123, 0.18)
     background: rgba(0, 146, 123, 0.05)
 
-.custom-modal-backdrop
-    position: fixed
-    inset: 0
-    background: rgba(15, 23, 42, 0.48)
-    backdrop-filter: blur(5px)
-    z-index: 1040
-    animation: backdropIn 0.18s ease-out
-
-.custom-modal
-    position: fixed
-    inset: 0
-    z-index: 1050
-    display: flex
-    align-items: center
-    justify-content: center
-    padding: 1.5rem
-
-.custom-modal__panel
-    width: min(540px, 100%)
-    background: $light-500
-    border: 1px solid rgba(255, 255, 255, 0.75)
-    border-radius: 22px
-    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28)
-    padding: 1.35rem
-    animation: modalIn 0.2s ease-out
-
-.custom-modal__header
-    display: flex
-    justify-content: space-between
-    align-items: center
-    gap: 1rem
-    margin-bottom: 1rem
-
-.custom-modal__icon
-    width: 3rem
-    height: 3rem
-    border-radius: 999px
-    display: flex
-    align-items: center
-    justify-content: center
-    font-size: 1.35rem
-    flex: 0 0 auto
-
-.custom-modal__icon--danger
-    background: rgba(214, 69, 69, 0.12)
-    color: $danger-600
-
-.custom-modal__close
-    width: 2.2rem
-    height: 2.2rem
-    border: 0
-    border-radius: 999px
-    background: $light-100
-    color: $dark-700
-    display: flex
-    align-items: center
-    justify-content: center
-    cursor: pointer
-    transition: background 0.15s ease, color 0.15s ease
-
-    &:hover:not(:disabled)
-        background: $light-300
-        color: $dark-900
-
-    &:disabled
-        opacity: 0.65
-        cursor: not-allowed
-
-.custom-modal__content
-    h2
-        margin: 0 0 0.45rem
-        color: $dark-900
-        font-size: 1.35rem
-        font-weight: 700
-
-    p
-        margin: 0
-        color: $dark-700
-        line-height: 1.5
-
-.custom-modal__warning
-    margin-top: 1rem !important
-    color: $danger-600 !important
-    font-size: 0.92rem
-    font-weight: 600
-
-.cancel-summary
-    margin-top: 1rem
-    display: grid
-    gap: 0.75rem
-    padding: 1rem
-    border-radius: 16px
-    background: $light-100
-    border: 1px solid $border-color
-
-    div
-        display: flex
-        justify-content: space-between
-        gap: 1rem
-
-    span
-        color: $dark-700
-        font-size: 0.9rem
-
-    strong
-        color: $dark-900
-        text-align: right
-        overflow-wrap: anywhere
-
-.custom-modal__actions
-    display: flex
-    justify-content: flex-end
-    gap: 0.75rem
-    margin-top: 1.5rem
-    flex-wrap: wrap
-
-@keyframes spin
-    to
-        transform: rotate(360deg)
-
-@keyframes notificationIn
-    from
-        opacity: 0
-        transform: translateY(-6px)
-
-    to
-        opacity: 1
-        transform: translateY(0)
-
-@keyframes backdropIn
-    from
-        opacity: 0
-
-    to
-        opacity: 1
-
-@keyframes modalIn
-    from
-        opacity: 0
-        transform: translateY(10px) scale(0.98)
-
-    to
-        opacity: 1
-        transform: translateY(0) scale(1)
-
 @media (max-width: 768px)
-    .absence-approvals-page
-        padding: 1rem 0.875rem 1.5rem
-
-    .page-header
-        flex-direction: column
-        align-items: stretch
-
-    .page-title
-        font-size: 1.5rem
-
-    .approval-btn--secondary
-        width: 100%
-
-    .approval-card
-        padding: 1rem
-
-    .request-header
-        flex-direction: column
-
-    .request-grid
-        grid-template-columns: 1fr
-
-    .card-actions
-        justify-content: stretch
-
-    .approval-btn
-        width: 100%
-
     .reviewed-toggle
         align-items: flex-start
 
@@ -665,28 +562,6 @@
         padding-top: 0.1rem
 
 @media (max-width: 576px)
-    .absence-approvals-page
-        padding: 1rem 0.75rem 1.5rem
-
-    .approval-card
-        padding: 0.875rem
-
-    .user-block
-        align-items: flex-start
-
-    .user-avatar
-        width: 40px
-        height: 40px
-
-    .page-notification
-        grid-template-columns: auto 1fr
-        padding: 0.95rem
-
-    .page-notification__close
-        grid-column: 2
-        justify-self: flex-end
-        margin-top: -0.25rem
-
     .reviewed-toggle
         padding: 1rem
         gap: 0.75rem
@@ -700,25 +575,3 @@
     .reviewed-toggle__meta
         span
             display: none
-
-    .custom-modal
-        align-items: flex-end
-        padding: 0.75rem
-
-    .custom-modal__panel
-        border-radius: 20px
-        padding: 1.1rem
-
-    .custom-modal__actions
-        flex-direction: column-reverse
-
-        .approval-btn
-            width: 100%
-
-    .cancel-summary
-        div
-            flex-direction: column
-            gap: 0.2rem
-
-        strong
-            text-align: left
