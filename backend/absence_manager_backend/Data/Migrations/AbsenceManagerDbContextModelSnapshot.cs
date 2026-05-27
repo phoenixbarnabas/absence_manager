@@ -412,7 +412,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "üres-1",
+                            Code = "Üres-1",
                             DisplayOrder = 5,
                             IsActive = true,
                             Name = "5",
@@ -434,7 +434,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-7",
-                            Code = "üres-2",
+                            Code = "Üres-2",
                             DisplayOrder = 7,
                             IsActive = true,
                             Name = "7",
