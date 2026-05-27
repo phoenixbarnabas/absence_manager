@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Subject, distinctUntilChanged, filter, takeUntil } from 'rxjs';
 import { AuthService } from './auth/auth-service';
+import { UserService } from './services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -11,17 +12,37 @@ import { AuthService } from './auth/auth-service';
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('absence_manager_frontend');
+
   isLoginPage = false;
 
   private readonly destroy$ = new Subject<void>();
+  private graphProfileSyncStarted = false;
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) {}
 
   async ngOnInit(): Promise<void> {
-    await this.initializeAuth();
+    await this.bootstrapAuth();
+
+    this.authService.account$
+      .pipe(
+        distinctUntilChanged((previous, current) =>
+          previous?.homeAccountId === current?.homeAccountId
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(account => {
+        if (!account) {
+          this.graphProfileSyncStarted = false;
+          return;
+        }
+
+        this.startGraphProfileSync();
+      });
+
     this.updateRouteState();
 
     this.router.events
@@ -37,24 +58,37 @@ export class App implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private async initializeAuth(): Promise<void> {
+  private async bootstrapAuth(): Promise<void> {
     try {
-      await this.authService.initialize();
-      await this.authService.handleRedirect();
+      await this.authService.bootstrap();
 
       if (this.authService.isLoggedIn()) {
-        await this.authService.acquireApiToken();
-
-        if (this.router.url === '/' || this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login')) {
-          await this.router.navigate(['/desk-booking']);
-        }
+        this.startGraphProfileSync();
       }
-    } catch (err) {
-      console.error('Auth init error', err);
+    } catch (error) {
+      console.error('Auth bootstrap failed in App.', error);
     }
   }
 
+  private startGraphProfileSync(): void {
+    if (this.graphProfileSyncStarted) {
+      return;
+    }
+
+    this.graphProfileSyncStarted = true;
+
+    this.userService.syncGraphProfile()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: err => {
+          console.warn('Graph profil szinkron sikertelen.', err);
+        }
+      });
+  }
+
   private updateRouteState(): void {
-    this.isLoginPage = this.router.url.startsWith('/welcome') || this.router.url.startsWith('/login');
+    this.isLoginPage =
+      this.router.url.startsWith('/welcome') ||
+      this.router.url.startsWith('/login');
   }
 }

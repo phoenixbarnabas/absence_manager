@@ -70,6 +70,8 @@ export interface CreateAbsenceRequestDto {
   reason?: string | null;
 }
 
+
+
 export interface AbsenceRequestViewDto {
   id: string;
   type: CalendarAbsenceRequestType;

@@ -492,7 +492,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.refreshView();
 
     const dayInfos$ = this.calendarService.getDayInfos(fromDate, toDate).pipe(
-      timeout(10000),
+      timeout(30000),
       catchError(err => {
         console.error('Calendar day-infos load failed', err);
         this.warningMessage = 'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.';
@@ -503,7 +503,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     const events$ = selectedTypes.length === 0
       ? of([] as CalendarEventDto[])
       : this.calendarService.getEvents(fromDate, toDate, this.scope, selectedTypes).pipe(
-        timeout(10000),
+        timeout(30000),
         catchError(err => {
           console.error('Calendar events load failed', err);
           this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.');

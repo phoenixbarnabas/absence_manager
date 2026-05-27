@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260522110800_NewOffice")]
-    partial class NewOffice
+    [Migration("20260526075349_UserManagerRelations")]
+    partial class UserManagerRelations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,6 +44,10 @@ namespace Data.Migrations
 
                     b.Property<DateOnly>("DateTo")
                         .HasColumnType("date");
+
+                    b.Property<string>("DecisionComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(1000)
@@ -411,7 +415,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-5",
-                            Code = "Üres-1",
+                            Code = "üres-1",
                             DisplayOrder = 5,
                             IsActive = true,
                             Name = "5",
@@ -433,7 +437,7 @@ namespace Data.Migrations
                         new
                         {
                             Id = "ws-7",
-                            Code = "Üres-2",
+                            Code = "üres-2",
                             DisplayOrder = 7,
                             IsActive = true,
                             Name = "7",

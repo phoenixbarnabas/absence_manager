@@ -26,11 +26,22 @@ export class UserService {
   constructor(private http: HttpClient, private configService: ConfigService) {}
 
   getMe(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.configService.apiUrl}/users/me`);
+    return this.http.get<UserProfile>(
+      `${this.configService.apiUrl}/users/me`
+    );
+  }
+
+  syncGraphProfile(): Observable<void> {
+    return this.http.post<void>(
+      `${this.configService.apiUrl}/users/me/sync-graph-profile`,
+      {}
+    );
   }
 
   getMeEntra(): Observable<MeResponse> {
-    return this.http.get<MeResponse>(`${this.configService.apiUrl}/auth-debug/me`);
+    return this.http.get<MeResponse>(
+      `${this.configService.apiUrl}/auth-debug/me`
+    );
   }
 
   getClaims(): Observable<Array<{ type: string; value: string }>> {

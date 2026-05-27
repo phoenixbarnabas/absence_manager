@@ -47,6 +47,121 @@
     box-sizing: border-box
     overflow: hidden
 
+.notification-stack
+    display: flex
+    flex-direction: column
+    gap: 0.75rem
+    margin: 0 0 1rem
+
+.notification-stack--inline
+    margin: 0 0 1rem
+
+.page-notification
+    position: relative
+    display: grid
+    grid-template-columns: auto 1fr auto
+    align-items: flex-start
+    gap: 0.9rem
+    padding: 1rem 1.1rem
+    border-radius: 16px
+    border: 1px solid $border-color
+    background: $light-500
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08)
+    overflow: hidden
+    animation: notificationIn 0.2s ease-out
+
+    &::before
+        content: ''
+        position: absolute
+        inset: 0 auto 0 0
+        width: 4px
+        background: $primary-500
+
+.page-notification__icon
+    width: 2.4rem
+    height: 2.4rem
+    border-radius: 999px
+    display: flex
+    align-items: center
+    justify-content: center
+    background: rgba(0, 146, 123, 0.12)
+    color: $primary-600
+    font-size: 1.1rem
+    flex: 0 0 auto
+
+.page-notification__body
+    min-width: 0
+    display: flex
+    flex-direction: column
+    gap: 0.2rem
+
+    strong
+        color: $dark-900
+        font-size: 0.98rem
+        line-height: 1.25
+
+    span
+        color: $dark-700
+        font-size: 0.92rem
+        line-height: 1.45
+        overflow-wrap: anywhere
+
+.page-notification__close
+    width: 2rem
+    height: 2rem
+    border: 0
+    border-radius: 999px
+    background: transparent
+    color: $dark-700
+    display: flex
+    align-items: center
+    justify-content: center
+    cursor: pointer
+    transition: background 0.15s ease, color 0.15s ease
+
+    &:hover
+        background: $light-100
+        color: $dark-900
+
+.page-notification--success
+    border-color: rgba(46, 158, 111, 0.25)
+
+    &::before
+        background: $success-600
+
+    .page-notification__icon
+        background: rgba(46, 158, 111, 0.12)
+        color: $success-600
+
+.page-notification--error
+    border-color: rgba(214, 69, 69, 0.25)
+
+    &::before
+        background: $danger-600
+
+    .page-notification__icon
+        background: rgba(214, 69, 69, 0.12)
+        color: $danger-600
+
+.page-notification--warning
+    border-color: rgba(255, 193, 7, 0.35)
+
+    &::before
+        background: $warning-400
+
+    .page-notification__icon
+        background: rgba(255, 193, 7, 0.18)
+        color: $dark-900
+
+.page-notification--info
+    border-color: rgba(0, 146, 123, 0.25)
+
+    &::before
+        background: $primary-500
+
+    .page-notification__icon
+        background: rgba(0, 146, 123, 0.12)
+        color: $primary-600
 .feedback-messages
     display: flex
     flex-direction: column
