@@ -100,39 +100,58 @@ namespace Logic.Logic
             return hierarchy.DirectReports;
         }
 
-        public async Task RefreshUserProfileAsync(string userId, CancellationToken ct)
+        public async Task RefreshUserProfileAsync(string userId, CancellationToken cancellationToken)
         {
-            var user = await _dbContext.AppUsers.FindAsync(userId);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("User id is required.", nameof(userId));
+            }
+
+            var user = await _dbContext.AppUsers
+                .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
             if (user == null)
+            {
                 throw new KeyNotFoundException("User not found.");
+            }
 
-            var graphProfile = await _graphLogic.GetCurrentUserProfileAsync(ct);
+            if (!user.IsActive)
+            {
+                throw new InvalidOperationException("User is not active.");
+            }
+
+            var graphProfile = await _graphLogic.GetCurrentUserProfileAsync(cancellationToken);
 
             if (graphProfile == null)
+            {
                 return;
+            }
 
             var changed = false;
 
-            if (user.DisplayName != graphProfile.DisplayName && !string.IsNullOrWhiteSpace(graphProfile.DisplayName))
+            if (!string.IsNullOrWhiteSpace(graphProfile.DisplayName) &&
+                user.DisplayName != graphProfile.DisplayName)
             {
                 user.DisplayName = graphProfile.DisplayName;
                 changed = true;
             }
 
-            if (user.Email != graphProfile.Email && !string.IsNullOrWhiteSpace(graphProfile.Email))
+            if (!string.IsNullOrWhiteSpace(graphProfile.Email) &&
+                user.Email != graphProfile.Email)
             {
                 user.Email = graphProfile.Email;
                 changed = true;
             }
 
-            if (user.Department != graphProfile.Department && graphProfile.Department != null)
+            if (graphProfile.Department != null &&
+                user.Department != graphProfile.Department)
             {
                 user.Department = graphProfile.Department;
                 changed = true;
             }
 
-            if (user.JobTitle != graphProfile.JobTitle && graphProfile.JobTitle != null)
+            if (graphProfile.JobTitle != null &&
+                user.JobTitle != graphProfile.JobTitle)
             {
                 user.JobTitle = graphProfile.JobTitle;
                 changed = true;
@@ -140,7 +159,7 @@ namespace Logic.Logic
 
             if (changed)
             {
-                await _dbContext.SaveChangesAsync(ct);
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
         }
 

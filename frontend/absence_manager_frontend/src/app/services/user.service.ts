@@ -20,20 +20,33 @@ export type MeResponse = {
   providedIn: 'root'
 })
 export class UserService {
-  private readonly usersApiUrl = `${environment.apiUrl}/users`;
-  private readonly authDebugApiUrl = `${environment.apiUrl}/auth-debug`;
-
-  constructor(private http: HttpClient, private configService: ConfigService) {}
+  constructor(
+    private http: HttpClient,
+    private configService: ConfigService
+  ) { }
 
   getMe(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.configService.apiUrl}/users/me`);
+    return this.http.get<UserProfile>(
+      `${this.configService.apiUrl}/users/me`
+    );
+  }
+
+  syncGraphProfile(): Observable<void> {
+    return this.http.post<void>(
+      `${this.configService.apiUrl}/users/me/sync-graph-profile`,
+      {}
+    );
   }
 
   getMeEntra(): Observable<MeResponse> {
-    return this.http.get<MeResponse>(`${this.configService.apiUrl}/auth-debug/me`);
+    return this.http.get<MeResponse>(
+      `${this.configService.apiUrl}/auth-debug/me`
+    );
   }
 
   getClaims(): Observable<Array<{ type: string; value: string }>> {
-    return this.http.get<Array<{ type: string; value: string }>>(`${this.configService.apiUrl}/auth-debug/claims`);
+    return this.http.get<Array<{ type: string; value: string }>>(
+      `${this.configService.apiUrl}/auth-debug/claims`
+    );
   }
 }

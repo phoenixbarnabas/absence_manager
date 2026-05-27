@@ -61,6 +61,10 @@ namespace Absence_Manager.Controllers
 
                 return Ok(result);
             }
+            catch (OperationCanceledException)
+            {
+                return new StatusCodeResult(499);
+            }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
