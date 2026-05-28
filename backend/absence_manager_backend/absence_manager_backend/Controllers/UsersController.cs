@@ -14,11 +14,13 @@ namespace Absence_Manager.Controllers
     {
         private readonly UserLogic _userLogic;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ICurrentUserGraphSyncService _currentUserGraphSyncService;
 
-        public UsersController(UserLogic userLogic, ICurrentUserService currentUserService)
+        public UsersController(UserLogic userLogic, ICurrentUserService currentUserService, ICurrentUserGraphSyncService currentUserGraphSyncService)
         {
             _userLogic = userLogic;
             _currentUserService = currentUserService;
+            _currentUserGraphSyncService = currentUserGraphSyncService;
         }
 
         [HttpGet("me")]
@@ -139,6 +141,41 @@ namespace Absence_Manager.Controllers
                 return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("me/sync-from-graph")]
+        public async Task<IActionResult> SyncCurrentUserFromGraph(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+
+                var result = await _currentUserGraphSyncService.SyncCurrentUserFromGraphAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(result);
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499, new { message = "A kérés megszakadt." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
