@@ -16,6 +16,33 @@ export type MeResponse = {
   roles: string[];
 };
 
+export interface GraphAppUserDto {
+  entraObjectId: string;
+  appUserId?: string | null;
+  displayName?: string | null;
+  email?: string | null;
+  userPrincipalName?: string | null;
+  department?: string | null;
+  jobTitle?: string | null;
+  officeLocation?: string | null;
+  isKnownLocalUser: boolean;
+  isActiveLocalUser: boolean;
+}
+
+export interface AppUserHierarchyDto {
+  currentUser?: GraphAppUserDto | null;
+  manager?: GraphAppUserDto | null;
+  directReports: GraphAppUserDto[];
+}
+
+export interface UserContextDto {
+  profile: UserProfile;
+  hierarchy: AppUserHierarchyDto;
+  isManager: boolean;
+  roles: string[];
+  lastGraphSyncAtUtc?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,9 +58,9 @@ export class UserService {
     );
   }
 
-  syncGraphProfile(): Observable<void> {
-    return this.http.post<void>(
-      `${this.configService.apiUrl}/users/me/sync-graph-profile`,
+  syncCurrentUserFromGraph(): Observable<UserContextDto> {
+    return this.http.post<UserContextDto>(
+      `${this.configService.apiUrl}/users/me/sync-from-graph`,
       {}
     );
   }

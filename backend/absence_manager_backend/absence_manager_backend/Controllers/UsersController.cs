@@ -12,13 +12,15 @@ namespace Absence_Manager.Controllers
     [RequiredScope("user_impersonation")]
     public class UsersController : ControllerBase
     {
-        private readonly UserLogic _userLogic;
+        private readonly IUserLogic _userLogic;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ICurrentUserGraphSyncService _currentUserGraphSyncService;
 
-        public UsersController(UserLogic userLogic, ICurrentUserService currentUserService)
+        public UsersController(IUserLogic userLogic, ICurrentUserService currentUserService, ICurrentUserGraphSyncService currentUserGraphSyncService)
         {
             _userLogic = userLogic;
             _currentUserService = currentUserService;
+            _currentUserGraphSyncService = currentUserGraphSyncService;
         }
 
         [HttpGet("me")]
@@ -98,7 +100,9 @@ namespace Absence_Manager.Controllers
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                var result = await _userLogic.GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+                var result = await _userLogic.GetCurrentUserHierarchyFromLocalDbAsync(
+                    currentUserId,
+                    cancellationToken);
 
                 return Ok(result);
             }
@@ -116,15 +120,46 @@ namespace Absence_Manager.Controllers
             }
         }
 
-        [HttpPost("me/sync-graph-profile")]
-        public async Task<IActionResult> SyncMyGraphProfile(CancellationToken cancellationToken)
+        //[HttpPost("me/sync-graph-profile")]
+        //public async Task<IActionResult> SyncMyGraphProfile(CancellationToken cancellationToken)
+        //{
+        //    try
+        //    {
+        //        var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
+        //        await _userLogic.RefreshUserProfileAsync(currentUserId, cancellationToken);
+
+        //        return NoContent();
+        //    }
+        //    catch (OperationCanceledException)
+        //    {
+        //        return StatusCode(499, new { message = "A kérés megszakadt." });
+        //    }
+        //    catch (UnauthorizedAccessException ex)
+        //    {
+        //        return Unauthorized(new { message = ex.Message });
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
+
+        [HttpPost("me/sync-from-graph")]
+        public async Task<IActionResult> SyncCurrentUserFromGraph(CancellationToken cancellationToken)
         {
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                await _userLogic.RefreshUserProfileAsync(currentUserId, cancellationToken);
 
-                return NoContent();
+                var result = await _currentUserGraphSyncService.SyncCurrentUserFromGraphAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                return Ok(result);
             }
             catch (OperationCanceledException)
             {
@@ -139,6 +174,10 @@ namespace Absence_Manager.Controllers
                 return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }

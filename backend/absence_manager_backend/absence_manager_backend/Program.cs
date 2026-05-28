@@ -15,12 +15,13 @@ builder.Services.AddScoped(typeof(Repository<>));
 builder.Services.AddSingleton<DtoProvider>();
 builder.Services.AddScoped<OfficeBookingLogic>();
 builder.Services.AddScoped<OfficeManagementLogic>();
-builder.Services.AddScoped<UserLogic>();
+builder.Services.AddScoped<IUserLogic, UserLogic>();
 builder.Services.AddScoped<CalendarLogic>();
 builder.Services.AddScoped<AbsenceRequestLogic>();
 builder.Services.AddScoped<IAppUserResolver, AppUserResolver>();
 builder.Services.AddScoped<IMsGraphLogic, MsGraphLogic>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICurrentUserGraphSyncService, CurrentUserGraphSyncService>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
