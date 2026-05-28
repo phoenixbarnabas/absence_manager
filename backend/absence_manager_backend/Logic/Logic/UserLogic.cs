@@ -8,7 +8,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Logic.Logic
 {
-    public class UserLogic
+    public interface IUserLogic
+    {
+        UserProfileDto GetUserProfile(string userId);
+
+        Task<AppUserHierarchyDto> SyncCurrentUserHierarchyFromGraphAsync(string currentUserId, CancellationToken cancellationToken = default);
+
+        Task<AppUserHierarchyDto> GetCurrentUserHierarchyFromLocalDbAsync(string currentUserId, CancellationToken cancellationToken = default);
+
+        Task<GraphAppUserDto?> GetCurrentUserManagerAsync(string currentUserId, CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<GraphAppUserDto>> GetCurrentUserDirectReportsAsync(string currentUserId, CancellationToken cancellationToken = default);
+
+        Task RefreshUserProfileAsync(string userId, CancellationToken cancellationToken);
+    }
+
+    public class UserLogic : IUserLogic
     {
         private readonly Repository<AppUser> _userRepository;
         private readonly DtoProvider _dtoProvider;

@@ -11,9 +11,9 @@ namespace Logic.Logic
     }
     public class CurrentUserGraphSyncService : ICurrentUserGraphSyncService
     {
-        private readonly UserLogic _userLogic;
+        private readonly IUserLogic _userLogic;
 
-        public CurrentUserGraphSyncService(UserLogic userLogic)
+        public CurrentUserGraphSyncService(IUserLogic userLogic)
         {
             _userLogic = userLogic;
         }

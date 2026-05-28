@@ -12,11 +12,11 @@ namespace Absence_Manager.Controllers
     [RequiredScope("user_impersonation")]
     public class UsersController : ControllerBase
     {
-        private readonly UserLogic _userLogic;
+        private readonly IUserLogic _userLogic;
         private readonly ICurrentUserService _currentUserService;
         private readonly ICurrentUserGraphSyncService _currentUserGraphSyncService;
 
-        public UsersController(UserLogic userLogic, ICurrentUserService currentUserService, ICurrentUserGraphSyncService currentUserGraphSyncService)
+        public UsersController(IUserLogic userLogic, ICurrentUserService currentUserService, ICurrentUserGraphSyncService currentUserGraphSyncService)
         {
             _userLogic = userLogic;
             _currentUserService = currentUserService;
