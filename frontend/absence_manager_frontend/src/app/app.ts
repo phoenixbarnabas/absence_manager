@@ -16,13 +16,13 @@ export class App implements OnInit, OnDestroy {
   isLoginPage = false;
 
   private readonly destroy$ = new Subject<void>();
-  private graphProfileSyncStarted = false;
+  private graphSyncStarted = false;
 
   constructor(
     private router: Router,
     private authService: AuthService,
     private userService: UserService
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
     await this.bootstrapAuth();
@@ -36,11 +36,11 @@ export class App implements OnInit, OnDestroy {
       )
       .subscribe(account => {
         if (!account) {
-          this.graphProfileSyncStarted = false;
+          this.graphSyncStarted = false;
           return;
         }
 
-        this.startGraphProfileSync();
+        this.startGraphSync();
       });
 
     this.updateRouteState();
@@ -63,25 +63,25 @@ export class App implements OnInit, OnDestroy {
       await this.authService.bootstrap();
 
       if (this.authService.isLoggedIn()) {
-        this.startGraphProfileSync();
+        this.startGraphSync();
       }
     } catch (error) {
       console.error('Auth bootstrap failed in App.', error);
     }
   }
 
-  private startGraphProfileSync(): void {
-    if (this.graphProfileSyncStarted) {
+  private startGraphSync(): void {
+    if (this.graphSyncStarted) {
       return;
     }
 
-    this.graphProfileSyncStarted = true;
+    this.graphSyncStarted = true;
 
-    this.userService.syncGraphProfile()
+    this.userService.syncCurrentUserFromGraph()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         error: err => {
-          console.warn('Graph profil szinkron sikertelen.', err);
+          console.warn('Graph szinkron sikertelen.', err);
         }
       });
   }
