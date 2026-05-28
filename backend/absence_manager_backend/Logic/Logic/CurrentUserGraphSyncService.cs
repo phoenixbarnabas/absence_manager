@@ -27,7 +27,7 @@ namespace Logic.Logic
 
             await _userLogic.RefreshUserProfileAsync(currentUserId, cancellationToken);
 
-            var hierarchy = await _userLogic.GetCurrentUserHierarchyAsync(
+            var hierarchy = await _userLogic.SyncCurrentUserHierarchyFromGraphAsync(
                 currentUserId,
                 cancellationToken);
 

@@ -88,15 +88,66 @@ namespace Logic.Logic
             };
         }
 
+        public Task<AppUserHierarchyDto> SyncCurrentUserHierarchyFromGraphAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            return GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+        }
+
+        public async Task<AppUserHierarchyDto> GetCurrentUserHierarchyFromLocalDbAsync(string currentUserId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                throw new ArgumentException("Current user id is required.", nameof(currentUserId));
+
+            var currentUser = await _dbContext.AppUsers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken)
+                ?? throw new KeyNotFoundException("User not found.");
+
+            if (!currentUser.IsActive)
+                throw new InvalidOperationException("User is not active.");
+
+            var managerRelation = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .Include(x => x.ManagerUser)
+                .FirstOrDefaultAsync(x =>
+                    x.UserId == currentUserId &&
+                    x.IsActive,
+                    cancellationToken);
+
+            var directReportRelations = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .Include(x => x.User)
+                .Where(x =>
+                    x.ManagerUserId == currentUserId &&
+                    x.IsActive)
+                .ToListAsync(cancellationToken);
+
+            return new AppUserHierarchyDto
+            {
+                CurrentUser = ToGraphAppUserDto(currentUser),
+                Manager = ToManagerGraphAppUserDto(managerRelation),
+                DirectReports = directReportRelations
+                    .Where(x => x.User != null && x.User.IsActive)
+                    .Select(x => ToGraphAppUserDto(x.User))
+                    .ToList()
+            };
+        }
+
         public async Task<GraphAppUserDto?> GetCurrentUserManagerAsync(string currentUserId, CancellationToken cancellationToken = default)
         {
-            var hierarchy = await GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+            var hierarchy = await GetCurrentUserHierarchyFromLocalDbAsync(
+                currentUserId,
+                cancellationToken);
+
             return hierarchy.Manager;
         }
 
         public async Task<IReadOnlyList<GraphAppUserDto>> GetCurrentUserDirectReportsAsync(string currentUserId, CancellationToken cancellationToken = default)
         {
-            var hierarchy = await GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+            var hierarchy = await GetCurrentUserHierarchyFromLocalDbAsync(
+                currentUserId,
+                cancellationToken);
+
             return hierarchy.DirectReports;
         }
 
@@ -289,6 +340,49 @@ namespace Logic.Logic
         private static bool SameNullable(string? left, string? right)
         {
             return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static GraphAppUserDto ToGraphAppUserDto(AppUser user)
+        {
+            return new GraphAppUserDto
+            {
+                EntraObjectId = user.EntraObjectId,
+                AppUserId = user.Id,
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                UserPrincipalName = user.Email,
+                Department = user.Department,
+                JobTitle = user.JobTitle,
+                OfficeLocation = null,
+                IsKnownLocalUser = true,
+                IsActiveLocalUser = user.IsActive
+            };
+        }
+
+        private static GraphAppUserDto? ToManagerGraphAppUserDto(AppUserManagerRelation? relation)
+        {
+            if (relation == null)
+                return null;
+
+            if (relation.ManagerUser != null)
+                return ToGraphAppUserDto(relation.ManagerUser);
+
+            if (string.IsNullOrWhiteSpace(relation.ManagerEntraObjectId))
+                return null;
+
+            return new GraphAppUserDto
+            {
+                EntraObjectId = relation.ManagerEntraObjectId,
+                AppUserId = null,
+                DisplayName = null,
+                Email = null,
+                UserPrincipalName = null,
+                Department = null,
+                JobTitle = null,
+                OfficeLocation = null,
+                IsKnownLocalUser = false,
+                IsActiveLocalUser = false
+            };
         }
     }
 }

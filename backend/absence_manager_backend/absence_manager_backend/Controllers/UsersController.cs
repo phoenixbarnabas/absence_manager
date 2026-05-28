@@ -100,7 +100,9 @@ namespace Absence_Manager.Controllers
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                var result = await _userLogic.GetCurrentUserHierarchyAsync(currentUserId, cancellationToken);
+                var result = await _userLogic.GetCurrentUserHierarchyFromLocalDbAsync(
+                    currentUserId,
+                    cancellationToken);
 
                 return Ok(result);
             }
