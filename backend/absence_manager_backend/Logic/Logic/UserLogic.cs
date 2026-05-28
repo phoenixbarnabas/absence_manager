@@ -81,8 +81,9 @@ namespace Logic.Logic
 
             graphUsers.AddRange(graphHierarchy.DirectReports);
 
-            var localUsersByEntraObjectId = await GetLocalUsersByEntraObjectIdAsync(
+            var localUsersByEntraObjectId = await EnsureGraphUsersExistAsync(
                 graphUsers,
+                currentUser.TenantId,
                 cancellationToken);
 
             await SyncHierarchyRelationsAsync(
@@ -398,6 +399,134 @@ namespace Logic.Logic
                 IsKnownLocalUser = false,
                 IsActiveLocalUser = false
             };
+        }
+
+        private async Task<Dictionary<string, AppUser>> EnsureGraphUsersExistAsync(IEnumerable<GraphUserDto> graphUsers, string? tenantId, CancellationToken cancellationToken)
+        {
+            var uniqueGraphUsers = graphUsers
+                .Where(x => !string.IsNullOrWhiteSpace(x.EntraObjectId))
+                .GroupBy(x => x.EntraObjectId)
+                .Select(x => x.First())
+                .ToList();
+
+            if (uniqueGraphUsers.Count == 0)
+            {
+                return new Dictionary<string, AppUser>();
+            }
+
+            var entraObjectIds = uniqueGraphUsers
+                .Select(x => x.EntraObjectId)
+                .Distinct()
+                .ToList();
+
+            var localUsers = await _dbContext.AppUsers
+                .Where(x =>
+                    entraObjectIds.Contains(x.EntraObjectId) &&
+                    x.TenantId == tenantId)
+                .ToListAsync(cancellationToken);
+
+            var localUsersByEntraObjectId = localUsers
+                .GroupBy(x => x.EntraObjectId)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            foreach (var graphUser in uniqueGraphUsers)
+            {
+                if (localUsersByEntraObjectId.TryGetValue(graphUser.EntraObjectId, out var localUser))
+                {
+                    ApplyGraphUserData(localUser, graphUser);
+                    continue;
+                }
+
+                var newUser = CreateAppUserFromGraphUser(graphUser, tenantId);
+
+                _dbContext.AppUsers.Add(newUser);
+                localUsersByEntraObjectId[newUser.EntraObjectId] = newUser;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return localUsersByEntraObjectId;
+        }
+
+        private static void ApplyGraphUserData(AppUser user, GraphUserDto graphUser)
+        {
+            var displayName = GetGraphDisplayName(graphUser);
+            var email = GetGraphEmail(graphUser);
+
+            if (!string.IsNullOrWhiteSpace(displayName) && user.DisplayName != displayName)
+            {
+                user.DisplayName = displayName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(email) && user.Email != email)
+            {
+                user.Email = email;
+            }
+
+            if (graphUser.Department != null && user.Department != graphUser.Department)
+            {
+                user.Department = graphUser.Department;
+            }
+
+            if (graphUser.JobTitle != null && user.JobTitle != graphUser.JobTitle)
+            {
+                user.JobTitle = graphUser.JobTitle;
+            }
+
+            if (!user.IsActive)
+            {
+                user.IsActive = true;
+            }
+        }
+
+        private static AppUser CreateAppUserFromGraphUser(GraphUserDto graphUser, string? tenantId)
+        {
+            return new AppUser
+            {
+                EntraObjectId = graphUser.EntraObjectId,
+                TenantId = tenantId,
+                DisplayName = GetGraphDisplayName(graphUser),
+                Email = GetGraphEmail(graphUser),
+                Department = graphUser.Department ?? string.Empty,
+                JobTitle = graphUser.JobTitle ?? string.Empty,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        private static string GetGraphDisplayName(GraphUserDto graphUser)
+        {
+            if (!string.IsNullOrWhiteSpace(graphUser.DisplayName))
+            {
+                return graphUser.DisplayName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(graphUser.UserPrincipalName))
+            {
+                return graphUser.UserPrincipalName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(graphUser.Email))
+            {
+                return graphUser.Email;
+            }
+
+            return graphUser.EntraObjectId;
+        }
+
+        private static string? GetGraphEmail(GraphUserDto graphUser)
+        {
+            if (!string.IsNullOrWhiteSpace(graphUser.Email))
+            {
+                return graphUser.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(graphUser.UserPrincipalName))
+            {
+                return graphUser.UserPrincipalName;
+            }
+
+            return null;
         }
     }
 }
