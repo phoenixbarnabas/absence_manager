@@ -1,7 +1,12 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { AbsenceApprovalStatusValue, AbsenceApprovalTypeValue, AbsenceRequestApprovalDto } from '../../models/calendar-models';
-import { CalendarService } from '../../services/calendar-service';
 import { finalize, Subject, takeUntil, timeout } from 'rxjs';
+
+import {
+  AbsenceApprovalStatusValue,
+  AbsenceApprovalTypeValue,
+  AbsenceRequestApprovalDto
+} from '../../models/calendar-models';
+import { CalendarService } from '../../services/calendar-service';
 
 type ApprovalAction = 'approve' | 'reject';
 type NotificationType = 'success' | 'error' | 'warning' | 'info';
@@ -25,7 +30,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
   savingRequestId: string | null = null;
 
   notification: PageNotification | null = null;
-
   decisionComments: Record<string, string> = {};
 
   reviewedApprovals: AbsenceRequestApprovalDto[] = [];
@@ -210,12 +214,14 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
       return '-';
     }
 
-    const date = new Date(value);
+    const datePart = value.substring(0, 10);
+    const parts = datePart.split('-').map(Number);
 
-    if (Number.isNaN(date.getTime())) {
-      return value.substring(0, 10);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) {
+      return datePart;
     }
 
+    const date = new Date(parts[0], parts[1] - 1, parts[2]);
     return date.toLocaleDateString('hu-HU');
   }
 
