@@ -1,26 +1,64 @@
 <div class="calendar-page">
-  <header class="calendar-hero">
-    <div class="calendar-hero__content">
-      <span class="eyebrow">
+  <header class="page-header">
+    <div class="page-header__content">
+      <span class="page-eyebrow">
         <i class="bi bi-calendar3"></i>
         Központi naptár
       </span>
 
-      <div class="calendar-hero__title-row">
+      <div class="page-header__title-row">
         <div>
           <h1>Naptár</h1>
           <p>
-            Távollétek, home office napok, betegszabadságok és helyfoglalási információk
-            áttekintése egy letisztult, céges nézetben.
+            Tekintsd át az eseményeket és igényeket egy helyen.
           </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-primary page-header__action page-header__action--primary"
+          (click)="selectedCalendarDay ? openRequestModal(selectedCalendarDay) : goToToday()"
+          [disabled]="saving"
+        >
+          <span class="page-header__action-icon">
+            <i class="bi bi-plus-lg"></i>
+          </span>
+          <span>Új igénylés</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="page-header__visual">
+      <div class="header-calendar-card" aria-hidden="true">
+        <div class="header-calendar-card__top">
+          <span class="header-calendar-card__label">Aktív naptár</span>
+          <span class="header-calendar-card__icon">
+            <i class="bi bi-calendar2-check"></i>
+          </span>
+        </div>
+
+        <div class="header-calendar-card__period">
+          {{ periodTitle }}
+        </div>
+
+        <div class="header-calendar-card__grid">
+          <span></span>
+          <span></span>
+          <span class="is-active"></span>
+          <span></span>
+          <span class="is-muted"></span>
+          <span></span>
+          <span class="is-accent"></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
     </div>
   </header>
 
-  <section class="calendar-control-panel">
+  <section class="filter-panel">
     <div class="filter-card">
-      <div class="filter-card__scope">
+      <div class="filter-card__section filter-card__section--scope">
         <label for="calendarScope" class="form-label">Láthatóság</label>
 
         <select
@@ -38,7 +76,7 @@
         <small>{{ selectedScopeDescription }}</small>
       </div>
 
-      <div class="filter-card__types">
+      <div class="filter-card__section filter-card__section--types">
         <div class="filter-card__label-row">
           <span class="form-label mb-0">Eseménytípusok</span>
           <span class="filter-count">{{ activeEventTypes.length }} aktív szűrő</span>
@@ -70,17 +108,17 @@
   </section>
 
   <div class="calendar-alerts">
-    <div class="alert alert-success" *ngIf="successMessage">
+    <div class="app-alert app-alert--success" *ngIf="successMessage">
       <i class="bi bi-check-circle"></i>
       <span>{{ successMessage }}</span>
     </div>
 
-    <div class="alert alert-warning" *ngIf="warningMessage">
+    <div class="app-alert app-alert--warning" *ngIf="warningMessage">
       <i class="bi bi-exclamation-triangle"></i>
       <span>{{ warningMessage }}</span>
     </div>
 
-    <div class="alert alert-danger" *ngIf="errorMessage">
+    <div class="app-alert app-alert--danger" *ngIf="errorMessage">
       <i class="bi bi-x-circle"></i>
       <span>{{ errorMessage }}</span>
     </div>
@@ -130,7 +168,7 @@
 
             <button
               type="button"
-              class="btn btn-primary today-button"
+              class="btn btn-outline-primary today-button"
               (click)="goToToday()"
               [disabled]="saving"
             >
@@ -154,81 +192,143 @@
         </div>
       </div>
 
-      <div class="month-weekdays" *ngIf="viewMode === 'month'">
-        <div *ngFor="let dayName of weekDayNames">
-          {{ dayName }}
-        </div>
-      </div>
-
-      <div
-        class="calendar-grid"
-        [class.month-grid]="viewMode === 'month'"
-        [class.week-grid]="viewMode === 'week'"
-      >
-        <button
-          type="button"
-          class="calendar-day"
-          *ngFor="let day of calendarDays; trackBy: trackByDate"
-          [class.calendar-day--month]="viewMode === 'month'"
-          [class.calendar-day--week]="viewMode === 'week'"
-          [class.calendar-day--other-month]="!day.isCurrentMonth"
-          [class.calendar-day--today]="day.isToday"
-          [class.calendar-day--selected]="day.isSelected"
-          [class.calendar-day--non-working]="!day.isWorkingDay"
-          (click)="selectDay(day)"
-        >
-          <span class="calendar-day__topline">
-            <span>
-              <span class="calendar-day__name" *ngIf="viewMode === 'week'">
-                {{ day.dayName }}
-              </span>
-              <span class="calendar-day__number">{{ day.dayNumber }}</span>
-            </span>
-
-            <span class="calendar-day__badges">
-              <span class="day-badge day-badge--today" *ngIf="day.isToday">Ma</span>
-              <span class="day-badge day-badge--holiday" *ngIf="day.isHoliday">Ünnep</span>
-              <span class="day-badge day-badge--weekend" *ngIf="day.isWeekend && !day.isHoliday">Hétvége</span>
-            </span>
-          </span>
-
-          <span class="calendar-day__holiday" *ngIf="day.holidayName">
-            {{ day.holidayName }}
-          </span>
-
-          <span class="event-list" *ngIf="day.events.length; else emptyDayBlock">
-            <span
-              class="event-pill"
-              *ngFor="let event of day.events.slice(0, viewMode === 'month' ? 3 : 8); trackBy: trackByEvent"
-              [ngClass]="[
-                'event-pill--' + event.type,
-                'event-pill--' + event.status
-              ]"
-              (click)="selectEvent(event, $event)"
+      <ng-container *ngIf="viewMode === 'year'; else monthOrWeekCalendar">
+        <div class="year-overview">
+          <article
+            class="year-month-card"
+            *ngFor="let month of yearMonths"
+          >
+            <button
+              type="button"
+              class="year-month-card__header"
+              (click)="openMonth(month)"
+              [disabled]="saving"
             >
-              <span class="event-pill__marker"></span>
+              <span>{{ month.monthName }}</span>
+              <small>
+                {{ month.eventCount }} esemény
+                <ng-container *ngIf="month.holidayCount"> · {{ month.holidayCount }} ünnep</ng-container>
+              </small>
+            </button>
 
-              <span class="event-pill__content">
-                <strong>{{ event.title }}</strong>
-                <small *ngIf="viewMode === 'week'">
-                  {{ event.userName }} · {{ getStatusLabel(event.status) }}
-                </small>
+            <div class="year-month-weekdays">
+              <span *ngFor="let dayName of weekDayNames">{{ dayName }}</span>
+            </div>
+
+            <div class="year-month-grid">
+              <span
+                class="year-month-blank"
+                *ngFor="let blank of month.leadingBlankDays"
+              ></span>
+
+              <button
+                type="button"
+                class="year-day"
+                *ngFor="let day of month.days; trackBy: trackByDate"
+                [class.year-day--today]="day.isToday"
+                [class.year-day--selected]="day.isSelected"
+                [class.year-day--holiday]="day.isHoliday"
+                [class.year-day--weekend]="day.isWeekend && !day.isHoliday"
+                [title]="day.holidayName || (day.events.length ? day.events.length + ' esemény' : '')"
+                (click)="selectDay(day)"
+              >
+                <span>{{ day.dayNumber }}</span>
+
+                <span class="year-day__dots" *ngIf="day.events.length || day.isHoliday">
+                  <span
+                    class="year-day__dot year-day__dot--event"
+                    *ngIf="day.events.length"
+                  ></span>
+                  <span
+                    class="year-day__dot year-day__dot--holiday"
+                    *ngIf="day.isHoliday"
+                  ></span>
+                </span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </ng-container>
+
+      <ng-template #monthOrWeekCalendar>
+        <div class="month-weekdays" *ngIf="viewMode === 'month'">
+          <div *ngFor="let dayName of weekDayNames">
+            {{ dayName }}
+          </div>
+        </div>
+
+        <div
+          class="calendar-grid"
+          [class.month-grid]="viewMode === 'month'"
+          [class.week-grid]="viewMode === 'week'"
+        >
+          <button
+            type="button"
+            class="calendar-day"
+            *ngFor="let day of calendarDays; trackBy: trackByDate"
+            [class.calendar-day--month]="viewMode === 'month'"
+            [class.calendar-day--week]="viewMode === 'week'"
+            [class.calendar-day--other-month]="!day.isCurrentMonth"
+            [class.calendar-day--today]="day.isToday"
+            [class.calendar-day--selected]="day.isSelected"
+            [class.calendar-day--non-working]="!day.isWorkingDay"
+            [class.calendar-day--holiday]="day.isHoliday"
+            (click)="selectDay(day)"
+          >
+            <span class="calendar-day__topline">
+              <span>
+                <span class="calendar-day__name" *ngIf="viewMode === 'week'">
+                  {{ day.dayName }}
+                </span>
+                <span class="calendar-day__number">{{ day.dayNumber }}</span>
+              </span>
+
+              <span class="calendar-day__badges">
+                <span class="day-badge day-badge--today" *ngIf="day.isToday">Ma</span>
+                <span class="day-badge day-badge--holiday" *ngIf="day.isHoliday">Ünnep</span>
+                <span class="day-badge day-badge--weekend" *ngIf="day.isWeekend && !day.isHoliday">Hétvége</span>
               </span>
             </span>
 
-            <span class="event-more" *ngIf="day.events.length > (viewMode === 'month' ? 3 : 8)">
-              +{{ day.events.length - (viewMode === 'month' ? 3 : 8) }} további esemény
+            <span class="calendar-day__holiday" *ngIf="day.holidayName">
+              {{ day.holidayName }}
             </span>
-          </span>
 
-          <ng-template #emptyDayBlock>
-            <span class="empty-day">
-              <i class="bi bi-plus-circle"></i>
-              Napi nézet
+            <span class="event-list" *ngIf="day.events.length; else emptyDayBlock">
+              <span
+                class="event-pill"
+                *ngFor="let event of day.events.slice(0, viewMode === 'month' ? 3 : 8); trackBy: trackByEvent"
+                [ngClass]="[
+                  'event-pill--' + event.type,
+                  'event-pill--' + event.status
+                ]"
+                (click)="selectEvent(event, $event)"
+              >
+                <span class="event-pill__marker"></span>
+
+                <span class="event-pill__content">
+                  <strong>{{ event.title }}</strong>
+                  <small *ngIf="viewMode === 'week'">
+                    {{ event.userName }} · {{ getStatusLabel(event.status) }}
+                  </small>
+                </span>
+              </span>
+
+              <span class="event-more" *ngIf="day.events.length > (viewMode === 'month' ? 3 : 8)">
+                +{{ day.events.length - (viewMode === 'month' ? 3 : 8) }} további esemény
+              </span>
             </span>
-          </ng-template>
-        </button>
-      </div>
+
+            <ng-template #emptyDayBlock>
+              <span class="empty-day">
+                <i class="bi bi-circle"></i>
+                Nincs esemény
+              </span>
+            </ng-template>
+          </button>
+        </div>
+      </ng-template>
+
     </section>
 
     <aside class="side-panel" *ngIf="selectedEvent as event; else selectedDayPanel">
@@ -301,10 +401,11 @@
 
       <button
         type="button"
-        class="btn btn-primary w-100"
-        (click)="openSelectedEvent()"
-        [disabled]="!event.detailsUrl"
+        class="btn btn-primary w-100 related-page-button"
+        (click)="openSelectedEvent(event)"
+        [disabled]="!canOpenRelatedPage(event)"
       >
+        <i class="bi bi-box-arrow-up-right"></i>
         Kapcsolódó oldal megnyitása
       </button>
     </aside>
