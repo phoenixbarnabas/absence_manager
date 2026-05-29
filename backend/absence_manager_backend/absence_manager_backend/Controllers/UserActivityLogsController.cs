@@ -27,6 +27,102 @@ namespace Absence_Manager.Controllers
             _currentUserService = currentUserService;
         }
 
+        [HttpGet("filter-options")]
+        public IActionResult GetFilterOptions()
+        {
+            var result = new UserActivityLogFilterOptionsDto
+            {
+                Actions = new[]
+                {
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.OfficeBookingCreated,
+                Label = "Foglalás létrehozása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.OfficeBookingCancelled,
+                Label = "Foglalás lemondása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.AbsenceRequestCreated,
+                Label = "Távolléti kérelem létrehozása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.AbsenceRequestCancelled,
+                Label = "Távolléti kérelem visszavonása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.AbsenceRequestApproved,
+                Label = "Távolléti kérelem jóváhagyása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.AbsenceRequestRejected,
+                Label = "Távolléti kérelem elutasítása"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.UserGraphSyncCompleted,
+                Label = "Felhasználói Graph szinkron sikeres"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.UserGraphSyncFailed,
+                Label = "Felhasználói Graph szinkron sikertelen"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogActions.UnauthorizedActionAttempt,
+                Label = "Jogosulatlan műveletkísérlet"
+            }
+        },
+
+                EntityTypes = new[]
+                {
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogEntityTypes.OfficeBooking,
+                Label = "Munkaállomás foglalás"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogEntityTypes.AbsenceRequest,
+                Label = "Távolléti kérelem"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogEntityTypes.AppUser,
+                Label = "Felhasználó"
+            }
+        },
+
+                Outcomes = new[]
+                {
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogOutcomes.Success,
+                Label = "Sikeres"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogOutcomes.Failed,
+                Label = "Sikertelen"
+            },
+            new UserActivityLogOptionDto
+            {
+                Value = UserActivityLogOutcomes.Forbidden,
+                Label = "Tiltott"
+            }
+        }
+            };
+
+            return Ok(result);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetLogs(
             [FromQuery] DateTime? fromUtc,
