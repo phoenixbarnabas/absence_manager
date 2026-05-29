@@ -1,13 +1,86 @@
 <div class="absence-approvals-page">
-  <div class="page-header">
-    <div>
-      <p class="page-eyebrow">Manager jóváhagyás</p>
-      <h1 class="page-title">Jóváhagyásra váró kérelmek</h1>
-      <p class="page-subtitle">
-        Itt láthatók az aktív beosztottak függőben lévő távollét kérelmei.
-      </p>
+  <header class="approval-page-hero">
+    <div class="approval-page-hero__content">
+      <span class="page-eyebrow">
+        <i class="bi bi-check2-square"></i>
+        Manager jóváhagyás
+      </span>
+
+      <div class="approval-page-hero__title-row">
+        <div class="approval-page-hero__text">
+          <h1>Jóváhagyásra váró kérelmek</h1>
+          <p>
+            Tekintsd át és bíráld el az aktív beosztottak távollét kérelmeit.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn hero-action"
+          (click)="loadPendingApprovals()"
+          [disabled]="loading || !!savingRequestId"
+        >
+          <span class="hero-action__icon">
+            <i class="bi bi-arrow-clockwise"></i>
+          </span>
+          <span>Frissítés</span>
+        </button>
+      </div>
     </div>
-  </div>
+
+    <div class="approval-page-hero__visual">
+      <div class="approval-status-card" aria-hidden="true">
+        <div class="approval-status-card__top">
+          <span>Jóváhagyási lista</span>
+          <i class="bi bi-clipboard-check"></i>
+        </div>
+
+        <strong>{{ approvals.length }}</strong>
+        <small>függőben lévő kérelem</small>
+
+        <div class="approval-status-card__bars">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="approval-summary-grid">
+    <div class="summary-card summary-card--primary">
+      <span class="summary-card__icon">
+        <i class="bi bi-hourglass-split"></i>
+      </span>
+
+      <div>
+        <strong>{{ approvals.length }}</strong>
+        <span>Várakozó kérelem</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <span class="summary-card__icon">
+        <i class="bi bi-archive"></i>
+      </span>
+
+      <div>
+        <strong>{{ reviewedLoaded ? reviewedApprovals.length : '-' }}</strong>
+        <span>Elbírált kérelem</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <span class="summary-card__icon">
+        <i class="bi bi-people"></i>
+      </span>
+
+      <div>
+        <strong>Aktív</strong>
+        <span>Beosztotti kérelmek</span>
+      </div>
+    </div>
+  </section>
 
   <div class="notification-stack" *ngIf="notification as currentNotification">
     <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
@@ -41,19 +114,33 @@
 
   <section class="approval-card loading-card" *ngIf="loading">
     <div class="spinner"></div>
-    <span>Kérelmek betöltése...</span>
+
+    <div>
+      <strong>Kérelmek betöltése</strong>
+      <span>A jóváhagyásra váró kérelmek lekérése folyamatban...</span>
+    </div>
   </section>
 
   <section class="approval-card empty-card" *ngIf="!loading && approvals.length === 0">
     <div class="empty-icon">
       <i class="bi bi-inbox"></i>
     </div>
+
     <h2>Nincs jóváhagyásra váró kérelem</h2>
     <p>Jelenleg nincs függőben lévő távollét kérelem az aktív beosztottaktól.</p>
   </section>
 
   <section class="approval-list" *ngIf="!loading && approvals.length > 0">
-    <article class="approval-card request-card" *ngFor="let approval of approvals; trackBy: trackByApprovalId">
+    <article
+      class="approval-card request-card"
+      *ngFor="let approval of approvals; trackBy: trackByApprovalId"
+      [ngClass]="[
+        'request-card--' + approval.type,
+        'request-card--' + approval.status
+      ]"
+    >
+      <div class="request-card__accent"></div>
+
       <div class="request-header">
         <div class="user-block">
           <div class="user-avatar">
@@ -61,12 +148,13 @@
           </div>
 
           <div class="user-meta">
+            <span class="user-meta__label">Kérelmező</span>
             <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
             <p>{{ approval.userEmail || '-' }}</p>
           </div>
         </div>
 
-        <span class="status-pill">
+        <span class="status-pill" [ngClass]="'status-pill--' + approval.status">
           {{ getStatusLabel(approval.status) }}
         </span>
       </div>
@@ -115,7 +203,7 @@
           [disabled]="!!savingRequestId"
         >
           <i class="bi bi-x-circle"></i>
-          Elutasítás
+          <span>Elutasítás</span>
         </button>
 
         <button
@@ -125,7 +213,7 @@
           [disabled]="!!savingRequestId"
         >
           <i class="bi bi-check-circle"></i>
-          Jóváhagyás
+          <span>{{ savingRequestId === approval.id ? 'Mentés...' : 'Jóváhagyás' }}</span>
         </button>
       </div>
     </article>
@@ -138,7 +226,12 @@
       (click)="toggleReviewedApprovals()"
       [attr.aria-expanded]="reviewedExpanded"
     >
-      <div>
+      <div class="reviewed-toggle__text">
+        <span class="reviewed-toggle__eyebrow">
+          <i class="bi bi-clock-history"></i>
+          Előzmények
+        </span>
+
         <h2>Elbírált kérelmek</h2>
         <p>Korábban jóváhagyott vagy elutasított távollét kérelmek.</p>
       </div>
@@ -185,7 +278,11 @@
 
       <div class="loading-card reviewed-loading" *ngIf="reviewedLoading">
         <div class="spinner"></div>
-        <span>Elbírált kérelmek betöltése...</span>
+
+        <div>
+          <strong>Elbírált kérelmek betöltése</strong>
+          <span>A korábbi döntések lekérése folyamatban...</span>
+        </div>
       </div>
 
       <div
@@ -195,6 +292,7 @@
         <div class="empty-icon">
           <i class="bi bi-archive"></i>
         </div>
+
         <h2>Még nincs elbírált kérelem</h2>
         <p>A jóváhagyott vagy elutasított kérelmek később itt jelennek meg.</p>
       </div>
@@ -203,6 +301,10 @@
         <article
           class="approval-card reviewed-card"
           *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId"
+          [ngClass]="[
+            'reviewed-card--' + approval.type,
+            'reviewed-card--' + approval.status
+          ]"
         >
           <div class="request-header">
             <div class="user-block">
@@ -211,18 +313,13 @@
               </div>
 
               <div class="user-meta">
+                <span class="user-meta__label">Kérelmező</span>
                 <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
                 <p>{{ approval.userEmail || '-' }}</p>
               </div>
             </div>
 
-            <span
-              class="status-pill"
-              [ngClass]="{
-                'status-pill--approved': approval.status === 'approved' || approval.status === 'Approved' || approval.status === 2,
-                'status-pill--rejected': approval.status === 'rejected' || approval.status === 'Rejected' || approval.status === 3
-              }"
-            >
+            <span class="status-pill" [ngClass]="'status-pill--' + approval.status">
               {{ getStatusLabel(approval.status) }}
             </span>
           </div>
