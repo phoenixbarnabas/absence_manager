@@ -2,8 +2,11 @@ using Data;
 using Logic.Helper;
 using Logic.Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Identity.Web;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,11 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services
+    .AddHealthChecks()
+    .AddCheck("api", ()=> HealthCheckResult.Healthy(), tags: new[] { "live" })
+    .AddDbContextCheck<AbsenceManagerDbContext>(name: "database", tags: new[] { "ready" });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -64,5 +72,43 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/api/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+    ResponseWriter = WriteHealthCheckResponse
+}).AllowAnonymous();
+
+app.MapHealthChecks("/api/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthCheckResponse
+}).AllowAnonymous();
+
+app.MapHealthChecks("/api/health", new HealthCheckOptions
+{
+    ResponseWriter = WriteHealthCheckResponse
+}).AllowAnonymous();
+
+static Task WriteHealthCheckResponse(HttpContext context, HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+
+    var response = new
+    {
+        status = report.Status.ToString(),
+        durationMs = report.TotalDuration.TotalMilliseconds,
+        checks = report.Entries.Select(entry => new
+        {
+            name = entry.Key,
+            status = entry.Value.Status.ToString(),
+            description = entry.Value.Description,
+            durationMs = entry.Value.Duration.TotalMilliseconds,
+            error = entry.Value.Exception?.Message
+        })
+    };
+
+    return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+}
 
 app.Run();
