@@ -176,8 +176,8 @@ namespace Logic.Logic
             request.User = user;
 
             await _activityLogger.LogAsync(
-                action: "AbsenceRequestCreated",
-                entityType: "AbsenceRequest",
+                action: UserActivityLogActions.AbsenceRequestCreated,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
                 entityId: request.Id,
                 actorUserId: currentUserId,
                 metadata: new
@@ -245,8 +245,8 @@ namespace Logic.Logic
             if (request.UserId != currentUserId)
             {
                 await _activityLogger.LogAsync(
-                    action: "UnauthorizedActionAttempt",
-                    entityType: "AbsenceRequest",
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.AbsenceRequest,
                     entityId: id,
                     actorUserId: currentUserId,
                     metadata: new
@@ -276,8 +276,8 @@ namespace Logic.Logic
             await _dbContext.SaveChangesAsync(cancellationToken);
 
             await _activityLogger.LogAsync(
-                action: "AbsenceRequestCancelled",
-                entityType: "AbsenceRequest",
+                action: UserActivityLogActions.AbsenceRequestCancelled,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
                 entityId: request.Id,
                 actorUserId: currentUserId,
                 metadata: new
@@ -446,8 +446,8 @@ namespace Logic.Logic
             if (!isActiveManager)
             {
                 await _activityLogger.LogAsync(
-                    action: "UnauthorizedActionAttempt",
-                    entityType: "AbsenceRequest",
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.AbsenceRequest,
                     entityId: absenceRequest.Id,
                     actorUserId: managerUserId,
                     metadata: new
@@ -482,9 +482,9 @@ namespace Logic.Logic
 
             await _activityLogger.LogAsync(
                 action: targetStatus == AbsenceRequestStatus.Approved
-                    ? "AbsenceRequestApproved"
-                    : "AbsenceRequestRejected",
-                entityType: "AbsenceRequest",
+                    ? UserActivityLogActions.AbsenceRequestApproved
+                    : UserActivityLogActions.AbsenceRequestRejected,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
                 entityId: absenceRequest.Id,
                 actorUserId: managerUserId,
                 metadata: new

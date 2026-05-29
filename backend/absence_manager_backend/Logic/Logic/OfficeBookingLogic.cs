@@ -217,8 +217,8 @@ namespace Logic.Logic
                 throw new InvalidOperationException("Created booking could not be loaded.");
 
             await _activityLogger.LogAsync(
-                action: "OfficeBookingCreated",
-                entityType: "OfficeBooking",
+                action: UserActivityLogActions.OfficeBookingCreated,
+                entityType: UserActivityLogEntityTypes.OfficeBooking,
                 entityId: createdBooking.Id,
                 actorUserId: currentUserId,
                 metadata: new
@@ -275,8 +275,8 @@ namespace Logic.Logic
             if (!isAdmin && booking.UserId != currentUserId)
             {
                 await _activityLogger.LogAsync(
-                    action: "UnauthorizedActionAttempt",
-                    entityType: "OfficeBooking",
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.OfficeBooking,
                     entityId: bookingId,
                     actorUserId: currentUserId,
                     metadata: new
@@ -304,8 +304,8 @@ namespace Logic.Logic
             _officeBookingRepository.Update(booking);
 
             await _activityLogger.LogAsync(
-                action: "OfficeBookingCancelled",
-                entityType: "OfficeBooking",
+                action: UserActivityLogActions.OfficeBookingCancelled,
+                entityType: UserActivityLogEntityTypes.OfficeBooking,
                 entityId: booking.Id,
                 actorUserId: currentUserId,
                 metadata: new

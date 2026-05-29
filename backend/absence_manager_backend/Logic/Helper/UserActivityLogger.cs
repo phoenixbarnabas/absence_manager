@@ -16,6 +16,29 @@ namespace Logic.Helper
         public const string Forbidden = "Forbidden";
     }
 
+    public static class UserActivityLogActions
+    {
+        public const string OfficeBookingCreated = "OfficeBookingCreated";
+        public const string OfficeBookingCancelled = "OfficeBookingCancelled";
+
+        public const string AbsenceRequestCreated = "AbsenceRequestCreated";
+        public const string AbsenceRequestCancelled = "AbsenceRequestCancelled";
+        public const string AbsenceRequestApproved = "AbsenceRequestApproved";
+        public const string AbsenceRequestRejected = "AbsenceRequestRejected";
+
+        public const string UserGraphSyncCompleted = "UserGraphSyncCompleted";
+        public const string UserGraphSyncFailed = "UserGraphSyncFailed";
+
+        public const string UnauthorizedActionAttempt = "UnauthorizedActionAttempt";
+    }
+
+    public static class UserActivityLogEntityTypes
+    {
+        public const string OfficeBooking = "OfficeBooking";
+        public const string AbsenceRequest = "AbsenceRequest";
+        public const string AppUser = "AppUser";
+    }
+
     public interface IUserActivityLogger
     {
         Task LogAsync(

@@ -55,8 +55,8 @@ namespace Logic.Logic
                 };
 
                 await _activityLogger.LogAsync(
-                    action: "UserGraphSyncCompleted",
-                    entityType: "AppUser",
+                    action: UserActivityLogActions.UserGraphSyncCompleted,
+                    entityType: UserActivityLogEntityTypes.AppUser,
                     entityId: currentUserId,
                     actorUserId: currentUserId,
                     metadata: new
@@ -77,8 +77,8 @@ namespace Logic.Logic
             catch (Exception ex)
             {
                 await _activityLogger.LogAsync(
-                    action: "UserGraphSyncFailed",
-                    entityType: "AppUser",
+                    action: UserActivityLogActions.UserGraphSyncFailed,
+                    entityType: UserActivityLogEntityTypes.AppUser,
                     entityId: currentUserId,
                     actorUserId: currentUserId,
                     metadata: new
