@@ -22,6 +22,7 @@ builder.Services.AddScoped<IAppUserResolver, AppUserResolver>();
 builder.Services.AddScoped<IMsGraphLogic, MsGraphLogic>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICurrentUserGraphSyncService, CurrentUserGraphSyncService>();
+builder.Services.AddScoped<IUserActivityLogger, UserActivityLogger>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
