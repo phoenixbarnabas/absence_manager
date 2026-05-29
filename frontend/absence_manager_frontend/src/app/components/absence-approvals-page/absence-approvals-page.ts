@@ -201,6 +201,21 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
     }
   }
 
+  getStatusPillClass(status: AbsenceApprovalStatusValue): string {
+    switch (this.normalizeStatus(status)) {
+      case 'pending':
+        return 'status-pill--pending';
+      case 'approved':
+        return 'status-pill--approved';
+      case 'rejected':
+        return 'status-pill--rejected';
+      case 'cancelled':
+        return 'status-pill--cancelled';
+      default:
+        return '';
+    }
+  }
+
   getDateRangeText(request: AbsenceRequestApprovalDto): string {
     if (request.dateFrom === request.dateTo) {
       return this.formatDate(request.dateFrom);

@@ -157,10 +157,6 @@
                 <p>{{ approval.userEmail || '-' }}</p>
               </div>
             </div>
-
-            <span class="status-pill" [ngClass]="'status-pill--' + approval.status">
-              {{ getStatusLabel(approval.status) }}
-            </span>
           </div>
 
           <div class="approval-row__meta-line">
@@ -200,26 +196,32 @@
           </div>
         </div>
 
-        <div class="approval-row__actions">
-          <button
-            type="button"
-            class="row-btn row-btn--danger"
-            (click)="reject(approval)"
-            [disabled]="!!savingRequestId"
-          >
-            <i class="bi bi-x-circle"></i>
-            <span>Elutasítás</span>
-          </button>
+        <div class="approval-row__side">
+          <span class="status-pill" [ngClass]="getStatusPillClass(approval.status)">
+            {{ getStatusLabel(approval.status) }}
+          </span>
 
-          <button
-            type="button"
-            class="row-btn row-btn--primary"
-            (click)="approve(approval)"
-            [disabled]="!!savingRequestId"
-          >
-            <i class="bi bi-check-circle"></i>
-            <span>{{ savingRequestId === approval.id ? 'Mentés...' : 'Jóváhagyás' }}</span>
-          </button>
+          <div class="approval-row__actions">
+            <button
+              type="button"
+              class="row-btn row-btn--danger"
+              (click)="reject(approval)"
+              [disabled]="!!savingRequestId"
+            >
+              <i class="bi bi-x-circle"></i>
+              <span>Elutasítás</span>
+            </button>
+
+            <button
+              type="button"
+              class="row-btn row-btn--primary"
+              (click)="approve(approval)"
+              [disabled]="!!savingRequestId"
+            >
+              <i class="bi bi-check-circle"></i>
+              <span>{{ savingRequestId === approval.id ? 'Mentés...' : 'Jóváhagyás' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </article>
@@ -252,36 +254,6 @@
     </button>
 
     <div class="archive-content" *ngIf="reviewedExpanded">
-      <div class="notification-stack notification-stack--inline" *ngIf="reviewedNotification as currentReviewedNotification">
-        <div class="page-notification" [ngClass]="'page-notification--' + currentReviewedNotification.type">
-          <div class="page-notification__icon">
-            <i
-              class="bi"
-              [ngClass]="{
-                'bi-check-circle-fill': currentReviewedNotification.type === 'success',
-                'bi-exclamation-triangle-fill': currentReviewedNotification.type === 'error',
-                'bi-info-circle-fill': currentReviewedNotification.type === 'info',
-                'bi-exclamation-circle-fill': currentReviewedNotification.type === 'warning'
-              }"
-            ></i>
-          </div>
-
-          <div class="page-notification__body">
-            <strong>{{ currentReviewedNotification.title }}</strong>
-            <span>{{ currentReviewedNotification.message }}</span>
-          </div>
-
-          <button
-            type="button"
-            class="page-notification__close"
-            aria-label="Értesítés bezárása"
-            (click)="clearReviewedNotification()"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </div>
-
       <section class="state-card state-card--flat" *ngIf="reviewedLoading">
         <div class="spinner"></div>
 
@@ -330,10 +302,6 @@
                     <p>{{ approval.userEmail || '-' }}</p>
                   </div>
                 </div>
-
-                <span class="status-pill" [ngClass]="'status-pill--' + approval.status">
-                  {{ getStatusLabel(approval.status) }}
-                </span>
               </div>
 
               <div class="approval-row__meta-line">
@@ -362,6 +330,12 @@
                 <strong>Döntési megjegyzés:</strong>
                 <span>{{ approval.decisionComment }}</span>
               </div>
+            </div>
+
+            <div class="approval-row__side approval-row__side--readonly">
+              <span class="status-pill" [ngClass]="getStatusPillClass(approval.status)">
+                {{ getStatusLabel(approval.status) }}
+              </span>
             </div>
           </div>
         </article>

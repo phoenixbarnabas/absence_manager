@@ -138,7 +138,6 @@
           <i class="bi bi-hourglass-split"></i>
           Jóváhagyási folyamatban
         </span>
-
       </div>
 
       <span class="section-count section-count--pending">
@@ -246,10 +245,6 @@
               <span class="request-row__eyebrow">Jóváhagyott kérelem</span>
               <h3>{{ getTypeLabel(request.type) }}</h3>
             </div>
-
-            <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
-              {{ getStatusLabel(request.status) }}
-            </span>
           </div>
 
           <div class="request-row__meta-line">
@@ -280,7 +275,11 @@
           </div>
         </div>
 
-        <div class="request-row__actions">
+        <div class="request-row__side">
+          <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+            {{ getStatusLabel(request.status) }}
+          </span>
+
           <button
             type="button"
             class="row-btn row-btn--danger"
@@ -351,10 +350,6 @@
                 <span class="request-row__eyebrow">Lezárt kérelem</span>
                 <h3>{{ getTypeLabel(request.type) }}</h3>
               </div>
-
-              <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
-                {{ getStatusLabel(request.status) }}
-              </span>
             </div>
 
             <div class="request-row__meta-line">
@@ -383,6 +378,12 @@
               <strong>Döntési megjegyzés:</strong>
               <span>{{ request.decisionComment }}</span>
             </div>
+          </div>
+
+          <div class="request-row__side request-row__side--readonly">
+            <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+              {{ getStatusLabel(request.status) }}
+            </span>
           </div>
         </article>
       </section>
