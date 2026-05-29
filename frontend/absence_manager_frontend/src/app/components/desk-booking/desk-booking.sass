@@ -2,146 +2,313 @@
 
 .desk-booking-page
     width: 100%
-    max-width: 1100px
+    max-width: 1180px
     min-width: 0
     margin: 0 auto
-    padding: 1.5rem 1rem 2rem
+    padding: 1.5rem 1rem 2.5rem
     box-sizing: border-box
+    color: $dark-800
 
-.page-header
-    margin-bottom: 1.25rem
+.booking-hero
+    display: grid
+    grid-template-columns: minmax(0, 1fr) 280px
+    gap: 1.25rem
+    margin-bottom: 1rem
 
-.page-title
-    margin: 0
-    font-size: 1.75rem
-    font-weight: 700
-    color: $dark-900
+.booking-hero__content,
+.booking-status-card,
+.booking-card
+    border: 1px solid $border-color
+    background: $light-500
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .055)
+
+.booking-hero__content
+    min-height: 178px
+    display: flex
+    flex-direction: column
+    justify-content: center
+    padding: 1.6rem 1.8rem
+    border-radius: 24px
+
+.booking-hero__title-row
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: 1.5rem
+
+.booking-hero__text
+    min-width: 0
+
+    h1
+        margin: 0 0 .45rem
+        color: $dark-900
+        font-size: 2rem
+        font-weight: 500
+        line-height: 1.15
+
+    p
+        max-width: 660px
+        margin: 0
+        color: $dark-700
+        font-size: .98rem
+        line-height: 1.5
+
+.page-eyebrow,
+.section-eyebrow
+    display: inline-flex
+    align-items: center
+    gap: .45rem
+    color: $primary-500
+    font-size: .76rem
+    font-weight: 600
+    letter-spacing: .04em
+    text-transform: uppercase
+
+.page-eyebrow
+    margin-bottom: .75rem
+
+.booking-status-card
+    min-height: 178px
+    display: flex
+    flex-direction: column
+    justify-content: space-between
+    padding: 1.35rem
+    border-radius: 24px
+    border-color: rgba(0, 146, 123, .16)
+    background: linear-gradient(135deg, rgba(0, 146, 123, .11), rgba(146, 212, 0, .12))
+
+    strong
+        color: $dark-900
+        font-size: 2.25rem
+        font-weight: 500
+        line-height: 1
+
+    small
+        color: $dark-700
+        font-size: .9rem
+
+.booking-status-card__top
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: .75rem
+    color: $dark-800
+    font-size: .76rem
+    font-weight: 600
+    text-transform: uppercase
+    letter-spacing: .04em
+
+    i
+        width: 40px
+        height: 40px
+        display: inline-flex
+        align-items: center
+        justify-content: center
+        border-radius: 14px
+        background: $primary-500
+        color: #fff
+
+.booking-status-card__bars
+    display: grid
+    grid-template-columns: 1.4fr 1fr .7fr
+    gap: .45rem
+
+    span
+        height: .8rem
+        border-radius: 999px
+        background: rgba(255, 255, 255, .8)
+
+        &:first-child
+            background: $primary-500
+
+        &:last-child
+            background: $secondary-500
 
 .booking-card
     width: 100%
-    max-width: 100%
     min-width: 0
-    background: $light-500
-    border: 1px solid $border-color
-    border-radius: 16px
-    padding: 1.25rem
     margin-bottom: 1rem
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04)
+    padding: 1.15rem
+    border-radius: 22px
     box-sizing: border-box
     overflow: visible
 
+.booking-card--calendar
+    border-color: rgba(0, 146, 123, .16)
+
+.booking-card--filters
+    background: linear-gradient(135deg, #fff, rgba(0, 146, 123, .035))
+
+.booking-section-header,
+.workstation-heading,
+.booking-actions-card
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: 1rem
+
+.booking-section-header,
+.workstation-heading
+    margin-bottom: .9rem
+
+.booking-section-header h2,
+.workstation-heading h2,
+.booking-actions-info h2
+    margin: .2rem 0 0
+    color: $dark-900
+    font-size: 1.08rem
+    font-weight: 500
+
+.selected-date-chip
+    flex: 0 0 auto
+    display: inline-flex
+    align-items: center
+    min-height: 30px
+    padding: 0 .8rem
+    border-radius: 999px
+    background: rgba(0, 146, 123, .1)
+    color: $primary-600
+    font-size: .84rem
+    font-weight: 600
+    white-space: nowrap
+
+.selected-date-chip--warning
+    background: rgba(227, 154, 28, .14)
+    color: #b36b00
+
 .calendar-scroll
     width: 100%
-    max-width: 100%
-    min-width: 0
-    overflow-x: auto
-    overflow-y: hidden
-    -webkit-overflow-scrolling: touch
-    padding: 0.25rem 0
-    box-sizing: border-box
+    overflow: visible
+    padding: 0
 
 .calendar-row
-    display: flex
-    flex-wrap: nowrap
-    gap: 0.75rem
-    width: max-content
-    min-width: 100%
-    justify-content: flex-start
+    width: 100%
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(58px, 1fr))
+    gap: .65rem
 
 .calendar-day
-    border: none
-    background: transparent
-    border-radius: 12px
-    min-width: 56px
-    height: 76px
+    width: 100%
+    min-width: 0
+    height: 78px
+
+.calendar-day
+    flex: 0 0 auto
+    min-width: 58px
+    height: 78px
     display: flex
     flex-direction: column
     align-items: center
     justify-content: center
-    gap: 0.3rem
+    gap: .35rem
+    padding: .5rem
+    border: 1px solid transparent
+    border-radius: 16px
+    background: $light-100
     color: $dark-800
-    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease
-    flex: 0 0 auto
+    cursor: pointer
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease
 
     &:hover
-        background: $light-200
+        border-color: rgba(0, 146, 123, .25)
+        background: #fff
+        box-shadow: 0 6px 16px rgba(0, 0, 0, .055)
         transform: translateY(-1px)
 
-.calendar-day__label
-    font-size: 0.75rem
+.day-label
     color: $dark-700
-
-.calendar-day__number
-    font-size: 1rem
-    font-weight: 700
-
-.calendar-day--active
-    background: $primary-500
-    color: $light-500
-
-    .calendar-day__label
-        color: $light-500
-
-.calendar-day--weekend
-    background: #f3f4f6
-    border-color: #9ca3af
-
-.calendar-day--holiday
-    background: #fee2e2
-    border-color: #ef4444
-
-.calendar-day
-    display: flex
-    flex-direction: column
-    align-items: center
-    gap: 4px
-    padding: 8px
-    border: 1px solid transparent
-    background: transparent
-    cursor: pointer
-
-.calendar-day--weekend
-    background: #f3f4f6
-
-.calendar-day--holiday
-    background: #fee2e2
+    font-size: .74rem
+    font-weight: 600
+    text-transform: uppercase
 
 .day-number
-    width: 32px
-    height: 32px
+    width: 34px
+    height: 34px
     display: flex
     align-items: center
     justify-content: center
     border-radius: 50%
-    transition: 0.2s ease
-
-.calendar-day--selected .day-number
-    background: $primary-500
-    color: white
+    color: $dark-900
+    font-size: 1rem
     font-weight: 600
+    transition: background .15s ease, color .15s ease
+
+.calendar-day--selected
+    border-color: rgba(0, 146, 123, .35)
+    background: rgba(0, 146, 123, .08)
+
+    .day-number
+        background: $primary-500
+        color: #fff
+
+.calendar-day--weekend
+    background: rgba(83, 83, 83, .06)
+
+.calendar-day--holiday
+    background: rgba(214, 69, 69, .1)
+    border-color: rgba(214, 69, 69, .18)
+
+.form-row-inline
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    gap: 1rem
+
+.form-field
+    min-width: 0
+
+.form-label
+    margin-bottom: .45rem
+    color: $dark-800
+    font-size: .84rem
+    font-weight: 600
+
+.form-select
+    width: 100%
+    min-height: 44px
+    border-color: $border-color
+    border-radius: 14px
+    color: $dark-900
+    font-size: .92rem
+    box-shadow: none
+
+    &:focus
+        border-color: rgba(0, 146, 123, .6)
+        box-shadow: 0 0 0 .16rem rgba(0, 146, 123, .12)
 
 .workstation-navigation
     display: grid
-    grid-template-columns: 44px 1fr 44px
-    gap: 14px
-    align-items: center
+    grid-template-columns: 44px minmax(0, 1fr) 44px
+    gap: 1rem
+    align-items: stretch
+
+.workstation-content
+    min-width: 0
 
 .workstation-date-inline
-    display: flex
-    justify-content: center
+    display: inline-flex
     align-items: center
-    gap: 8px
-    margin-bottom: 12px
-    font-size: 17px
-    font-weight: 500
-    color: #374151
+    gap: .45rem
+    min-height: 30px
+    padding: 0 .75rem
+    border-radius: 999px
+    background: rgba(0, 146, 123, .08)
+    color: $dark-800
+    font-size: .84rem
+    font-weight: 600
+    white-space: nowrap
 
 .separator
-    color: #9ca3af
+    color: rgba(83, 83, 83, .45)
 
 .non-working
-    color: #dc2626
-    font-weight: 600
+    color: #b42318
+
+.workstation-list-shell
+    min-width: 0
+    padding: .85rem
+    border: 1px solid $border-color
+    border-radius: 18px
+    background: rgba(255, 255, 255, .72)
 
 .day-nav-placeholder
     width: 44px
@@ -150,171 +317,159 @@
 .day-nav-button
     width: 44px
     height: 44px
-    border: 1px solid #d1d5db
-    border-radius: 999px
-    background: #ffffff
-    display: flex
-    align-items: center
-    justify-content: center
-    cursor: pointer
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08)
-    transition: 0.15s ease
-
-    i
-        font-size: 20px
-
-    &:hover
-        background: #f3f4f6
-        transform: translateY(-1px)
-
-    &:active
-        transform: translateY(0)
-
-.workstation-content
-    min-width: 0
-
-.selected-day-info
-    display: flex
-    gap: 12px
-    align-items: center
-    margin-bottom: 12px
-
-.non-working-day
-    color: #dc2626
-    font-weight: 600
-
-.form-row-inline
-    display: flex
-    gap: 1rem
-    align-items: end
-    flex-wrap: wrap
-    min-width: 0
-
-.form-row-inline--user
-    .form-field
-        flex: 1 1 auto
-        min-width: 0
-
-    .form-action
-        flex: 0 0 240px
-
-.form-field
-    flex: 1 1 280px
-    min-width: 0
-
-.form-label
-    margin-bottom: 0.45rem
-    font-weight: 600
-    color: $dark-800
-
-.form-select
-    width: 100%
-    min-width: 0
-
-.form-action
-    display: flex
-    align-items: end
-    min-width: 0
-
-    .btn
-        width: 100%
-
-.booking-actions-card
-    padding-top: 1rem
-    padding-bottom: 1rem
-
-.booking-actions-row
-    display: flex
-    gap: 0.75rem
-    justify-content: center
-    align-items: center
-    flex-wrap: wrap
-    min-width: 0
-
-.booking-btn
-    min-width: 220px
-    min-height: 44px
-    padding: 0.7rem 1.1rem
-    border-radius: 12px
-    font-weight: 600
+    align-self: center
     display: inline-flex
     align-items: center
     justify-content: center
-    gap: 0.5rem
-    transition: transform 0.15s ease, box-shadow 0.15s ease
-    box-sizing: border-box
+    border: 1px solid $border-color
+    border-radius: 999px
+    background: #fff
+    color: $primary-500
+    cursor: pointer
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .06)
+    transition: background .15s ease, border-color .15s ease, transform .15s ease
+
+    i
+        font-size: 1.1rem
+
+    &:hover
+        border-color: rgba(0, 146, 123, .3)
+        background: rgba(0, 146, 123, .06)
+        transform: translateY(-1px)
+
+.booking-actions-card
+    padding: 1rem 1.15rem
+
+.booking-actions-info
+    min-width: 0
+
+.booking-actions-row
+    display: flex
+    align-items: center
+    justify-content: flex-end
+    gap: .75rem
+    flex-wrap: wrap
+
+.booking-btn
+    min-width: 220px
+    min-height: 42px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: .5rem
+    padding: 0 .95rem
+    border-radius: 999px
+    font-size: .88rem
+    font-weight: 600
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease
 
     &:hover:not(:disabled)
         transform: translateY(-1px)
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08)
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .08)
+
+    &:disabled
+        opacity: .55
+        cursor: not-allowed
 
 .booking-btn--primary
     background: $primary-500
     border-color: $primary-500
-    color: $light-500
-
-.booking-btn--danger
-    background: transparent
-    border: 1px solid #dc3545
-    color: #dc3545
+    color: #fff
 
     &:hover:not(:disabled)
-        background: rgba(220, 53, 69, 0.08)
+        background: $primary-600
+        border-color: $primary-600
+        color: #fff
+
+.booking-btn--danger
+    background: #fff
+    border: 1px solid rgba(214, 69, 69, .32)
+    color: #b42318
+
+    &:hover:not(:disabled)
+        background: rgba(214, 69, 69, .08)
 
 .feedback-messages
     display: flex
     flex-direction: column
-    gap: 0.75rem
+    gap: .75rem
 
-.alert
-    margin-bottom: 0
+.page-alert
+    display: flex
+    align-items: center
+    gap: .65rem
+    padding: .9rem 1rem
+    border: 1px solid $border-color
+    border-radius: 16px
+    background: #fff
+    font-size: .92rem
+    line-height: 1.4
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .045)
+
+.page-alert--danger
+    border-color: rgba(214, 69, 69, .22)
+    color: #b42318
+    background: rgba(214, 69, 69, .06)
+
+.page-alert--success
+    border-color: rgba(0, 146, 123, .22)
+    color: $primary-600
+    background: rgba(0, 146, 123, .06)
+
+@media (max-width: 1100px)
+    .booking-hero
+        grid-template-columns: 1fr
+
+    .booking-hero__visual
+        display: none
 
 @media (max-width: 768px)
     .desk-booking-page
-        padding: 1rem 0.875rem 1.5rem
+        padding: 1rem .875rem 2rem
 
-    .page-title
-        font-size: 1.5rem
-
+    .booking-hero__content,
     .booking-card
         padding: 1rem
 
+    .booking-hero__text h1
+        font-size: 1.55rem
+
     .form-row-inline
+        grid-template-columns: 1fr
+
+    .booking-section-header,
+    .workstation-heading,
+    .booking-actions-card
+        align-items: flex-start
         flex-direction: column
-        align-items: stretch
 
-    .form-field
-        flex: 1 1 auto
+    .workstation-navigation
+        grid-template-columns: 38px minmax(0, 1fr) 38px
+        gap: .65rem
 
-    .booking-actions-row
-        justify-content: stretch
+    .day-nav-button,
+    .day-nav-placeholder
+        width: 38px
+        height: 38px
 
+    .booking-actions-row,
     .booking-btn
         width: 100%
-        min-width: 0
 
 @media (max-width: 576px)
     .desk-booking-page
-        padding: 1rem 0.75rem 1.5rem
-
-    .booking-card
-        padding: 0.875rem
+        padding: 1rem .75rem 1.75rem
 
     .calendar-row
-        gap: 0.5rem
+        gap: .5rem
 
     .calendar-day
         min-width: 52px
         height: 72px
 
-    .form-row-inline--user
-        .form-action
-            flex: 1 1 auto
+    .selected-date-chip,
+    .workstation-date-inline
+        white-space: normal
 
-    .booking-actions-row
-        flex-direction: column
-        align-items: stretch
-
-    .booking-btn
-        width: 100%
-        min-width: 0
+    .workstation-list-shell
+        padding: .65rem
