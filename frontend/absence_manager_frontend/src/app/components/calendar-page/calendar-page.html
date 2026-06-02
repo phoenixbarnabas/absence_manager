@@ -399,15 +399,28 @@
         </div>
       </dl>
 
-      <button
-        type="button"
-        class="btn btn-primary w-100 related-page-button"
-        (click)="openSelectedEvent(event)"
-        [disabled]="!canOpenRelatedPage(event)"
-      >
-        <i class="bi bi-box-arrow-up-right"></i>
-        Kapcsolódó oldal megnyitása
-      </button>
+      <div class="event-actions">
+        <button
+          type="button"
+          class="btn event-action-btn event-action-btn--primary"
+          (click)="openSelectedEvent()"
+          [disabled]="!canOpenRelatedPage(event)"
+        >
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>Kapcsolódó oldal megnyitása</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn event-action-btn event-action-btn--danger"
+          *ngIf="canCancelCalendarEvent(event)"
+          (click)="cancelSelectedEvent()"
+          [disabled]="cancellingEventId === event.id"
+        >
+          <i class="bi bi-x-circle"></i>
+          <span>{{ cancellingEventId === event.id ? 'Visszavonás...' : 'Kérelem visszavonása' }}</span>
+        </button>
+      </div>
     </aside>
 
     <ng-template #selectedDayPanel>
@@ -430,7 +443,7 @@
           </div>
         </div>
 
-        <div class="selected-day-events" *ngIf="selectedDay.events.length; else noSelectedDayEvents">
+        <div class="selected-day-events" *ngIf="selectedDay.events.length">
           <button
             type="button"
             class="selected-day-event"
@@ -447,14 +460,6 @@
           </button>
         </div>
 
-        <ng-template #noSelectedDayEvents>
-          <div class="day-empty-state">
-            <i class="bi bi-calendar2-check"></i>
-            <strong>Nincs esemény ezen a napon</strong>
-            <span>Innen indíthatsz új távollét vagy home office igényt.</span>
-          </div>
-        </ng-template>
-
         <button
           type="button"
           class="btn btn-primary w-100 request-day-button"
@@ -470,6 +475,87 @@
         </small>
       </aside>
     </ng-template>
+  </div>
+
+  <div
+    class="cancel-modal-backdrop"
+    *ngIf="cancelModalEvent as cancelEvent"
+    (click)="closeCancelCalendarModal()"
+  >
+    <div
+      class="cancel-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancelModalTitle"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="cancel-modal__header">
+        <div class="cancel-modal__icon">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Bezárás"
+          (click)="closeCancelCalendarModal()"
+          [disabled]="!!cancellingEventId"
+        ></button>
+      </div>
+
+      <div class="cancel-modal__content">
+        <span class="event-type-chip" [ngClass]="'event-type-chip--' + cancelEvent.type">
+          <i class="bi" [ngClass]="getEventTypeIcon(cancelEvent.type)"></i>
+          {{ getEventTypeLabel(cancelEvent.type) }}
+        </span>
+
+        <h2 id="cancelModalTitle">
+          Kérelem visszavonása
+        </h2>
+
+        <p>
+          Biztosan visszavonod ezt a kérelmet?
+        </p>
+
+        <div class="cancel-modal__summary">
+          <div>
+            <span>Megnevezés</span>
+            <strong>{{ cancelEvent.title }}</strong>
+          </div>
+
+          <div>
+            <span>Időszak</span>
+            <strong>{{ getEventDateText(cancelEvent) }}</strong>
+          </div>
+
+          <div>
+            <span>Státusz</span>
+            <strong>{{ getStatusLabel(cancelEvent.status) }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="cancel-modal__actions">
+        <button
+          type="button"
+          class="btn modal-action-btn modal-action-btn--secondary"
+          (click)="closeCancelCalendarModal()"
+          [disabled]="!!cancellingEventId"
+        >
+          Mégsem
+        </button>
+
+        <button
+          type="button"
+          class="btn modal-action-btn modal-action-btn--danger"
+          (click)="confirmCancelSelectedEvent()"
+          [disabled]="!!cancellingEventId"
+        >
+          <i class="bi bi-x-circle"></i>
+          <span>{{ cancellingEventId ? 'Visszavonás...' : 'Igen, visszavonom' }}</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div

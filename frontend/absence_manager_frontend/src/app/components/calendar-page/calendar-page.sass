@@ -180,6 +180,51 @@
   color: $danger-600
   font-size: .78rem
 
+.event-actions
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  margin-top: 1.15rem
+
+.event-action-btn
+  width: 100%
+  min-height: 44px
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  gap: .55rem
+  padding: 0 1rem
+  border-radius: 999px
+  font-size: .88rem
+  font-weight: 600
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease
+
+  &:hover:not(:disabled)
+    transform: translateY(-1px)
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .08)
+
+  &:disabled
+    opacity: .55
+    cursor: not-allowed
+
+.event-action-btn--primary
+  border: 1px solid $primary-500
+  background: $primary-500
+  color: #fff
+
+  &:hover:not(:disabled)
+    border-color: $primary-600
+    background: $primary-600
+    color: #fff
+
+.event-action-btn--danger
+  border: 1px solid rgba(214, 69, 69, .32)
+  background: #fff
+  color: $danger-600
+
+  &:hover:not(:disabled)
+    background: rgba(214, 69, 69, .08)
+
 .event-list
   display: flex
   flex-direction: column
@@ -243,6 +288,128 @@
   i
     font-size: .42rem
 
+.cancel-modal-backdrop
+  position: fixed
+  inset: 0
+  z-index: 1060
+  display: flex
+  align-items: center
+  justify-content: center
+  padding: 1rem
+  background: rgba(20, 33, 30, .48)
+
+.cancel-modal
+  width: min(560px, 100%)
+  overflow: hidden
+  border: 1px solid rgba(214, 69, 69, .18)
+  border-radius: 24px
+  background: #fff
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .22)
+
+.cancel-modal__header
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+  padding: 1.15rem 1.2rem .75rem
+
+.cancel-modal__icon
+  width: 44px
+  height: 44px
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  border-radius: 16px
+  background: rgba(214, 69, 69, .12)
+  color: $danger-600
+  font-size: 1.05rem
+
+.cancel-modal__content
+  padding: 0 1.2rem 1.15rem
+
+  h2
+    margin: .75rem 0 .35rem
+    color: $dark-900
+    font-size: 1.3rem
+    font-weight: 500
+
+  p
+    margin: 0
+    color: $dark-700
+    font-size: .94rem
+    line-height: 1.45
+
+.cancel-modal__summary
+  display: grid
+  grid-template-columns: repeat(3, minmax(0, 1fr))
+  gap: .7rem
+  margin-top: 1rem
+
+  div
+    min-width: 0
+    padding: .8rem
+    border: 1px solid $light-200
+    border-radius: 16px
+    background: $light-100
+
+  span
+    display: block
+    margin-bottom: .2rem
+    color: $dark-700
+    font-size: .74rem
+    font-weight: 600
+    text-transform: uppercase
+    letter-spacing: .03em
+
+  strong
+    display: block
+    color: $dark-900
+    font-size: .88rem
+    font-weight: 500
+    line-height: 1.35
+    overflow-wrap: anywhere
+
+.cancel-modal__actions
+  display: flex
+  align-items: center
+  justify-content: flex-end
+  gap: .8rem
+  padding: 1rem 1.2rem 1.2rem
+  border-top: 1px solid $light-200
+
+.modal-action-btn
+  min-height: 40px
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  gap: .45rem
+  padding: 0 1rem
+  border-radius: 999px
+  font-size: .86rem
+  font-weight: 600
+
+  &:disabled
+    opacity: .55
+    cursor: not-allowed
+
+.modal-action-btn--secondary
+  border: 1px solid $border-color
+  background: #fff
+  color: $dark-800
+
+  &:hover:not(:disabled)
+    background: $light-100
+
+.modal-action-btn--danger
+  border: 1px solid rgba(214, 69, 69, .32)
+  background: $danger-600
+  color: #fff
+
+  &:hover:not(:disabled)
+    border-color: $danger-500
+    background: $danger-600
+    color: #fff
+
 @media (max-width: 1200px)
   .calendar-layout
     grid-template-columns: 1fr
@@ -274,6 +441,16 @@
 
   .view-switcher__btn
     flex: 1
+
+  .cancel-modal__summary
+    grid-template-columns: 1fr
+
+  .cancel-modal__actions
+    flex-direction: column
+    align-items: stretch
+
+  .modal-action-btn
+    width: 100%
 
 .page-header__title-row
   align-items: center

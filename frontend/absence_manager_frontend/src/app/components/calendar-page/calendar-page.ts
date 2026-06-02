@@ -63,26 +63,6 @@ export class CalendarPage implements OnInit, OnDestroy {
     'December'
   ];
 
-  private getRelatedRequestId(event: CalendarEventDto): string | null {
-    const extendedEvent = event as CalendarEventDto & {
-      requestId?: string | null;
-      absenceRequestId?: string | null;
-      relatedEntityId?: string | null;
-      entityId?: string | null;
-      sourceId?: string | null;
-    };
-
-    return (
-      extendedEvent.requestId ||
-      extendedEvent.absenceRequestId ||
-      extendedEvent.relatedEntityId ||
-      extendedEvent.entityId ||
-      extendedEvent.sourceId ||
-      event.id ||
-      null
-    );
-  }
-
   readonly viewModes: { value: CalendarDisplayViewMode; label: string; icon: string }[] = [
     { value: 'week', label: 'Heti', icon: 'bi-calendar-week' },
     { value: 'month', label: 'Havi', icon: 'bi-calendar3' },
@@ -140,6 +120,8 @@ export class CalendarPage implements OnInit, OnDestroy {
 
   loading = false;
   saving = false;
+  cancellingEventId: string | null = null;
+  cancelModalEvent: CalendarEventDto | null = null;
 
   errorMessage = '';
   warningMessage = '';
@@ -514,6 +496,113 @@ export class CalendarPage implements OnInit, OnDestroy {
     });
   }
 
+  canCancelCalendarEvent(event: CalendarEventDto | null | undefined): boolean {
+    if (!event || this.saving || this.cancellingEventId) {
+      return false;
+    }
+
+    if (event.type === 'deskBooking') {
+      return false;
+    }
+
+    const status = this.normalizeStatus(event.status);
+
+    if (status !== 'pending' && status !== 'approved') {
+      return false;
+    }
+
+    return event.dateFrom >= this.formatDateForApi(new Date());
+  }
+
+  cancelSelectedEvent(): void {
+    const event = this.selectedEvent;
+
+    if (!this.canCancelCalendarEvent(event)) {
+      return;
+    }
+
+    this.cancelModalEvent = event;
+    this.refreshView();
+  }
+
+  closeCancelCalendarModal(): void {
+    if (this.cancellingEventId) {
+      return;
+    }
+
+    this.cancelModalEvent = null;
+    this.refreshView();
+  }
+
+  confirmCancelSelectedEvent(): void {
+    const event = this.cancelModalEvent;
+
+    if (!this.canCancelCalendarEvent(event)) {
+      return;
+    }
+
+    const requestId = this.getRelatedRequestId(event!);
+
+    if (!requestId) {
+      this.cancelModalEvent = null;
+      this.warningMessage = 'Ehhez az eseményhez nem található visszavonható kérelem azonosító.';
+      this.refreshView();
+      return;
+    }
+
+    this.clearMessages();
+    this.cancellingEventId = event!.id;
+    this.refreshView();
+
+    this.calendarService.cancelAbsenceRequest(requestId)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.cancellingEventId = null;
+          this.refreshView();
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage = 'A kérelem visszavonása sikerült.';
+          this.selectedEvent = null;
+          this.cancelModalEvent = null;
+          this.loadCalendar();
+        },
+        error: err => {
+          console.error('Calendar absence request cancel failed', err);
+
+          this.errorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült visszavonni a kérelmet.'
+          );
+
+          this.refreshView();
+        }
+      });
+  }
+
+  private getRelatedRequestId(event: CalendarEventDto): string | null {
+    const extendedEvent = event as CalendarEventDto & {
+      requestId?: string | null;
+      absenceRequestId?: string | null;
+      relatedEntityId?: string | null;
+      entityId?: string | null;
+      sourceId?: string | null;
+    };
+
+    return (
+      extendedEvent.requestId ||
+      extendedEvent.absenceRequestId ||
+      extendedEvent.relatedEntityId ||
+      extendedEvent.entityId ||
+      extendedEvent.sourceId ||
+      event.id ||
+      null
+    );
+  }
+
   reload(): void {
     this.loadCalendar();
   }
@@ -588,7 +677,6 @@ export class CalendarPage implements OnInit, OnDestroy {
 
     return 'Nincs látható esemény, innen indítható új igény erre a napra.';
   }
-
 
   private loadCalendar(): void {
     this.reloadRequested$.next();

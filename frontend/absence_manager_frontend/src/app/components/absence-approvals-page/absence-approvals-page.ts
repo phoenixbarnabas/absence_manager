@@ -47,6 +47,7 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadPendingApprovals();
+    this.loadReviewedApprovals();
   }
 
   ngOnDestroy(): void {
