@@ -103,7 +103,7 @@ namespace Absence_Manager.Controllers
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                var result = _officeBookingLogic.CreateBooking(dto, currentUserId);
+                var result = await _officeBookingLogic.CreateBookingAsync(dto, currentUserId, cancellationToken);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
@@ -132,7 +132,11 @@ namespace Absence_Manager.Controllers
             try
             {
                 var currentUserId = await _currentUserService.GetUserIdAsync(cancellationToken);
-                _officeBookingLogic.CancelBooking(bookingId, currentUserId, isAdmin: false);
+                await _officeBookingLogic.CancelBookingAsync(
+                    bookingId,
+                    currentUserId,
+                    isAdmin: false,
+                    cancellationToken);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)

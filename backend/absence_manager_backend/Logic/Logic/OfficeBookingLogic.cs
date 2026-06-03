@@ -19,6 +19,7 @@ namespace Logic.Logic
         private readonly Repository<Location> _locationRepository;
         private readonly Repository<AppUser> _appUserRepository;
         private readonly DtoProvider _dtoProvider;
+        private readonly IUserActivityLogger _activityLogger;
 
         public OfficeBookingLogic(
             Repository<OfficeBooking> officeBookingRepository,
@@ -26,7 +27,9 @@ namespace Logic.Logic
             Repository<Office> officeRepository,
             Repository<Location> locationRepository,
             Repository<AppUser> appUserRepository,
-            DtoProvider dtoProvider)
+            DtoProvider dtoProvider,
+            IUserActivityLogger activityLogger
+            )
         {
             _officeBookingRepository = officeBookingRepository;
             _workstationRepository = workstationRepository;
@@ -34,6 +37,7 @@ namespace Logic.Logic
             _locationRepository = locationRepository;
             _appUserRepository = appUserRepository;
             _dtoProvider = dtoProvider;
+            _activityLogger = activityLogger;
         }
 
         public OfficeDayAvailabilityDto GetOfficeDayAvailability(string officeId, DateOnly date, string currentUserId)
@@ -153,7 +157,7 @@ namespace Logic.Logic
         }
 
         //javitsd hogy a date formatumot is vizsgalja a create ha nem jo a formatum dobjon exceptiont
-        public OfficeBookingViewDto CreateBooking(CreateOfficeBookingDto dto, string currentUserId)
+        public async Task<OfficeBookingViewDto> CreateBookingAsync(CreateOfficeBookingDto dto, string currentUserId, CancellationToken cancellationToken = default)
         {
             ValidateBookingDate(dto.BookingDate);
 
@@ -212,9 +216,23 @@ namespace Logic.Logic
             if (createdBooking == null)
                 throw new InvalidOperationException("Created booking could not be loaded.");
 
-            Console.WriteLine($"Booking Id: {createdBooking.Id}");
-            Console.WriteLine($"WorkstationId: {createdBooking.WorkstationId}");
-            Console.WriteLine($"UserId: {createdBooking.UserId}");
+            await _activityLogger.LogAsync(
+                action: UserActivityLogActions.OfficeBookingCreated,
+                entityType: UserActivityLogEntityTypes.OfficeBooking,
+                entityId: createdBooking.Id,
+                actorUserId: currentUserId,
+                metadata: new
+                {
+                    createdBooking.BookingDate,
+                    createdBooking.WorkstationId,
+                    WorkstationName = createdBooking.Workstation.Name,
+                    WorkstationCode = createdBooking.Workstation.Code,
+                    OfficeId = createdBooking.Workstation.Office.Id,
+                    OfficeName = createdBooking.Workstation.Office.Name,
+                    LocationId = createdBooking.Workstation.Office.Location.Id,
+                    LocationName = createdBooking.Workstation.Office.Location.Name
+                },
+                cancellationToken: cancellationToken);
 
             return _dtoProvider.Mapper.Map<OfficeBookingViewDto>(createdBooking);
         }
@@ -240,10 +258,12 @@ namespace Logic.Logic
                 .Select(b => _dtoProvider.Mapper.Map<OfficeBookingViewDto>(b));
         }
 
-        public void CancelBooking(string bookingId, string currentUserId, bool isAdmin = false)
+        public async Task CancelBookingAsync(string bookingId, string currentUserId, bool isAdmin = false, CancellationToken cancellationToken = default)
         {
             var booking = _officeBookingRepository.GetAll()
                 .Include(b => b.Workstation)
+                .ThenInclude(w => w.Office)
+                .ThenInclude(o => o.Location)
                 .FirstOrDefault(b => b.Id == bookingId);
 
             if (booking == null)
@@ -253,7 +273,24 @@ namespace Logic.Logic
                 throw new InvalidOperationException("Booking is already cancelled.");
 
             if (!isAdmin && booking.UserId != currentUserId)
+            {
+                await _activityLogger.LogAsync(
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.OfficeBooking,
+                    entityId: bookingId,
+                    actorUserId: currentUserId,
+                    metadata: new
+                    {
+                        AttemptedAction = "CancelOfficeBooking",
+                        BookingOwnerUserId = booking.UserId,
+                        booking.BookingDate,
+                        booking.WorkstationId
+                    },
+                    outcome: UserActivityLogOutcomes.Forbidden,
+                    cancellationToken: cancellationToken);
+
                 throw new UnauthorizedAccessException("You can only cancel your own booking.");
+            }
 
             var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -265,6 +302,25 @@ namespace Logic.Logic
             booking.CancelledByUserId = currentUserId;
 
             _officeBookingRepository.Update(booking);
+
+            await _activityLogger.LogAsync(
+                action: UserActivityLogActions.OfficeBookingCancelled,
+                entityType: UserActivityLogEntityTypes.OfficeBooking,
+                entityId: booking.Id,
+                actorUserId: currentUserId,
+                metadata: new
+                {
+                    booking.BookingDate,
+                    booking.WorkstationId,
+                    WorkstationName = booking.Workstation.Name,
+                    WorkstationCode = booking.Workstation.Code,
+                    OfficeId = booking.Workstation.Office.Id,
+                    OfficeName = booking.Workstation.Office.Name,
+                    LocationId = booking.Workstation.Office.Location.Id,
+                    LocationName = booking.Workstation.Office.Location.Name,
+                    IsAdminCancellation = isAdmin
+                },
+                cancellationToken: cancellationToken);
         }
 
         private static void ValidateBookingDate(DateOnly bookingDate)

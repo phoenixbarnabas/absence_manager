@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+import { combineLatest, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { UserProfile } from '../../models/app-user-models';
-import { AuthService } from '../../auth/auth-service';
+import { AuthProcessState, AuthService } from '../../auth/auth-service';
 import { UserService } from '../../services/user.service';
 import { AccountInfo } from '@azure/msal-browser';
 
@@ -15,28 +15,43 @@ export class Navbar implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   loading = true;
   isLoggedIn = false;
+  authProcessState: AuthProcessState = 'initializing';
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(public authService: AuthService) { }
 
   ngOnInit(): void {
-    this.authService.account$
-      .pipe(
-        distinctUntilChanged((previous, current) => previous?.homeAccountId === current?.homeAccountId),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(account => {
+    combineLatest([
+      this.authService.account$.pipe(
+        distinctUntilChanged((previous, current) =>
+          previous?.homeAccountId === current?.homeAccountId
+        )
+      ),
+      this.authService.authProcessState$
+    ])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([account, authProcessState]) => {
+        this.authProcessState = authProcessState;
+        this.loading = this.isAuthTransition;
+
+        if (this.isAuthTransition) {
+          if (this.isLoggingOut) {
+            this.isLoggedIn = false;
+            this.userProfile = null;
+          }
+
+          return;
+        }
+
         this.isLoggedIn = !!account;
 
         if (!account) {
           this.userProfile = null;
-          this.loading = false;
           return;
         }
 
         this.userProfile = this.createProfileFromAccount(account);
-        this.loading = false;
       });
   }
 
@@ -65,5 +80,33 @@ export class Navbar implements OnInit, OnDestroy {
       department: '',
       jobTitle: ''
     };
+  }
+
+  get isInitializing(): boolean {
+    return this.authProcessState === 'initializing';
+  }
+
+  get isLoggingIn(): boolean {
+    return this.authProcessState === 'loggingIn';
+  }
+
+  get isLoggingOut(): boolean {
+    return this.authProcessState === 'loggingOut';
+  }
+
+  get isAuthTransition(): boolean {
+    return this.isInitializing || this.isLoggingIn || this.isLoggingOut;
+  }
+
+  get authTransitionLabel(): string {
+    if (this.isLoggingIn) {
+      return 'Bejelentkezés...';
+    }
+
+    if (this.isLoggingOut) {
+      return 'Kijelentkezés...';
+    }
+
+    return 'Betöltés...';
   }
 }

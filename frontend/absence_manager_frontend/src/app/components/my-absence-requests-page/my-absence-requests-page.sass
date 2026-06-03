@@ -1,6 +1,777 @@
 @use '../../../../src/styles' as *
-@use '../absence-approvals-page/absence-approvals-page'
 
-.request-card--highlighted
+.my-absence-requests-page
+    width: 100%
+    max-width: 1180px
+    margin: 0 auto
+    padding: 1.5rem 1rem 2.5rem
+    color: $dark-800
+
+.requests-hero
+    display: grid
+    grid-template-columns: minmax(0, 1fr) 280px
+    gap: 1.25rem
+    margin-bottom: 1rem
+
+.requests-hero__content,
+.status-visual-card,
+.summary-card,
+.state-card,
+.request-section,
+.archive-toggle,
+.request-row
+    border: 1px solid $border-color
+    background: $light-500
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .055)
+
+.requests-hero__content
+    min-height: 178px
+    display: flex
+    flex-direction: column
+    justify-content: center
+    padding: 1.6rem 1.8rem
+    border-radius: 24px
+
+.requests-hero__title-row
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: 1.5rem
+
+.requests-hero__text
+    h1
+        margin: 0 0 .45rem
+        color: $dark-900
+        font-size: 2rem
+        font-weight: 500
+        line-height: 1.15
+
+    p
+        max-width: 660px
+        margin: 0
+        color: $dark-700
+        font-size: .98rem
+        line-height: 1.5
+
+.page-eyebrow,
+.section-eyebrow,
+.archive-toggle__eyebrow,
+.request-row__eyebrow
+    display: inline-flex
+    align-items: center
+    gap: .45rem
+    color: $primary-500
+    font-size: .76rem
+    font-weight: 600
+    letter-spacing: .04em
+    text-transform: uppercase
+
+.page-eyebrow
+    margin-bottom: .75rem
+
+.hero-action
+    min-height: 46px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: .6rem
+    padding: 0 1.15rem
+    border: 0
+    border-radius: 999px
+    background: $primary-500
+    color: #fff
+    font-weight: 500
+    text-decoration: none
+    white-space: nowrap
+    box-shadow: 0 10px 20px rgba(0, 146, 123, .18)
+
+    &:hover
+        background: $primary-600
+        color: #fff
+
+.hero-action__icon
+    width: 26px
+    height: 26px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    border-radius: 50%
+    background: rgba(255, 255, 255, .18)
+
+.status-visual-card
+    min-height: 178px
+    display: flex
+    flex-direction: column
+    justify-content: space-between
+    padding: 1.35rem
+    border-radius: 24px
+    border-color: rgba(0, 146, 123, .16)
+    background: linear-gradient(135deg, rgba(0, 146, 123, .11), rgba(146, 212, 0, .12))
+
+    strong
+        color: $dark-900
+        font-size: 2.25rem
+        font-weight: 500
+        line-height: 1
+
+    small
+        color: $dark-700
+        font-size: .9rem
+
+.status-visual-card__top
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: .75rem
+    color: $dark-800
+    font-size: .76rem
+    font-weight: 600
+    text-transform: uppercase
+    letter-spacing: .04em
+
+    i
+        width: 40px
+        height: 40px
+        display: inline-flex
+        align-items: center
+        justify-content: center
+        border-radius: 14px
+        background: $primary-500
+        color: #fff
+
+.status-visual-card__bars
+    display: grid
+    grid-template-columns: 1.4fr 1fr .7fr
+    gap: .45rem
+
+    span
+        height: .8rem
+        border-radius: 999px
+        background: rgba(255, 255, 255, .8)
+
+        &:first-child
+            background: $primary-500
+
+        &:last-child
+            background: $secondary-500
+
+.summary-grid
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: .9rem
+    margin-bottom: 1rem
+
+.summary-card
+    display: flex
+    align-items: center
+    gap: .85rem
+    padding: 1rem
+    border-radius: 18px
+
+    strong
+        display: block
+        color: $dark-900
+        font-size: 1.12rem
+        font-weight: 500
+        line-height: 1.15
+
+    span
+        color: $dark-700
+        font-size: .86rem
+
+.summary-card--primary
+    border-color: rgba(227, 154, 28, .22)
+    background: linear-gradient(135deg, #fff, rgba(227, 154, 28, .055))
+
+.summary-card--approved
+    border-color: rgba(46, 158, 111, .22)
+    background: linear-gradient(135deg, #fff, rgba(46, 158, 111, .055))
+
+.summary-card__icon,
+.empty-icon
+    flex: 0 0 auto
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    background: rgba(0, 146, 123, .1)
+    color: $primary-500
+
+.summary-card__icon
+    width: 42px
+    height: 42px
+    border-radius: 15px
+
+.notification-stack
+    margin-bottom: 1rem
+
+.page-notification
+    display: grid
+    grid-template-columns: auto 1fr auto
+    gap: .85rem
+    padding: 1rem
+    border: 1px solid $border-color
+    border-radius: 18px
+    background: $light-500
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .055)
+
+.page-notification__icon
+    width: 2.35rem
+    height: 2.35rem
+    display: flex
+    align-items: center
+    justify-content: center
+    border-radius: 999px
+    background: rgba(0, 146, 123, .1)
+    color: $primary-500
+
+.page-notification--success .page-notification__icon
+    background: rgba(46, 158, 111, .12)
+    color: $success-600
+
+.page-notification--error .page-notification__icon
+    background: rgba(214, 69, 69, .12)
+    color: $danger-600
+
+.page-notification--warning .page-notification__icon
+    background: rgba(227, 154, 28, .14)
+    color: $warning-600
+
+.page-notification__body
+    display: flex
+    flex-direction: column
+    gap: .2rem
+
+    strong
+        color: $dark-900
+        font-size: .95rem
+        font-weight: 600
+
+    span
+        color: $dark-700
+        font-size: .9rem
+        line-height: 1.45
+
+.page-notification__close
+    width: 30px
+    height: 30px
+    border: 0
+    border-radius: 8px
+    background: transparent
+    color: $dark-700
+
+.state-card
+    display: flex
+    align-items: center
+    gap: 1rem
+    padding: 1.1rem 1.2rem
+    margin-bottom: 1rem
+    border-radius: 18px
+
+    h2
+        margin: 0 0 .25rem
+        color: $dark-900
+        font-size: 1.05rem
+        font-weight: 500
+
+    p,
+    span
+        margin: 0
+        color: $dark-700
+        font-size: .9rem
+        line-height: 1.45
+
+.state-card--flat
+    box-shadow: none
+
+.spinner
+    width: 1.7rem
+    height: 1.7rem
+    border-radius: 50%
+    border: 3px solid $light-200
+    border-top-color: $primary-500
+    animation: spin .8s linear infinite
+
+.empty-icon
+    width: 48px
+    height: 48px
+    border-radius: 16px
+    font-size: 1.25rem
+
+.request-section
+    position: relative
+    margin-top: 1rem
+    padding: 1rem
+    border-radius: 22px
+    overflow: hidden
+
+    &::before
+        content: ''
+        position: absolute
+        inset: 0 auto 0 0
+        width: 6px
+        background: $primary-500
+
+.request-section--pending
+    border-color: rgba(227, 154, 28, .28)
+    background: linear-gradient(135deg, rgba(227, 154, 28, .07), #fff 42%)
+
+    &::before
+        background: $warning-500
+
+.request-section--approved
+    border-color: rgba(46, 158, 111, .28)
+    background: linear-gradient(135deg, rgba(46, 158, 111, .07), #fff 42%)
+
+    &::before
+        background: $success-500
+
+.request-section__header
+    display: flex
+    align-items: flex-start
+    justify-content: space-between
+    gap: 1rem
+    margin-bottom: .85rem
+    padding-left: .25rem
+
+    h2
+        margin: .2rem 0 .15rem
+        color: $dark-900
+        font-size: 1.08rem
+        font-weight: 500
+
+    p
+        margin: 0
+        color: $dark-700
+        font-size: .86rem
+        line-height: 1.4
+
+.section-count
+    flex: 0 0 auto
+    min-height: 30px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    padding: 0 .75rem
+    border-radius: 999px
+    font-size: .82rem
+    font-weight: 600
+    white-space: nowrap
+
+.section-count--pending
+    background: rgba(227, 154, 28, .14)
+    color: $warning-600
+
+.section-count--approved
+    background: rgba(46, 158, 111, .12)
+    color: $success-600
+
+.request-list
+    display: flex
+    flex-direction: column
+    gap: .65rem
+
+.request-row
+    display: grid
+    grid-template-columns: 5px minmax(0, 1fr) auto
+    align-items: center
+    min-height: 82px
+    padding: 0
+    border-radius: 16px
+    overflow: hidden
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .035)
+    transition: border-color .15s ease, box-shadow .15s ease
+
+    &:hover
+        border-color: rgba(0, 146, 123, .24)
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .05)
+
+.request-row--pending
+    background: #fffaf1
+
+.request-row--approved-list
+    background: #f7fcfa
+
+.request-row--archived
+    background: rgba(255, 255, 255, .78)
+    box-shadow: none
+
+.request-row--highlighted
     border-color: $primary-500
-    box-shadow: 0 0 0 3px rgba(0, 146, 123, 0.12), 0 8px 22px rgba(0, 0, 0, 0.08)
+    box-shadow: 0 0 0 3px rgba(0, 146, 123, .13), 0 8px 20px rgba(0, 0, 0, .05)
+
+.request-row__accent
+    align-self: stretch
+    background: $primary-500
+
+.request-section--pending .request-row__accent
+    background: $warning-500
+
+.request-section--approved .request-row__accent
+    background: $success-500
+
+.request-row--vacation .request-row__accent
+    background: $secondary-500
+
+.request-row--homeOffice .request-row__accent
+    background: $primary-500
+
+.request-row--sickLeave .request-row__accent
+    background: $warning-500
+
+.request-row--otherAbsence .request-row__accent
+    background: $info-500
+
+.request-row__main
+    min-width: 0
+    padding: .85rem 1rem .85rem 1.15rem
+
+.request-row__title-line
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: .85rem
+    margin-bottom: .35rem
+
+    h3
+        margin: 0
+        color: $dark-900
+        font-size: 1rem
+        font-weight: 500
+        line-height: 1.25
+
+.request-row__eyebrow
+    display: block
+    margin-bottom: .1rem
+    font-size: .68rem
+
+.request-row__meta-line
+    display: flex
+    align-items: center
+    flex-wrap: wrap
+    gap: .4rem 1rem
+    color: $dark-700
+    font-size: .82rem
+    line-height: 1.35
+
+    span
+        display: inline-flex
+        align-items: center
+        gap: .35rem
+
+    i
+        color: $primary-500
+        font-size: .82rem
+
+.request-row__note
+    display: flex
+    gap: .35rem
+    margin-top: .4rem
+    color: $dark-700
+    font-size: .82rem
+    line-height: 1.35
+
+    strong
+        flex: 0 0 auto
+        color: $dark-800
+        font-weight: 600
+
+    span
+        min-width: 0
+        overflow: hidden
+        display: -webkit-box
+        -webkit-line-clamp: 2
+        -webkit-box-orient: vertical
+
+.request-row__note--decision
+    color: $primary-600
+
+
+.request-row__side
+    display: flex
+    flex-direction: column
+    align-items: flex-end
+    justify-content: flex-start
+    gap: 1rem
+    padding: .85rem 1rem .85rem .75rem
+
+.request-row__side--readonly
+    justify-content: center
+
+.request-row__actions
+    display: flex
+    align-items: flex-start
+    justify-content: flex-end
+    padding: .65rem 1rem .85rem 0
+
+.status-pill
+    flex: 0 0 auto
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    min-height: 24px
+    padding: 0 .6rem
+    border-radius: 999px
+    background: $light-100
+    color: $dark-700
+    font-size: .74rem
+    font-weight: 600
+    white-space: nowrap
+
+.status-pill--pending
+    background: rgba(227, 154, 28, .14)
+    color: $warning-600
+
+.status-pill--approved
+    background: rgba(46, 158, 111, .12)
+    color: $success-600
+
+.status-pill--rejected
+    background: rgba(214, 69, 69, .12)
+    color: $danger-600
+
+.status-pill--cancelled
+    background: $light-200
+    color: $dark-700
+
+.row-btn
+    min-height: 34px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: .4rem
+    padding: 0 .8rem
+    border-radius: 999px
+    border: 1px solid transparent
+    background: #fff
+    font-size: .82rem
+    font-weight: 500
+    white-space: nowrap
+
+    &:disabled
+        opacity: .55
+        cursor: not-allowed
+
+.row-btn--danger
+    border-color: rgba(214, 69, 69, .28)
+    color: $danger-600
+
+    &:hover:not(:disabled)
+        background: rgba(214, 69, 69, .08)
+
+.row-btn--secondary
+    border-color: $border-color
+    color: $dark-800
+
+.archive-section
+    margin-top: 1.25rem
+    padding-top: 1.25rem
+    border-top: 1px dashed rgba(83, 83, 83, .22)
+
+.archive-toggle
+    width: 100%
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: 1rem
+    padding: 1rem 1.1rem
+    border-radius: 18px
+    color: inherit
+    text-align: left
+    background: linear-gradient(135deg, #fff, rgba(83, 83, 83, .035))
+
+    h2
+        margin: .2rem 0
+        color: $dark-900
+        font-size: 1.02rem
+        font-weight: 500
+
+    p
+        margin: 0
+        color: $dark-700
+        font-size: .86rem
+
+.archive-toggle__meta
+    display: inline-flex
+    align-items: center
+    gap: .65rem
+    color: $dark-700
+    font-size: .84rem
+    white-space: nowrap
+
+    i
+        width: 32px
+        height: 32px
+        display: inline-flex
+        align-items: center
+        justify-content: center
+        border-radius: 11px
+        background: rgba(0, 146, 123, .08)
+        color: $primary-500
+
+.archive-content
+    margin-top: .75rem
+    padding: 1rem
+    border: 1px solid $border-color
+    border-radius: 18px
+    background: rgba(255, 255, 255, .72)
+
+.custom-modal-backdrop
+    position: fixed
+    inset: 0
+    z-index: 1050
+    background: rgba(20, 33, 30, .45)
+
+.custom-modal
+    position: fixed
+    inset: 0
+    z-index: 1060
+    display: flex
+    align-items: center
+    justify-content: center
+    padding: 1rem
+
+.custom-modal__panel
+    width: min(540px, 100%)
+    border-radius: 22px
+    background: #fff
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .18)
+    overflow: hidden
+
+.custom-modal__header,
+.custom-modal__actions
+    display: flex
+    align-items: center
+    justify-content: space-between
+    gap: .6rem
+    padding: 1.1rem
+
+.custom-modal__icon,
+.custom-modal__close
+    width: 40px
+    height: 40px
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    border: 0
+    border-radius: 14px
+
+.custom-modal__icon--danger
+    background: rgba(214, 69, 69, .12)
+    color: $danger-600
+
+.custom-modal__close
+    background: $light-100
+    color: $dark-700
+
+.custom-modal__content
+    padding: 0 1.1rem 1.1rem
+
+    h2
+        margin: 0 0 .35rem
+        color: $dark-900
+        font-size: 1.25rem
+        font-weight: 500
+
+    p
+        margin: 0
+        color: $dark-700
+        font-size: .92rem
+
+.cancel-summary
+    display: grid
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    gap: .65rem
+    margin: 1rem 0
+
+    div
+        padding: .75rem
+        border: 1px solid $light-200
+        border-radius: 14px
+        background: $light-100
+
+    span
+        display: block
+        margin-bottom: .18rem
+        color: $dark-700
+        font-size: .75rem
+
+    strong
+        color: $dark-900
+        font-size: .88rem
+        font-weight: 500
+
+.custom-modal__warning
+    margin-top: .85rem !important
+    padding: .8rem
+    border-radius: 14px
+    background: rgba(214, 69, 69, .08)
+    color: $danger-600 !important
+
+.custom-modal__actions
+    justify-content: flex-end
+    border-top: 1px solid $light-200
+
+@keyframes spin
+    to
+        transform: rotate(360deg)
+
+@media (max-width: 1100px)
+    .requests-hero
+        grid-template-columns: 1fr
+
+    .requests-hero__visual
+        display: none
+
+@media (max-width: 820px)
+    .summary-grid,
+    .cancel-summary
+        grid-template-columns: 1fr
+
+    .requests-hero__title-row,
+    .request-section__header
+        flex-direction: column
+        align-items: flex-start
+
+    .request-row
+        grid-template-columns: 5px minmax(0, 1fr)
+
+    .request-row__actions
+        grid-column: 2
+        justify-content: flex-start
+        padding: 0 1rem .9rem 1.15rem
+
+    .request-row__title-line
+        flex-direction: column
+        align-items: flex-start
+
+@media (max-width: 576px)
+    .my-absence-requests-page
+        padding: 1rem .75rem 2rem
+
+    .requests-hero__content
+        min-height: auto
+        padding: 1.25rem
+
+    .requests-hero__text h1
+        font-size: 1.55rem
+
+    .hero-action,
+    .row-btn
+        width: 100%
+
+    .state-card
+        align-items: flex-start
+
+    .request-row__meta-line
+        flex-direction: column
+        align-items: flex-start
+        gap: .3rem
+
+    .custom-modal__actions,
+    .archive-toggle
+        flex-direction: column
+        align-items: flex-start
+
+    .archive-toggle__meta
+        width: 100%
+        justify-content: space-between

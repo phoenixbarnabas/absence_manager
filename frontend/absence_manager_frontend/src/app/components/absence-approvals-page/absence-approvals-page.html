@@ -1,13 +1,74 @@
 <div class="absence-approvals-page">
-  <div class="page-header">
-    <div>
-      <p class="page-eyebrow">Manager jóváhagyás</p>
-      <h1 class="page-title">Jóváhagyásra váró kérelmek</h1>
-      <p class="page-subtitle">
-        Itt láthatók az aktív beosztottak függőben lévő távollét kérelmei.
-      </p>
+  <header class="approval-page-hero">
+    <div class="approval-page-hero__content">
+      <span class="page-eyebrow">
+        <i class="bi bi-check2-square"></i>
+        Manager jóváhagyás
+      </span>
+
+      <div class="approval-page-hero__title-row">
+        <div class="approval-page-hero__text">
+          <h1>Jóváhagyásra váró kérelmek</h1>
+          <p>
+            Tekintsd át és bíráld el az aktív beosztottak távollét kérelmeit.
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <div class="approval-page-hero__visual">
+      <div class="status-visual-card" aria-hidden="true">
+        <div class="status-visual-card__top">
+          <span>Jóváhagyási lista</span>
+          <i class="bi bi-clipboard-check"></i>
+        </div>
+
+        <strong>{{ approvals.length }}</strong>
+        <small>függőben lévő kérelem</small>
+
+        <div class="status-visual-card__bars">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <div class="summary-card summary-card--primary">
+      <span class="summary-card__icon">
+        <i class="bi bi-hourglass-split"></i>
+      </span>
+
+      <div>
+        <strong>{{ approvals.length }}</strong>
+        <span>Várakozó kérelem</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <span class="summary-card__icon">
+        <i class="bi bi-archive"></i>
+      </span>
+
+      <div>
+        <strong>{{ reviewedLoaded ? reviewedApprovals.length : '-' }}</strong>
+        <span>Elbírált kérelem</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <span class="summary-card__icon">
+        <i class="bi bi-people"></i>
+      </span>
+
+      <div>
+        <strong>Aktív</strong>
+        <span>Beosztotti kérelmek</span>
+      </div>
+    </div>
+  </section>
 
   <div class="notification-stack" *ngIf="notification as currentNotification">
     <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
@@ -39,111 +100,139 @@
     </div>
   </div>
 
-  <section class="approval-card loading-card" *ngIf="loading">
+  <section class="state-card" *ngIf="loading">
     <div class="spinner"></div>
-    <span>Kérelmek betöltése...</span>
+
+    <div>
+      <strong>Kérelmek betöltése</strong>
+      <span>A jóváhagyásra váró kérelmek lekérése folyamatban...</span>
+    </div>
   </section>
 
-  <section class="approval-card empty-card" *ngIf="!loading && approvals.length === 0">
+  <section class="state-card empty-card" *ngIf="!loading && approvals.length === 0">
     <div class="empty-icon">
       <i class="bi bi-inbox"></i>
     </div>
-    <h2>Nincs jóváhagyásra váró kérelem</h2>
-    <p>Jelenleg nincs függőben lévő távollét kérelem az aktív beosztottaktól.</p>
+
+    <div>
+      <h2>Nincs jóváhagyásra váró kérelem</h2>
+      <p>Jelenleg nincs függőben lévő távollét kérelem az aktív beosztottaktól.</p>
+    </div>
   </section>
 
   <section class="approval-list" *ngIf="!loading && approvals.length > 0">
-    <article class="approval-card request-card" *ngFor="let approval of approvals; trackBy: trackByApprovalId">
-      <div class="request-header">
-        <div class="user-block">
-          <div class="user-avatar">
-            {{ (approval.userDisplayName || approval.userEmail || '?').charAt(0).toUpperCase() }}
+    <article
+      class="approval-row"
+      *ngFor="let approval of approvals; trackBy: trackByApprovalId"
+      [ngClass]="[
+        'approval-row--' + approval.type,
+        'approval-row--' + approval.status
+      ]"
+    >
+      <div class="approval-row__accent"></div>
+
+      <div class="approval-row__content">
+        <div class="approval-row__main">
+          <div class="approval-row__title-line">
+            <div class="person-block">
+              <div class="user-avatar">
+                {{ (approval.userDisplayName || approval.userEmail || '?').charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="person-block__text">
+                <span class="approval-row__eyebrow">Kérelmező</span>
+                <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
+                <p>{{ approval.userEmail || '-' }}</p>
+              </div>
+            </div>
           </div>
 
-          <div class="user-meta">
-            <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
-            <p>{{ approval.userEmail || '-' }}</p>
+          <div class="approval-row__meta-line">
+            <span>
+              <i class="bi bi-tag"></i>
+              {{ getTypeLabel(approval.type) }}
+            </span>
+
+            <span>
+              <i class="bi bi-calendar3"></i>
+              {{ getDateRangeText(approval) }}
+            </span>
+
+            <span>
+              <i class="bi bi-clock"></i>
+              Létrehozva: {{ formatDate(approval.createdAtUtc) }}
+            </span>
+          </div>
+
+          <div class="approval-row__note" *ngIf="approval.reason">
+            <strong>Indoklás:</strong>
+            <span>{{ approval.reason }}</span>
+          </div>
+
+          <div class="approval-row__decision">
+            <label [for]="'decision-comment-' + approval.id">
+              Döntési megjegyzés
+            </label>
+
+            <textarea
+              [id]="'decision-comment-' + approval.id"
+              rows="2"
+              [(ngModel)]="decisionComments[approval.id]"
+              [disabled]="savingRequestId === approval.id"
+              placeholder="Opcionális megjegyzés..."
+            ></textarea>
           </div>
         </div>
 
-        <span class="status-pill">
-          {{ getStatusLabel(approval.status) }}
-        </span>
-      </div>
+        <div class="approval-row__side">
+          <span class="status-pill" [ngClass]="getStatusPillClass(approval.status)">
+            {{ getStatusLabel(approval.status) }}
+          </span>
 
-      <div class="request-grid">
-        <div class="request-field">
-          <span>Típus</span>
-          <strong>{{ getTypeLabel(approval.type) }}</strong>
+          <div class="approval-row__actions">
+            <button
+              type="button"
+              class="row-btn row-btn--danger"
+              (click)="reject(approval)"
+              [disabled]="!!savingRequestId"
+            >
+              <i class="bi bi-x-circle"></i>
+              <span>Elutasítás</span>
+            </button>
+
+            <button
+              type="button"
+              class="row-btn row-btn--primary"
+              (click)="approve(approval)"
+              [disabled]="!!savingRequestId"
+            >
+              <i class="bi bi-check-circle"></i>
+              <span>{{ savingRequestId === approval.id ? 'Mentés...' : 'Jóváhagyás' }}</span>
+            </button>
+          </div>
         </div>
-
-        <div class="request-field">
-          <span>Időszak</span>
-          <strong>{{ getDateRangeText(approval) }}</strong>
-        </div>
-
-        <div class="request-field">
-          <span>Létrehozva</span>
-          <strong>{{ formatDate(approval.createdAtUtc) }}</strong>
-        </div>
-      </div>
-
-      <div class="reason-block" *ngIf="approval.reason">
-        <span>Indoklás</span>
-        <p>{{ approval.reason }}</p>
-      </div>
-
-      <div class="decision-block">
-        <label [for]="'decision-comment-' + approval.id">
-          Döntési megjegyzés
-        </label>
-
-        <textarea
-          [id]="'decision-comment-' + approval.id"
-          rows="3"
-          [(ngModel)]="decisionComments[approval.id]"
-          [disabled]="savingRequestId === approval.id"
-          placeholder="Opcionális megjegyzés a döntéshez"
-        ></textarea>
-      </div>
-
-      <div class="card-actions">
-        <button
-          type="button"
-          class="approval-btn approval-btn--danger"
-          (click)="reject(approval)"
-          [disabled]="!!savingRequestId"
-        >
-          <i class="bi bi-x-circle"></i>
-          Elutasítás
-        </button>
-
-        <button
-          type="button"
-          class="approval-btn approval-btn--primary"
-          (click)="approve(approval)"
-          [disabled]="!!savingRequestId"
-        >
-          <i class="bi bi-check-circle"></i>
-          Jóváhagyás
-        </button>
       </div>
     </article>
   </section>
 
-  <section class="reviewed-section">
+  <section class="archive-section">
     <button
       type="button"
-      class="reviewed-toggle"
+      class="archive-toggle"
       (click)="toggleReviewedApprovals()"
       [attr.aria-expanded]="reviewedExpanded"
     >
       <div>
+        <span class="archive-toggle__eyebrow">
+          <i class="bi bi-clock-history"></i>
+          Előzmények
+        </span>
+
         <h2>Elbírált kérelmek</h2>
         <p>Korábban jóváhagyott vagy elutasított távollét kérelmek.</p>
       </div>
 
-      <div class="reviewed-toggle__meta">
+      <div class="archive-toggle__meta">
         <span *ngIf="reviewedLoaded && reviewedApprovals.length > 0">
           {{ reviewedApprovals.length }} db
         </span>
@@ -152,109 +241,93 @@
       </div>
     </button>
 
-    <div class="reviewed-content" *ngIf="reviewedExpanded">
-      <div class="notification-stack notification-stack--inline" *ngIf="reviewedNotification as currentReviewedNotification">
-        <div class="page-notification" [ngClass]="'page-notification--' + currentReviewedNotification.type">
-          <div class="page-notification__icon">
-            <i
-              class="bi"
-              [ngClass]="{
-                'bi-check-circle-fill': currentReviewedNotification.type === 'success',
-                'bi-exclamation-triangle-fill': currentReviewedNotification.type === 'error',
-                'bi-info-circle-fill': currentReviewedNotification.type === 'info',
-                'bi-exclamation-circle-fill': currentReviewedNotification.type === 'warning'
-              }"
-            ></i>
-          </div>
-
-          <div class="page-notification__body">
-            <strong>{{ currentReviewedNotification.title }}</strong>
-            <span>{{ currentReviewedNotification.message }}</span>
-          </div>
-
-          <button
-            type="button"
-            class="page-notification__close"
-            aria-label="Értesítés bezárása"
-            (click)="clearReviewedNotification()"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="loading-card reviewed-loading" *ngIf="reviewedLoading">
+    <div class="archive-content" *ngIf="reviewedExpanded">
+      <section class="state-card state-card--flat" *ngIf="reviewedLoading">
         <div class="spinner"></div>
-        <span>Elbírált kérelmek betöltése...</span>
-      </div>
 
-      <div
-        class="approval-card empty-card reviewed-empty"
+        <div>
+          <strong>Elbírált kérelmek betöltése</strong>
+          <span>A korábbi döntések lekérése folyamatban...</span>
+        </div>
+      </section>
+
+      <section
+        class="state-card empty-card state-card--flat"
         *ngIf="!reviewedLoading && reviewedApprovals.length === 0 && !reviewedNotification"
       >
         <div class="empty-icon">
           <i class="bi bi-archive"></i>
         </div>
-        <h2>Még nincs elbírált kérelem</h2>
-        <p>A jóváhagyott vagy elutasított kérelmek később itt jelennek meg.</p>
-      </div>
 
-      <div class="reviewed-list" *ngIf="!reviewedLoading && reviewedApprovals.length > 0">
+        <div>
+          <h2>Még nincs elbírált kérelem</h2>
+          <p>A jóváhagyott vagy elutasított kérelmek később itt jelennek meg.</p>
+        </div>
+      </section>
+
+      <section class="approval-list" *ngIf="!reviewedLoading && reviewedApprovals.length > 0">
         <article
-          class="approval-card reviewed-card"
+          class="approval-row approval-row--reviewed"
           *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId"
+          [ngClass]="[
+            'approval-row--' + approval.type,
+            'approval-row--' + approval.status
+          ]"
         >
-          <div class="request-header">
-            <div class="user-block">
-              <div class="user-avatar user-avatar--muted">
-                {{ (approval.userDisplayName || approval.userEmail || '?').charAt(0).toUpperCase() }}
+          <div class="approval-row__accent"></div>
+
+          <div class="approval-row__content approval-row__content--reviewed">
+            <div class="approval-row__main">
+              <div class="approval-row__title-line">
+                <div class="person-block">
+                  <div class="user-avatar user-avatar--muted">
+                    {{ (approval.userDisplayName || approval.userEmail || '?').charAt(0).toUpperCase() }}
+                  </div>
+
+                  <div class="person-block__text">
+                    <span class="approval-row__eyebrow">Kérelmező</span>
+                    <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
+                    <p>{{ approval.userEmail || '-' }}</p>
+                  </div>
+                </div>
               </div>
 
-              <div class="user-meta">
-                <h2>{{ approval.userDisplayName || 'Ismeretlen felhasználó' }}</h2>
-                <p>{{ approval.userEmail || '-' }}</p>
+              <div class="approval-row__meta-line">
+                <span>
+                  <i class="bi bi-tag"></i>
+                  {{ getTypeLabel(approval.type) }}
+                </span>
+
+                <span>
+                  <i class="bi bi-calendar3"></i>
+                  {{ getDateRangeText(approval) }}
+                </span>
+
+                <span>
+                  <i class="bi bi-check2-circle"></i>
+                  Döntés: {{ approval.reviewedAtUtc ? formatDate(approval.reviewedAtUtc) : '-' }}
+                </span>
+              </div>
+
+              <div class="approval-row__note" *ngIf="approval.reason">
+                <strong>Kérelmező indoklása:</strong>
+                <span>{{ approval.reason }}</span>
+              </div>
+
+              <div class="approval-row__note approval-row__note--decision" *ngIf="approval.decisionComment">
+                <strong>Döntési megjegyzés:</strong>
+                <span>{{ approval.decisionComment }}</span>
               </div>
             </div>
 
-            <span
-              class="status-pill"
-              [ngClass]="{
-                'status-pill--approved': approval.status === 'approved' || approval.status === 'Approved' || approval.status === 2,
-                'status-pill--rejected': approval.status === 'rejected' || approval.status === 'Rejected' || approval.status === 3
-              }"
-            >
-              {{ getStatusLabel(approval.status) }}
-            </span>
-          </div>
-
-          <div class="request-grid">
-            <div class="request-field">
-              <span>Típus</span>
-              <strong>{{ getTypeLabel(approval.type) }}</strong>
+            <div class="approval-row__side approval-row__side--readonly">
+              <span class="status-pill" [ngClass]="getStatusPillClass(approval.status)">
+                {{ getStatusLabel(approval.status) }}
+              </span>
             </div>
-
-            <div class="request-field">
-              <span>Időszak</span>
-              <strong>{{ getDateRangeText(approval) }}</strong>
-            </div>
-
-            <div class="request-field">
-              <span>Döntés ideje</span>
-              <strong>{{ approval.reviewedAtUtc ? formatDate(approval.reviewedAtUtc) : '-' }}</strong>
-            </div>
-          </div>
-
-          <div class="reason-block" *ngIf="approval.reason">
-            <span>Kérelmező indoklása</span>
-            <p>{{ approval.reason }}</p>
-          </div>
-
-          <div class="reason-block decision-comment-block" *ngIf="approval.decisionComment">
-            <span>Döntési megjegyzés</span>
-            <p>{{ approval.decisionComment }}</p>
           </div>
         </article>
-      </div>
+      </section>
     </div>
   </section>
 </div>

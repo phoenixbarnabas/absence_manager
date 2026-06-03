@@ -25,7 +25,10 @@ interface PageNotification {
 })
 export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   requests: AbsenceRequestViewDto[] = [];
+
   activeRequests: AbsenceRequestViewDto[] = [];
+  pendingRequests: AbsenceRequestViewDto[] = [];
+  approvedActiveRequests: AbsenceRequestViewDto[] = [];
   archivedRequests: AbsenceRequestViewDto[] = [];
 
   loading = false;
@@ -62,6 +65,10 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  get cancellableRequestsCount(): number {
+    return this.activeRequests.filter(request => this.canCancel(request)).length;
   }
 
   loadRequests(): void {
@@ -180,6 +187,10 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
 
   toggleArchivedRequests(): void {
     this.archivedExpanded = !this.archivedExpanded;
+
+    if (this.archivedExpanded) {
+      this.queueHighlightedRequestScroll();
+    }
   }
 
   trackByRequestId(_: number, request: AbsenceRequestViewDto): string {
@@ -194,6 +205,10 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
       (status === 'pending' || status === 'approved') &&
       request.dateFrom >= today
     );
+  }
+
+  getRequestElementId(requestId: string): string {
+    return `absence-request-${requestId}`;
   }
 
   getTypeLabel(type: AbsenceApprovalTypeValue): string {
@@ -243,16 +258,17 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   }
 
   getStatusPillClass(status: AbsenceApprovalStatusValue): string {
-    const normalizedStatus = this.normalizeStatus(status);
-
-    switch (normalizedStatus) {
+    switch (this.normalizeStatus(status)) {
+      case 'pending':
+        return 'status-pill--pending';
       case 'approved':
         return 'status-pill--approved';
       case 'rejected':
-      case 'cancelled':
         return 'status-pill--rejected';
+      case 'cancelled':
+        return 'status-pill--cancelled';
       default:
-        return '';
+        return 'status-pill--pending';
     }
   }
 
@@ -295,9 +311,20 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   private applyRequestLists(): void {
     const today = this.getTodayKey();
 
-    this.activeRequests = this.requests
+    const activeRequests = this.requests
       .filter(request => this.isActiveRequest(request, today))
       .sort((a, b) => a.dateFrom.localeCompare(b.dateFrom));
+
+    this.pendingRequests = activeRequests
+      .filter(request => this.normalizeStatus(request.status) === 'pending');
+
+    this.approvedActiveRequests = activeRequests
+      .filter(request => this.normalizeStatus(request.status) === 'approved');
+
+    this.activeRequests = [
+      ...this.pendingRequests,
+      ...this.approvedActiveRequests
+    ];
 
     this.archivedRequests = this.requests
       .filter(request => !this.isActiveRequest(request, today))
@@ -309,6 +336,29 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
     ) {
       this.archivedExpanded = true;
     }
+
+    this.queueHighlightedRequestScroll();
+  }
+
+  private queueHighlightedRequestScroll(): void {
+    if (!this.highlightedRequestId) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      const element = document.getElementById(
+        this.getRequestElementId(this.highlightedRequestId!)
+      );
+
+      if (!element) {
+        return;
+      }
+
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 120);
   }
 
   private isActiveRequest(request: AbsenceRequestViewDto, today: string): boolean {
@@ -325,8 +375,8 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
       ...request,
       type: this.normalizeType(request.type),
       status: this.normalizeStatus(request.status),
-      dateFrom: request.dateFrom?.substring(0, 10),
-      dateTo: request.dateTo?.substring(0, 10)
+      dateFrom: request.dateFrom?.substring(0, 10) || '',
+      dateTo: request.dateTo?.substring(0, 10) || ''
     };
   }
 
