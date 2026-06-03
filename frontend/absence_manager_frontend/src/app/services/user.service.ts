@@ -58,6 +58,12 @@ export class UserService {
     );
   }
 
+  getMyHierarchy(): Observable<AppUserHierarchyDto> {
+    return this.http.get<AppUserHierarchyDto>(
+      `${this.configService.apiUrl}/users/me/hierarchy`
+    );
+  }
+
   syncCurrentUserFromGraph(): Observable<UserContextDto> {
     return this.http.post<UserContextDto>(
       `${this.configService.apiUrl}/users/me/sync-from-graph`,
