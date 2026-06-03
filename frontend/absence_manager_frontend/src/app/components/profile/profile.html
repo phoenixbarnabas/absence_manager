@@ -45,7 +45,12 @@
     <span>{{ error }}</span>
   </div>
 
-  <section class="user-card" *ngIf="userProfile">
+  <div class="profile-alert profile-alert--danger" *ngIf="hierarchyError">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ hierarchyError }}</span>
+  </div>
+
+  <section class="user-card user-card--with-manager" *ngIf="userProfile">
     <div class="user-card__avatar">
       {{ getInitials(userProfile.displayName) }}
     </div>
@@ -71,6 +76,36 @@
         </span>
       </div>
     </div>
+
+    <aside class="user-card__manager">
+      <div class="manager-inline-card__icon">
+        <i class="bi bi-diagram-3"></i>
+      </div>
+
+      <div class="manager-inline-card__content">
+        <span class="manager-inline-card__label">Manager</span>
+
+        <strong *ngIf="hierarchyLoading">
+          Betöltés...
+        </strong>
+
+        <ng-container *ngIf="!hierarchyLoading">
+          <strong *ngIf="manager; else noManagerInline">
+            {{ getUserDisplayName(manager) }}
+          </strong>
+
+          <span class="manager-inline-card__email" *ngIf="manager && getUserEmail(manager)">
+            {{ getUserEmail(manager) }}
+          </span>
+
+          <ng-template #noManagerInline>
+            <strong class="manager-inline-card__muted">
+              Nincs aktív manager kapcsolat.
+            </strong>
+          </ng-template>
+        </ng-container>
+      </div>
+    </aside>
   </section>
 
   <section class="additional-data-card" *ngIf="userProfile">
@@ -116,6 +151,43 @@
         <div class="data-row__content">
           <p class="data-label">Email</p>
           <p class="data-value">{{ userProfile.email || '-' }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="additional-data-card" *ngIf="userProfile && !hierarchyLoading && hasDirectReports">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">
+          <i class="bi bi-people"></i>
+          Manager nézet
+        </span>
+
+        <h2>Közvetlen beosztottak</h2>
+      </div>
+
+      <span class="profile-badge">
+        <i class="bi bi-person-lines-fill"></i>
+        {{ directReports.length }} fő
+      </span>
+    </div>
+
+    <div class="profile-data-grid">
+      <div class="data-row" *ngFor="let directReport of directReports; trackBy: trackByUser">
+        <div class="data-row__icon">
+          <i class="bi bi-person"></i>
+        </div>
+
+        <div class="data-row__content">
+          <p class="data-label">Beosztott</p>
+          <p class="data-value">{{ getUserDisplayName(directReport) }}</p>
+          <p class="data-subvalue" *ngIf="getUserEmail(directReport)">
+            {{ getUserEmail(directReport) }}
+          </p>
+          <p class="data-subvalue">
+            {{ getUserDetails(directReport) }}
+          </p>
         </div>
       </div>
     </div>
