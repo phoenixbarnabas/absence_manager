@@ -2,6 +2,7 @@
 using Entities.Dtos.AbsenceRequestDtos;
 using Entities.Enums;
 using Entities.Models;
+using Logic.Helper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Logic.Logic
@@ -9,10 +10,12 @@ namespace Logic.Logic
     public class AbsenceRequestLogic
     {
         private readonly AbsenceManagerDbContext _dbContext;
+        private readonly IUserActivityLogger _activityLogger;
 
-        public AbsenceRequestLogic(AbsenceManagerDbContext dbContext)
+        public AbsenceRequestLogic(AbsenceManagerDbContext dbContext, IUserActivityLogger activityLogger)
         {
             _dbContext = dbContext;
+            _activityLogger = activityLogger;
         }
 
         public async Task<IReadOnlyList<AbsenceRequestApprovalDto>> GetReviewedApprovalsForManagerAsync(string managerUserId, CancellationToken cancellationToken = default)
@@ -172,6 +175,21 @@ namespace Logic.Logic
 
             request.User = user;
 
+            await _activityLogger.LogAsync(
+                action: UserActivityLogActions.AbsenceRequestCreated,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
+                entityId: request.Id,
+                actorUserId: currentUserId,
+                metadata: new
+                {
+                    request.Type,
+                    request.Status,
+                    request.DateFrom,
+                    request.DateTo,
+                    HasReason = !string.IsNullOrWhiteSpace(request.Reason)
+                },
+                cancellationToken: cancellationToken);
+
             return ToViewDto(request);
         }
 
@@ -225,7 +243,26 @@ namespace Logic.Logic
                 ?? throw new KeyNotFoundException("Request not found.");
 
             if (request.UserId != currentUserId)
+            {
+                await _activityLogger.LogAsync(
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.AbsenceRequest,
+                    entityId: id,
+                    actorUserId: currentUserId,
+                    metadata: new
+                    {
+                        AttemptedAction = "CancelAbsenceRequest",
+                        RequestOwnerUserId = request.UserId,
+                        request.Type,
+                        request.Status,
+                        request.DateFrom,
+                        request.DateTo
+                    },
+                    outcome: UserActivityLogOutcomes.Forbidden,
+                    cancellationToken: cancellationToken);
+
                 throw new UnauthorizedAccessException("You can only cancel your own request.");
+            }
 
             if (request.Status == AbsenceRequestStatus.Cancelled)
                 throw new InvalidOperationException("Request is already cancelled.");
@@ -237,6 +274,20 @@ namespace Logic.Logic
             request.UpdatedAtUtc = DateTime.UtcNow;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            await _activityLogger.LogAsync(
+                action: UserActivityLogActions.AbsenceRequestCancelled,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
+                entityId: request.Id,
+                actorUserId: currentUserId,
+                metadata: new
+                {
+                    request.Type,
+                    request.Status,
+                    request.DateFrom,
+                    request.DateTo
+                },
+                cancellationToken: cancellationToken);
         }
 
         public static AbsenceRequestType ParseType(string value)
@@ -394,6 +445,26 @@ namespace Logic.Logic
 
             if (!isActiveManager)
             {
+                await _activityLogger.LogAsync(
+                    action: UserActivityLogActions.UnauthorizedActionAttempt,
+                    entityType: UserActivityLogEntityTypes.AbsenceRequest,
+                    entityId: absenceRequest.Id,
+                    actorUserId: managerUserId,
+                    metadata: new
+                    {
+                        AttemptedAction = targetStatus == AbsenceRequestStatus.Approved
+                            ? "ApproveAbsenceRequest"
+                            : "RejectAbsenceRequest",
+                        RequestOwnerUserId = absenceRequest.UserId,
+                        RequestedTargetStatus = targetStatus,
+                        absenceRequest.Type,
+                        absenceRequest.Status,
+                        absenceRequest.DateFrom,
+                        absenceRequest.DateTo
+                    },
+                    outcome: UserActivityLogOutcomes.Forbidden,
+                    cancellationToken: cancellationToken);
+
                 throw new UnauthorizedAccessException("You are not allowed to review this absence request.");
             }
 
@@ -408,6 +479,24 @@ namespace Logic.Logic
                 : decisionComment.Trim();
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            await _activityLogger.LogAsync(
+                action: targetStatus == AbsenceRequestStatus.Approved
+                    ? UserActivityLogActions.AbsenceRequestApproved
+                    : UserActivityLogActions.AbsenceRequestRejected,
+                entityType: UserActivityLogEntityTypes.AbsenceRequest,
+                entityId: absenceRequest.Id,
+                actorUserId: managerUserId,
+                metadata: new
+                {
+                    RequestOwnerUserId = absenceRequest.UserId,
+                    absenceRequest.Type,
+                    absenceRequest.Status,
+                    absenceRequest.DateFrom,
+                    absenceRequest.DateTo,
+                    HasDecisionComment = !string.IsNullOrWhiteSpace(decisionComment)
+                },
+                cancellationToken: cancellationToken);
         }
     }
 }

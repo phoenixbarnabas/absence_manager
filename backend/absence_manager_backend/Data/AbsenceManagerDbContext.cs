@@ -12,6 +12,7 @@ namespace Data
         public DbSet<OfficeBooking> OfficeBookings => Set<OfficeBooking>();
         public DbSet<AbsenceRequest> AbsenceRequests => Set<AbsenceRequest>();
         public DbSet<AppUserManagerRelation> AppUserManagerRelations => Set<AppUserManagerRelation>();
+        public DbSet<UserActivityLog> UserActivityLogs => Set<UserActivityLog>();
 
         public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options)
             : base(options)
@@ -130,6 +131,77 @@ namespace Data
                     .IsUnique()
                     .HasFilter("\"IsActive\" = true")
                     .HasDatabaseName("UX_AppUserManagerRelations_OneActivePerUser");
+            });
+
+            // -------------------------
+            // UserActivityLog
+            // -------------------------
+            modelBuilder.Entity<UserActivityLog>(entity =>
+            {
+                entity.ToTable("UserActivityLogs");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Id)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.CreatedAtUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.ActorUserId)
+                    .HasMaxLength(50);
+
+                entity.Property(x => x.ActorEntraObjectId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.TenantId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.Action)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(x => x.EntityType)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(x => x.EntityId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.Outcome)
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(x => x.IpAddress)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.UserAgent)
+                    .HasMaxLength(500);
+
+                entity.Property(x => x.RequestMethod)
+                    .HasMaxLength(20);
+
+                entity.Property(x => x.RequestPath)
+                    .HasMaxLength(500);
+
+                entity.Property(x => x.CorrelationId)
+                    .HasMaxLength(100);
+
+                entity.Property(x => x.MetadataJson)
+                    .HasColumnType("jsonb");
+
+                entity.HasIndex(x => x.CreatedAtUtc)
+                    .HasDatabaseName("IX_UserActivityLogs_CreatedAtUtc");
+
+                entity.HasIndex(x => x.ActorUserId)
+                    .HasDatabaseName("IX_UserActivityLogs_ActorUserId");
+
+                entity.HasIndex(x => x.Action)
+                    .HasDatabaseName("IX_UserActivityLogs_Action");
+
+                entity.HasIndex(x => new { x.EntityType, x.EntityId })
+                    .HasDatabaseName("IX_UserActivityLogs_EntityType_EntityId");
             });
 
             // -------------------------

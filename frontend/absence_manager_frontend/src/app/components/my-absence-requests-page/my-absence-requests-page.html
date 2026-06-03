@@ -1,14 +1,81 @@
-<div class="absence-approvals-page">
-  <div class="page-header">
-    <div>
-      <p class="page-eyebrow">Saját kérelmek</p>
-      <h1 class="page-title">Saját távollét kérelmeim</h1>
-      <p class="page-subtitle">
-        Itt láthatod a saját szabadság, home office és egyéb távollét kérelmeidet.
-        A még aktuális kérelmeket vissza tudod vonni.
-      </p>
+<div class="my-absence-requests-page">
+  <header class="requests-hero">
+    <div class="requests-hero__content">
+      <span class="page-eyebrow">
+        <i class="bi bi-person-check"></i>
+        Saját kérelmek
+      </span>
+
+      <div class="requests-hero__title-row">
+        <div class="requests-hero__text">
+          <h1>Saját távollét kérelmeim</h1>
+          <p>
+            Itt láthatod a saját szabadság, home office és egyéb távollét kérelmeidet.
+          </p>
+        </div>
+
+        <a class="btn hero-action" routerLink="/calendar">
+          <span class="hero-action__icon">
+            <i class="bi bi-plus-lg"></i>
+          </span>
+          <span>Új igénylés</span>
+        </a>
+      </div>
     </div>
-  </div>
+
+    <div class="requests-hero__visual">
+      <div class="status-visual-card" aria-hidden="true">
+        <div class="status-visual-card__top">
+          <span>Kérelem állapot</span>
+          <i class="bi bi-calendar2-check"></i>
+        </div>
+
+        <strong>{{ activeRequests.length }}</strong>
+        <small>aktuális saját kérelem</small>
+
+        <div class="status-visual-card__bars">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <div class="summary-card summary-card--primary">
+      <span class="summary-card__icon">
+        <i class="bi bi-hourglass-split"></i>
+      </span>
+
+      <div>
+        <strong>{{ pendingRequests.length }}</strong>
+        <span>Jóváhagyásra vár</span>
+      </div>
+    </div>
+
+    <div class="summary-card summary-card--approved">
+      <span class="summary-card__icon">
+        <i class="bi bi-check2-circle"></i>
+      </span>
+
+      <div>
+        <strong>{{ approvedActiveRequests.length }}</strong>
+        <span>Jóváhagyott aktuális</span>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <span class="summary-card__icon">
+        <i class="bi bi-archive"></i>
+      </span>
+
+      <div>
+        <strong>{{ archivedRequests.length }}</strong>
+        <span>Korábbi / lezárt</span>
+      </div>
+    </div>
+  </section>
 
   <div class="notification-stack" *ngIf="notification as currentNotification">
     <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
@@ -40,96 +107,210 @@
     </div>
   </div>
 
-  <section class="approval-card loading-card" *ngIf="loading">
+  <section class="state-card" *ngIf="loading">
     <div class="spinner"></div>
-    <span>Kérelmek betöltése...</span>
+
+    <div>
+      <strong>Kérelmek betöltése</strong>
+      <span>A saját távollét kérelmeid lekérése folyamatban...</span>
+    </div>
   </section>
 
-  <section class="approval-card empty-card" *ngIf="!loading && activeRequests.length === 0">
+  <section class="state-card empty-card" *ngIf="!loading && activeRequests.length === 0">
     <div class="empty-icon">
       <i class="bi bi-inbox"></i>
     </div>
-    <h2>Nincs aktuális saját kérelmed</h2>
-    <p>Jelenleg nincs függőben lévő vagy jóváhagyott jövőbeli távollét kérelmed.</p>
+
+    <div>
+      <h2>Nincs aktuális saját kérelmed</h2>
+      <p>Jelenleg nincs függőben lévő vagy jóváhagyott jövőbeli távollét kérelmed.</p>
+    </div>
   </section>
 
-  <section class="approval-list" *ngIf="!loading && activeRequests.length > 0">
-    <article
-      class="approval-card request-card"
-      *ngFor="let request of activeRequests; trackBy: trackByRequestId"
-      [class.request-card--highlighted]="request.id === highlightedRequestId"
-    >
-      <div class="request-header">
-        <div class="user-block">
-          <div class="user-avatar">
-            {{ getTypeLabel(request.type).charAt(0).toUpperCase() }}
-          </div>
-
-          <div class="user-meta">
-            <h2>{{ getTypeLabel(request.type) }}</h2>
-            <p>{{ request.department || 'Saját kérelem' }}</p>
-          </div>
-        </div>
-
-        <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
-          {{ getStatusLabel(request.status) }}
+  <section
+    class="request-section request-section--pending"
+    *ngIf="!loading && pendingRequests.length > 0"
+  >
+    <div class="request-section__header">
+      <div>
+        <span class="section-eyebrow">
+          <i class="bi bi-hourglass-split"></i>
+          Jóváhagyási folyamatban
         </span>
       </div>
 
-      <div class="request-grid">
-        <div class="request-field">
-          <span>Típus</span>
-          <strong>{{ getTypeLabel(request.type) }}</strong>
+      <span class="section-count section-count--pending">
+        {{ pendingRequests.length }} db
+      </span>
+    </div>
+
+    <div class="request-list">
+      <article
+        class="request-row request-row--pending"
+        *ngFor="let request of pendingRequests; trackBy: trackByRequestId"
+        [attr.id]="getRequestElementId(request.id)"
+        [ngClass]="[
+          'request-row--' + request.type,
+          request.id === highlightedRequestId ? 'request-row--highlighted' : ''
+        ]"
+      >
+        <div class="request-row__accent"></div>
+
+        <div class="request-row__main">
+          <div class="request-row__title-line">
+            <div>
+              <span class="request-row__eyebrow">Jóváhagyásra vár</span>
+              <h3>{{ getTypeLabel(request.type) }}</h3>
+            </div>
+          </div>
+
+          <div class="request-row__meta-line">
+            <span>
+              <i class="bi bi-calendar3"></i>
+              {{ getDateRangeText(request) }}
+            </span>
+
+            <span>
+              <i class="bi bi-clock"></i>
+              Létrehozva: {{ formatDate(request.createdAtUtc) }}
+            </span>
+
+            <span *ngIf="request.department">
+              <i class="bi bi-building"></i>
+              {{ request.department }}
+            </span>
+          </div>
+
+          <div class="request-row__note" *ngIf="request.reason">
+            <strong>Indoklás:</strong>
+            <span>{{ request.reason }}</span>
+          </div>
         </div>
 
-        <div class="request-field">
-          <span>Időszak</span>
-          <strong>{{ getDateRangeText(request) }}</strong>
+        <div class="request-row__side">
+          <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+            {{ getStatusLabel(request.status) }}
+          </span>
+
+          <button
+            type="button"
+            class="row-btn row-btn--danger"
+            (click)="openCancelModal(request)"
+            [disabled]="!canCancel(request) || !!cancellingRequestId"
+          >
+            <i class="bi bi-trash"></i>
+            <span>{{ cancellingRequestId === request.id ? 'Visszavonás...' : 'Visszavonás' }}</span>
+          </button>
         </div>
-
-        <div class="request-field">
-          <span>Létrehozva</span>
-          <strong>{{ formatDate(request.createdAtUtc) }}</strong>
-        </div>
-      </div>
-
-      <div class="reason-block" *ngIf="request.reason">
-        <span>Indoklás</span>
-        <p>{{ request.reason }}</p>
-      </div>
-
-      <div class="reason-block decision-comment-block" *ngIf="request.decisionComment">
-        <span>Döntési megjegyzés</span>
-        <p>{{ request.decisionComment }}</p>
-      </div>
-
-      <div class="card-actions">
-        <button
-          type="button"
-          class="approval-btn approval-btn--danger"
-          (click)="openCancelModal(request)"
-          [disabled]="!canCancel(request) || !!cancellingRequestId"
-        >
-          <i class="bi bi-trash"></i>
-          {{ cancellingRequestId === request.id ? 'Visszavonás...' : 'Kérelem visszavonása' }}
-        </button>
-      </div>
-    </article>
+      </article>
+    </div>
   </section>
 
-  <section class="reviewed-section">
+  <section
+    class="request-section request-section--approved"
+    *ngIf="!loading && approvedActiveRequests.length > 0"
+  >
+    <div class="request-section__header">
+      <div>
+        <span class="section-eyebrow">
+          <i class="bi bi-check2-circle"></i>
+          Elfogadott aktuális kérelmek
+        </span>
+
+        <h2>Már jóváhagyott kérelmek</h2>
+        <p>Ezek elfogadott, még aktuális vagy jövőbeli kérelmek.</p>
+      </div>
+
+      <span class="section-count section-count--approved">
+        {{ approvedActiveRequests.length }} db
+      </span>
+    </div>
+
+    <div class="request-list">
+      <article
+        class="request-row request-row--approved-list"
+        *ngFor="let request of approvedActiveRequests; trackBy: trackByRequestId"
+        [attr.id]="getRequestElementId(request.id)"
+        [ngClass]="[
+          'request-row--' + request.type,
+          request.id === highlightedRequestId ? 'request-row--highlighted' : ''
+        ]"
+      >
+        <div class="request-row__accent"></div>
+
+        <div class="request-row__main">
+          <div class="request-row__title-line">
+            <div>
+              <span class="request-row__eyebrow">Jóváhagyott kérelem</span>
+              <h3>{{ getTypeLabel(request.type) }}</h3>
+            </div>
+          </div>
+
+          <div class="request-row__meta-line">
+            <span>
+              <i class="bi bi-calendar3"></i>
+              {{ getDateRangeText(request) }}
+            </span>
+
+            <span>
+              <i class="bi bi-clock"></i>
+              Létrehozva: {{ formatDate(request.createdAtUtc) }}
+            </span>
+
+            <span *ngIf="request.department">
+              <i class="bi bi-building"></i>
+              {{ request.department }}
+            </span>
+          </div>
+
+          <div class="request-row__note" *ngIf="request.reason">
+            <strong>Indoklás:</strong>
+            <span>{{ request.reason }}</span>
+          </div>
+
+          <div class="request-row__note request-row__note--decision" *ngIf="request.decisionComment">
+            <strong>Döntési megjegyzés:</strong>
+            <span>{{ request.decisionComment }}</span>
+          </div>
+        </div>
+
+        <div class="request-row__side">
+          <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
+            {{ getStatusLabel(request.status) }}
+          </span>
+
+          <button
+            type="button"
+            class="row-btn row-btn--danger"
+            (click)="openCancelModal(request)"
+            [disabled]="!canCancel(request) || !!cancellingRequestId"
+          >
+            <i class="bi bi-trash"></i>
+            <span>{{ cancellingRequestId === request.id ? 'Visszavonás...' : 'Visszavonás' }}</span>
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="archive-section">
     <button
       type="button"
-      class="reviewed-toggle"
+      class="archive-toggle"
       (click)="toggleArchivedRequests()"
       [attr.aria-expanded]="archivedExpanded"
     >
       <div>
+        <span class="archive-toggle__eyebrow">
+          <i class="bi bi-clock-history"></i>
+          Előzmények
+        </span>
+
         <h2>Korábbi / lezárt saját kérelmek</h2>
         <p>Elutasított, visszavont vagy már elmúlt kérelmek.</p>
       </div>
 
-      <div class="reviewed-toggle__meta">
+      <div class="archive-toggle__meta">
         <span *ngIf="archivedRequests.length > 0">
           {{ archivedRequests.length }} db
         </span>
@@ -138,69 +319,73 @@
       </div>
     </button>
 
-    <div class="reviewed-content" *ngIf="archivedExpanded">
-      <div
-        class="approval-card empty-card reviewed-empty"
-        *ngIf="!loading && archivedRequests.length === 0"
-      >
+    <div class="archive-content" *ngIf="archivedExpanded">
+      <section class="state-card empty-card state-card--flat" *ngIf="!loading && archivedRequests.length === 0">
         <div class="empty-icon">
           <i class="bi bi-archive"></i>
         </div>
-        <h2>Még nincs lezárt saját kérelmed</h2>
-        <p>A korábbi, elutasított vagy visszavont kérelmek később itt jelennek meg.</p>
-      </div>
 
-      <div class="reviewed-list" *ngIf="!loading && archivedRequests.length > 0">
+        <div>
+          <h2>Még nincs lezárt saját kérelmed</h2>
+          <p>A korábbi, elutasított vagy visszavont kérelmek később itt jelennek meg.</p>
+        </div>
+      </section>
+
+      <section class="request-list" *ngIf="!loading && archivedRequests.length > 0">
         <article
-          class="approval-card reviewed-card"
+          class="request-row request-row--archived"
           *ngFor="let request of archivedRequests; trackBy: trackByRequestId"
-          [class.request-card--highlighted]="request.id === highlightedRequestId"
+          [attr.id]="getRequestElementId(request.id)"
+          [ngClass]="[
+            'request-row--' + request.type,
+            request.id === highlightedRequestId ? 'request-row--highlighted' : ''
+          ]"
         >
-          <div class="request-header">
-            <div class="user-block">
-              <div class="user-avatar user-avatar--muted">
-                {{ getTypeLabel(request.type).charAt(0).toUpperCase() }}
-              </div>
+          <div class="request-row__accent"></div>
 
-              <div class="user-meta">
-                <h2>{{ getTypeLabel(request.type) }}</h2>
-                <p>{{ request.department || 'Saját kérelem' }}</p>
+          <div class="request-row__main">
+            <div class="request-row__title-line">
+              <div>
+                <span class="request-row__eyebrow">Lezárt kérelem</span>
+                <h3>{{ getTypeLabel(request.type) }}</h3>
               </div>
             </div>
 
+            <div class="request-row__meta-line">
+              <span>
+                <i class="bi bi-calendar3"></i>
+                {{ getDateRangeText(request) }}
+              </span>
+
+              <span>
+                <i class="bi bi-clock"></i>
+                Létrehozva: {{ formatDate(request.createdAtUtc) }}
+              </span>
+
+              <span *ngIf="request.department">
+                <i class="bi bi-building"></i>
+                {{ request.department }}
+              </span>
+            </div>
+
+            <div class="request-row__note" *ngIf="request.reason">
+              <strong>Indoklás:</strong>
+              <span>{{ request.reason }}</span>
+            </div>
+
+            <div class="request-row__note request-row__note--decision" *ngIf="request.decisionComment">
+              <strong>Döntési megjegyzés:</strong>
+              <span>{{ request.decisionComment }}</span>
+            </div>
+          </div>
+
+          <div class="request-row__side request-row__side--readonly">
             <span class="status-pill" [ngClass]="getStatusPillClass(request.status)">
               {{ getStatusLabel(request.status) }}
             </span>
           </div>
-
-          <div class="request-grid">
-            <div class="request-field">
-              <span>Típus</span>
-              <strong>{{ getTypeLabel(request.type) }}</strong>
-            </div>
-
-            <div class="request-field">
-              <span>Időszak</span>
-              <strong>{{ getDateRangeText(request) }}</strong>
-            </div>
-
-            <div class="request-field">
-              <span>Létrehozva</span>
-              <strong>{{ formatDate(request.createdAtUtc) }}</strong>
-            </div>
-          </div>
-
-          <div class="reason-block" *ngIf="request.reason">
-            <span>Indoklás</span>
-            <p>{{ request.reason }}</p>
-          </div>
-
-          <div class="reason-block decision-comment-block" *ngIf="request.decisionComment">
-            <span>Döntési megjegyzés</span>
-            <p>{{ request.decisionComment }}</p>
-          </div>
         </article>
-      </div>
+      </section>
     </div>
   </section>
 </div>
@@ -211,7 +396,12 @@
   (click)="closeCancelModal()"
 ></div>
 
-<div class="custom-modal" *ngIf="requestToCancel" role="dialog" aria-modal="true">
+<div
+  class="custom-modal"
+  *ngIf="requestToCancel as cancelRequest"
+  role="dialog"
+  aria-modal="true"
+>
   <div class="custom-modal__panel">
     <div class="custom-modal__header">
       <div class="custom-modal__icon custom-modal__icon--danger">
@@ -232,36 +422,30 @@
     <div class="custom-modal__content">
       <h2>Kérelem visszavonása</h2>
 
-      <p>
-        Biztosan visszavonod ezt a kérelmet?
-      </p>
+      <p>Biztosan visszavonod ezt a kérelmet?</p>
 
       <div class="cancel-summary">
         <div>
           <span>Típus</span>
-          <strong>{{ getTypeLabel(requestToCancel.type) }}</strong>
+          <strong>{{ getTypeLabel(cancelRequest.type) }}</strong>
         </div>
 
         <div>
           <span>Időszak</span>
-          <strong>{{ getDateRangeText(requestToCancel) }}</strong>
+          <strong>{{ getDateRangeText(cancelRequest) }}</strong>
         </div>
 
         <div>
           <span>Állapot</span>
-          <strong>{{ getStatusLabel(requestToCancel.status) }}</strong>
+          <strong>{{ getStatusLabel(cancelRequest.status) }}</strong>
         </div>
       </div>
-
-      <p class="custom-modal__warning">
-        A visszavont kérelmet később már nem lehet újra aktiválni.
-      </p>
     </div>
 
     <div class="custom-modal__actions">
       <button
         type="button"
-        class="approval-btn approval-btn--secondary"
+        class="row-btn row-btn--secondary"
         (click)="closeCancelModal()"
         [disabled]="!!cancellingRequestId"
       >
@@ -270,12 +454,12 @@
 
       <button
         type="button"
-        class="approval-btn approval-btn--danger"
+        class="row-btn row-btn--danger"
         (click)="confirmCancelRequest()"
         [disabled]="!!cancellingRequestId"
       >
         <i class="bi bi-trash"></i>
-        {{ cancellingRequestId ? 'Visszavonás...' : 'Igen, visszavonom' }}
+        <span>{{ cancellingRequestId ? 'Visszavonás...' : 'Igen, visszavonom' }}</span>
       </button>
     </div>
   </div>

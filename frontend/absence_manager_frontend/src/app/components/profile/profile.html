@@ -1,48 +1,134 @@
-<div class="profile-container" *ngIf="!loading">
-  <div class="profile-header">
-    <h1 class="profile-title">Profilom</h1>
+<div class="profile-page" *ngIf="!loading">
+  <header class="profile-hero">
+    <div class="profile-hero__content">
+      <span class="page-eyebrow">
+        <i class="bi bi-person-circle"></i>
+        Felhasználói profil
+      </span>
 
-    <button type="button" class="logout-button" (click)="logout()">
-      Kijelentkezés
-    </button>
-  </div>
+      <div class="profile-hero__title-row">
+        <div class="profile-hero__text">
+          <h1>Profilom</h1>
+          <p>
+            Itt láthatod a bejelentkezett felhasználóhoz tartozó alapadatokat.
+          </p>
+        </div>
 
-  <div class="user-card" *ngIf="userProfile">
-    <div class="user-avatar">{{ getInitials(userProfile.displayName) }}</div>
-    <div class="user-info">
-      <h2 class="user-name">{{ userProfile.displayName }}</h2>
-      <p class="user-email">{{ userProfile.email || '-' }}</p>
-      <div class="user-badges">
-        <span class="badge" *ngIf="userProfile.department">{{ userProfile.department }}</span>
-        <span class="badge" *ngIf="userProfile.jobTitle">{{ userProfile.jobTitle }}</span>
+        <button type="button" class="logout-button" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Kijelentkezés</span>
+        </button>
       </div>
     </div>
+
+    <div class="profile-hero__visual" *ngIf="userProfile">
+      <div class="profile-status-card" aria-hidden="true">
+        <div class="profile-status-card__top">
+          <span>Aktív felhasználó</span>
+          <i class="bi bi-shield-check"></i>
+        </div>
+
+        <strong>{{ getInitials(userProfile.displayName) }}</strong>
+        <small>{{ userProfile.email || '-' }}</small>
+
+        <div class="profile-status-card__bars">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-alert profile-alert--danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ error }}</span>
   </div>
 
-  <div class="additional-data-card" *ngIf="userProfile">
-    <h3 class="section-title">További Adatok</h3>
-
-    <div class="data-row">
-      <p class="data-label">Osztály</p>
-      <p class="data-value">{{ userProfile.department || '-' }}</p>
+  <section class="user-card" *ngIf="userProfile">
+    <div class="user-card__avatar">
+      {{ getInitials(userProfile.displayName) }}
     </div>
 
-    <div class="data-row">
-      <p class="data-label">Beosztás</p>
-      <p class="data-value">{{ userProfile.jobTitle || '-' }}</p>
+    <div class="user-card__content">
+      <span class="section-eyebrow">
+        <i class="bi bi-person-badge"></i>
+        Saját adatok
+      </span>
+
+      <h2 class="user-name">{{ userProfile.displayName }}</h2>
+      <p class="user-email">{{ userProfile.email || '-' }}</p>
+
+      <div class="user-badges">
+        <span class="profile-badge" *ngIf="userProfile.department">
+          <i class="bi bi-building"></i>
+          {{ userProfile.department }}
+        </span>
+
+        <span class="profile-badge" *ngIf="userProfile.jobTitle">
+          <i class="bi bi-briefcase"></i>
+          {{ userProfile.jobTitle }}
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="additional-data-card" *ngIf="userProfile">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">
+          <i class="bi bi-card-list"></i>
+          Profil részletek
+        </span>
+
+        <h2>További adatok</h2>
+      </div>
     </div>
 
-    <div class="data-row">
-      <p class="data-label">Email</p>
-      <p class="data-value">{{ userProfile.email || '-' }}</p>
-    </div>
-  </div>
+    <div class="profile-data-grid">
+      <div class="data-row">
+        <div class="data-row__icon">
+          <i class="bi bi-building"></i>
+        </div>
 
-  <div class="error-message" *ngIf="error">
-    <p>{{ error }}</p>
-  </div>
+        <div class="data-row__content">
+          <p class="data-label">Osztály</p>
+          <p class="data-value">{{ userProfile.department || '-' }}</p>
+        </div>
+      </div>
+
+      <div class="data-row">
+        <div class="data-row__icon">
+          <i class="bi bi-briefcase"></i>
+        </div>
+
+        <div class="data-row__content">
+          <p class="data-label">Beosztás</p>
+          <p class="data-value">{{ userProfile.jobTitle || '-' }}</p>
+        </div>
+      </div>
+
+      <div class="data-row">
+        <div class="data-row__icon">
+          <i class="bi bi-envelope"></i>
+        </div>
+
+        <div class="data-row__content">
+          <p class="data-label">Email</p>
+          <p class="data-value">{{ userProfile.email || '-' }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <div class="loading-container" *ngIf="loading">
-  <p>Betöltés...</p>
+  <div class="loading-card">
+    <div class="spinner"></div>
+
+    <div>
+      <strong>Profil betöltése</strong>
+      <span>A felhasználói adatok lekérése folyamatban...</span>
+    </div>
+  </div>
 </div>

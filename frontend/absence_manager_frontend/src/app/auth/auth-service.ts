@@ -3,6 +3,12 @@ import { AccountInfo, AuthenticationResult } from '@azure/msal-browser';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import { getApiScope, getMsalInstance, getPostLogoutRedirectUri } from './entra-auth-config';
 
+export type AuthProcessState =
+  | 'initializing'
+  | 'idle'
+  | 'loggingIn'
+  | 'loggingOut';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -10,11 +16,14 @@ export class AuthService {
   private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
 
+  private readonly authProcessStateSubject = new BehaviorSubject<AuthProcessState>('initializing');
+
   private initialized = false;
   private bootstrapPromise: Promise<void> | null = null;
 
   readonly account$ = this.accountSubject.asObservable();
   readonly token$ = this.tokenSubject.asObservable();
+  readonly authProcessState$ = this.authProcessStateSubject.asObservable();
 
   async bootstrap(): Promise<void> {
     if (!this.bootstrapPromise) {
@@ -25,8 +34,16 @@ export class AuthService {
   }
 
   private async bootstrapInternal(): Promise<void> {
-    await this.initialize();
-    await this.handleRedirect();
+    this.authProcessStateSubject.next('initializing');
+
+    try {
+      await this.initialize();
+      await this.handleRedirect();
+    } finally {
+      if (this.authProcessStateSubject.value === 'initializing') {
+        this.authProcessStateSubject.next('idle');
+      }
+    }
   }
 
   async initialize(): Promise<void> {
@@ -45,6 +62,7 @@ export class AuthService {
     if (authResult?.account) {
       getMsalInstance().setActiveAccount(authResult.account);
       this.accountSubject.next(authResult.account);
+      this.authProcessStateSubject.next('idle');
       return;
     }
 
@@ -52,37 +70,53 @@ export class AuthService {
 
     if (activeAccount) {
       this.accountSubject.next(activeAccount);
+      this.authProcessStateSubject.next('idle');
       return;
     }
 
     if (accounts.length > 0) {
       getMsalInstance().setActiveAccount(accounts[0]);
       this.accountSubject.next(accounts[0]);
+      this.authProcessStateSubject.next('idle');
       return;
     }
 
     this.accountSubject.next(null);
     this.tokenSubject.next(null);
+    this.authProcessStateSubject.next('idle');
   }
 
   async login(): Promise<void> {
-    await this.initialize();
+    this.authProcessStateSubject.next('loggingIn');
 
-    await getMsalInstance().loginRedirect({
-      scopes: ['openid', 'profile', 'email', getApiScope()]
-    });
+    try {
+      await this.initialize();
+
+      await getMsalInstance().loginRedirect({
+        scopes: ['openid', 'profile', 'email', getApiScope()]
+      });
+    } catch (error) {
+      this.authProcessStateSubject.next('idle');
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
-    await this.initialize();
+    this.authProcessStateSubject.next('loggingOut');
 
-    this.accountSubject.next(null);
-    this.tokenSubject.next(null);
-    this.bootstrapPromise = null;
+    try {
+      await this.initialize();
 
-    await getMsalInstance().logoutRedirect({
-      postLogoutRedirectUri: getPostLogoutRedirectUri()
-    });
+      this.tokenSubject.next(null);
+      this.bootstrapPromise = null;
+
+      await getMsalInstance().logoutRedirect({
+        postLogoutRedirectUri: getPostLogoutRedirectUri()
+      });
+    } catch (error) {
+      this.authProcessStateSubject.next('idle');
+      throw error;
+    }
   }
 
   async acquireApiToken(): Promise<string | null> {

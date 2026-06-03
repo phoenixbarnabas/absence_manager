@@ -27,6 +27,18 @@ import {
 } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
 
+type CalendarDisplayViewMode = CalendarViewMode | 'year';
+
+interface CalendarYearMonthView {
+  monthIndex: number;
+  monthName: string;
+  monthDate: Date;
+  leadingBlankDays: number[];
+  days: CalendarDayView[];
+  eventCount: number;
+  holidayCount: number;
+}
+
 @Component({
   selector: 'app-calendar-page',
   standalone: false,
@@ -51,9 +63,10 @@ export class CalendarPage implements OnInit, OnDestroy {
     'December'
   ];
 
-  readonly viewModes: { value: CalendarViewMode; label: string; icon: string }[] = [
+  readonly viewModes: { value: CalendarDisplayViewMode; label: string; icon: string }[] = [
+    { value: 'week', label: 'Heti', icon: 'bi-calendar-week' },
     { value: 'month', label: 'Havi', icon: 'bi-calendar3' },
-    { value: 'week', label: 'Heti', icon: 'bi-calendar-week' }
+    { value: 'year', label: 'Éves', icon: 'bi-calendar4-range' }
   ];
 
   readonly scopeOptions: { value: CalendarScope; label: string; description: string }[] = [
@@ -88,7 +101,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     { value: 'otherAbsence', label: 'Egyéb távollét', icon: 'bi-calendar-x' }
   ];
 
-  viewMode: CalendarViewMode = 'month';
+  viewMode: CalendarDisplayViewMode = 'month';
   scope: CalendarScope = 'mine';
 
   currentDate = this.startOfDay(new Date());
@@ -107,6 +120,8 @@ export class CalendarPage implements OnInit, OnDestroy {
 
   loading = false;
   saving = false;
+  cancellingEventId: string | null = null;
+  cancelModalEvent: CalendarEventDto | null = null;
 
   errorMessage = '';
   warningMessage = '';
@@ -159,6 +174,10 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   get periodTitle(): string {
+    if (this.viewMode === 'year') {
+      return `${this.currentDate.getFullYear()}. év`;
+    }
+
     if (this.viewMode === 'week') {
       const range = this.getCurrentRange();
       return `${this.formatShortDate(range.from)} - ${this.formatShortDate(range.to)}`;
@@ -177,6 +196,26 @@ export class CalendarPage implements OnInit, OnDestroy {
 
   get selectedDayEvents(): CalendarEventDto[] {
     return this.selectedCalendarDay?.events ?? [];
+  }
+
+  get yearMonths(): CalendarYearMonthView[] {
+    const year = this.currentDate.getFullYear();
+
+    return this.monthNames.map((monthName, monthIndex) => {
+      const days = this.calendarDays.filter(day =>
+        day.date.getFullYear() === year && day.date.getMonth() === monthIndex
+      );
+
+      return {
+        monthIndex,
+        monthName,
+        monthDate: new Date(year, monthIndex, 1),
+        leadingBlankDays: Array.from({ length: this.getMondayBasedWeekdayIndex(new Date(year, monthIndex, 1)) }),
+        days,
+        eventCount: days.reduce((total, day) => total + day.events.length, 0),
+        holidayCount: days.filter(day => day.isHoliday).length
+      };
+    });
   }
 
   get activeEventTypes(): CalendarEventType[] {
@@ -217,7 +256,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     return !this.saving;
   }
 
-  setViewMode(mode: CalendarViewMode): void {
+  setViewMode(mode: CalendarDisplayViewMode): void {
     if (this.viewMode === mode) {
       return;
     }
@@ -228,7 +267,9 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   previousPeriod(): void {
-    if (this.viewMode === 'month') {
+    if (this.viewMode === 'year') {
+      this.currentDate = new Date(this.currentDate.getFullYear() - 1, 0, 1);
+    } else if (this.viewMode === 'month') {
       this.currentDate = new Date(
         this.currentDate.getFullYear(),
         this.currentDate.getMonth() - 1,
@@ -246,7 +287,9 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   nextPeriod(): void {
-    if (this.viewMode === 'month') {
+    if (this.viewMode === 'year') {
+      this.currentDate = new Date(this.currentDate.getFullYear() + 1, 0, 1);
+    } else if (this.viewMode === 'month') {
       this.currentDate = new Date(
         this.currentDate.getFullYear(),
         this.currentDate.getMonth() + 1,
@@ -266,6 +309,14 @@ export class CalendarPage implements OnInit, OnDestroy {
   goToToday(): void {
     this.currentDate = this.startOfDay(new Date());
     this.selectedDateKey = this.formatDateForApi(this.currentDate);
+    this.selectedEvent = null;
+    this.loadCalendar();
+  }
+
+  openMonth(month: CalendarYearMonthView): void {
+    this.currentDate = new Date(this.currentDate.getFullYear(), month.monthIndex, 1);
+    this.selectedDateKey = this.formatDateForApi(this.currentDate);
+    this.viewMode = 'month';
     this.selectedEvent = null;
     this.loadCalendar();
   }
@@ -383,12 +434,173 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.refreshView();
   }
 
-  openSelectedEvent(): void {
-    if (!this.selectedEvent?.detailsUrl) {
+  getEventDetailsUrl(event: CalendarEventDto | null): string {
+    if (!event) {
+      return '';
+    }
+
+    const apiDetailsUrl = event.detailsUrl?.trim();
+
+    if (apiDetailsUrl) {
+      return apiDetailsUrl;
+    }
+
+    if (event.type === 'deskBooking') {
+      return '/desk-booking';
+    }
+
+    return `/my-absence-requests?requestId=${encodeURIComponent(event.id)}`;
+  }
+
+  canOpenRelatedPage(event: CalendarEventDto | null | undefined): boolean {
+    if (!event) {
+      return false;
+    }
+
+    if (event.type === 'deskBooking') {
+      return true;
+    }
+
+    return !!this.getRelatedRequestId(event);
+  }
+
+  openSelectedEvent(event?: CalendarEventDto | null): void {
+    const targetEvent = event ?? this.selectedEvent;
+
+    if (!targetEvent) {
       return;
     }
 
-    this.router.navigateByUrl(this.selectedEvent.detailsUrl);
+    if (targetEvent.type === 'deskBooking') {
+      this.router.navigate(['/desk-booking'], {
+        queryParams: {
+          date: targetEvent.dateFrom
+        }
+      });
+
+      return;
+    }
+
+    const requestId = this.getRelatedRequestId(targetEvent);
+
+    if (!requestId) {
+      this.warningMessage = 'Ehhez az eseményhez nem található kapcsolódó kérelem azonosító.';
+      this.refreshView();
+      return;
+    }
+
+    this.router.navigate(['/my-absence-requests'], {
+      queryParams: {
+        requestId
+      }
+    });
+  }
+
+  canCancelCalendarEvent(event: CalendarEventDto | null | undefined): boolean {
+    if (!event || this.saving || this.cancellingEventId) {
+      return false;
+    }
+
+    if (event.type === 'deskBooking') {
+      return false;
+    }
+
+    const status = this.normalizeStatus(event.status);
+
+    if (status !== 'pending' && status !== 'approved') {
+      return false;
+    }
+
+    return event.dateFrom >= this.formatDateForApi(new Date());
+  }
+
+  cancelSelectedEvent(): void {
+    const event = this.selectedEvent;
+
+    if (!this.canCancelCalendarEvent(event)) {
+      return;
+    }
+
+    this.cancelModalEvent = event;
+    this.refreshView();
+  }
+
+  closeCancelCalendarModal(): void {
+    if (this.cancellingEventId) {
+      return;
+    }
+
+    this.cancelModalEvent = null;
+    this.refreshView();
+  }
+
+  confirmCancelSelectedEvent(): void {
+    const event = this.cancelModalEvent;
+
+    if (!this.canCancelCalendarEvent(event)) {
+      return;
+    }
+
+    const requestId = this.getRelatedRequestId(event!);
+
+    if (!requestId) {
+      this.cancelModalEvent = null;
+      this.warningMessage = 'Ehhez az eseményhez nem található visszavonható kérelem azonosító.';
+      this.refreshView();
+      return;
+    }
+
+    this.clearMessages();
+    this.cancellingEventId = event!.id;
+    this.refreshView();
+
+    this.calendarService.cancelAbsenceRequest(requestId)
+      .pipe(
+        timeout(15000),
+        finalize(() => {
+          this.cancellingEventId = null;
+          this.refreshView();
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage = 'A kérelem visszavonása sikerült.';
+          this.selectedEvent = null;
+          this.cancelModalEvent = null;
+          this.loadCalendar();
+        },
+        error: err => {
+          console.error('Calendar absence request cancel failed', err);
+
+          this.errorMessage = this.getApiErrorMessage(
+            err,
+            'Nem sikerült visszavonni a kérelmet.'
+          );
+
+          this.refreshView();
+        }
+      });
+  }
+
+  private getRelatedRequestId(event: CalendarEventDto): string | null {
+    const extendedEvent = event as CalendarEventDto & {
+      requestId?: string | null;
+      absenceRequestId?: string | null;
+      relatedEntityId?: string | null;
+      entityId?: string | null;
+      sourceId?: string | null;
+    };
+
+    return (
+      extendedEvent.requestId ||
+      extendedEvent.absenceRequestId ||
+      extendedEvent.relatedEntityId ||
+      extendedEvent.entityId ||
+      extendedEvent.sourceId ||
+      event.id ||
+      null
+    );
   }
 
   reload(): void {
@@ -466,7 +678,6 @@ export class CalendarPage implements OnInit, OnDestroy {
     return 'Nincs látható esemény, innen indítható új igény erre a napra.';
   }
 
-
   private loadCalendar(): void {
     this.reloadRequested$.next();
   }
@@ -520,7 +731,7 @@ export class CalendarPage implements OnInit, OnDestroy {
           return;
         }
 
-        this.dayInfos = dayInfos;
+        this.dayInfos = this.enrichHungarianHolidayDayInfos(dayInfos);
         this.events = events.map(event => this.normalizeEvent(event));
         this.rebuildView();
       }),
@@ -548,7 +759,7 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   private rebuildView(): void {
-    const dayInfoMap = new Map(this.dayInfos.map(dayInfo => [dayInfo.date, dayInfo]));
+    const dayInfoMap = new Map(this.dayInfos.map(dayInfo => [dayInfo.date.substring(0, 10), dayInfo]));
     const eventsByDate = this.createEventsByDateMap(this.events);
     const days: CalendarDayView[] = [];
 
@@ -605,6 +816,13 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   private getCurrentRange(): { from: Date; to: Date } {
+    if (this.viewMode === 'year') {
+      return {
+        from: new Date(this.currentDate.getFullYear(), 0, 1),
+        to: new Date(this.currentDate.getFullYear(), 11, 31)
+      };
+    }
+
     if (this.viewMode === 'week') {
       const weekStart = this.getStartOfWeek(this.currentDate);
       const weekEnd = new Date(weekStart);
@@ -658,7 +876,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       result.push(this.generateFallbackDayInfo(date));
     }
 
-    return result;
+    return this.enrichHungarianHolidayDayInfos(result);
   }
 
   private generateFallbackDayInfo(date: Date): CalendarDayInfoDto {
@@ -672,6 +890,127 @@ export class CalendarPage implements OnInit, OnDestroy {
       isWorkingDay: !isWeekend,
       holidayName: null
     };
+  }
+
+  private enrichHungarianHolidayDayInfos(dayInfos: CalendarDayInfoDto[]): CalendarDayInfoDto[] {
+    if (!dayInfos.length) {
+      return dayInfos;
+    }
+
+    const holidayFallbacks = this.createHungarianHolidayFallbackMap(dayInfos);
+
+    return dayInfos.map(dayInfo => {
+      const dateKey = dayInfo.date.substring(0, 10);
+      const fallbackHolidayName = holidayFallbacks.get(dateKey);
+
+      if (!fallbackHolidayName || dayInfo.isHoliday) {
+        return {
+          ...dayInfo,
+          date: dateKey
+        };
+      }
+
+      return {
+        ...dayInfo,
+        date: dateKey,
+        isHoliday: true,
+        isWorkingDay: false,
+        holidayName: dayInfo.holidayName || fallbackHolidayName
+      };
+    });
+  }
+
+  private createHungarianHolidayFallbackMap(dayInfos: CalendarDayInfoDto[]): Map<string, string> {
+    const result = new Map<string, string>();
+    const years = [
+      ...new Set(
+        dayInfos
+          .map(dayInfo => Number(dayInfo.date.substring(0, 4)))
+          .filter(year => !Number.isNaN(year))
+      )
+    ];
+
+    years.forEach(year => {
+      this.addFixedHoliday(result, year, 1, 1, 'Újév');
+      this.addFixedHoliday(result, year, 3, 15, 'Nemzeti ünnep');
+      this.addFixedHoliday(result, year, 5, 1, 'A munka ünnepe');
+      this.addFixedHoliday(result, year, 8, 20, 'Államalapítás ünnepe');
+      this.addFixedHoliday(result, year, 10, 23, 'Nemzeti ünnep');
+      this.addFixedHoliday(result, year, 11, 1, 'Mindenszentek');
+      this.addFixedHoliday(result, year, 12, 25, 'Karácsony');
+      this.addFixedHoliday(result, year, 12, 26, 'Karácsony másnapja');
+
+      const easterSunday = this.getEasterSunday(year);
+
+      this.addMovingHoliday(result, easterSunday, -2, 'Nagypéntek');
+      this.addMovingHoliday(result, easterSunday, 0, 'Húsvétvasárnap');
+      this.addMovingHoliday(result, easterSunday, 1, 'Húsvéthétfő');
+      this.addMovingHoliday(result, easterSunday, 49, 'Pünkösdvasárnap');
+      this.addMovingHoliday(result, easterSunday, 50, 'Pünkösdhétfő');
+    });
+
+    return result;
+  }
+
+  private addFixedHoliday(
+    result: Map<string, string>,
+    year: number,
+    month: number,
+    day: number,
+    holidayName: string
+  ): void {
+    result.set(this.formatDateForApi(new Date(year, month - 1, day)), holidayName);
+  }
+
+  private addMovingHoliday(
+    result: Map<string, string>,
+    baseDate: Date,
+    offsetDays: number,
+    holidayName: string
+  ): void {
+    const date = new Date(baseDate);
+    date.setDate(date.getDate() + offsetDays);
+    result.set(this.formatDateForApi(date), holidayName);
+  }
+
+  private getEasterSunday(year: number): Date {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+    return new Date(year, month - 1, day);
+  }
+
+  private storeNavigationContext(event: CalendarEventDto): void {
+    if (event.type !== 'deskBooking') {
+      return;
+    }
+
+    try {
+      const storageKey = 'desk-booking-state';
+      const rawState = localStorage.getItem(storageKey);
+      const existingState = rawState ? JSON.parse(rawState) : {};
+
+      localStorage.setItem(storageKey, JSON.stringify({
+        selectedLocationId: existingState.selectedLocationId ?? '',
+        selectedOfficeId: existingState.selectedOfficeId ?? '',
+        selectedWorkstationId: existingState.selectedWorkstationId ?? '',
+        selectedDate: event.dateFrom
+      }));
+    } catch (error) {
+      console.warn('Nem sikerült eltárolni a helyfoglalás navigációs állapotát.', error);
+    }
   }
 
   private normalizeEvent(event: CalendarEventDto): CalendarEventDto {
