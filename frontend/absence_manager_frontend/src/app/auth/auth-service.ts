@@ -16,6 +16,7 @@ export class AuthService {
   private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
   private readonly authProcessStateSubject = new BehaviorSubject<AuthProcessState>('initializing');
+  private authFailureCleanupPromise: Promise<void> | null = null;
 
   private initialized = false;
   private bootstrapPromise: Promise<void> | null = null;
@@ -183,5 +184,57 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return this.getActiveAccount() !== null || this.getAccount() !== null;
+  }
+
+  async clearSessionAfterAuthFailure(): Promise<void> {
+    if (this.authFailureCleanupPromise) {
+      return this.authFailureCleanupPromise;
+    }
+
+    this.authFailureCleanupPromise = this.clearSessionAfterAuthFailureInternal()
+      .finally(() => {
+        this.authFailureCleanupPromise = null;
+      });
+
+    return this.authFailureCleanupPromise;
+  }
+
+  private async clearSessionAfterAuthFailureInternal(): Promise<void> {
+    this.authProcessStateSubject.next('loggingOut');
+
+    try {
+      await this.initialize();
+
+      const msal = getMsalInstance();
+      const account = this.getActiveAccount();
+
+      this.accountSubject.next(null);
+      this.tokenSubject.next(null);
+      this.bootstrapPromise = null;
+      this.tokenRequestPromise = null;
+
+      await msal.logoutRedirect({
+        account: account ?? undefined,
+        postLogoutRedirectUri: getPostLogoutRedirectUri()
+      });
+
+      msal.setActiveAccount(null);
+
+      msal.setActiveAccount(null);
+    } catch (error) {
+      console.warn('Local auth cleanup failed.', error);
+
+      this.accountSubject.next(null);
+      this.tokenSubject.next(null);
+      this.bootstrapPromise = null;
+      this.tokenRequestPromise = null;
+
+      try {
+        getMsalInstance().setActiveAccount(null);
+      } catch {
+      }
+    } finally {
+      this.authProcessStateSubject.next('idle');
+    }
   }
 }
