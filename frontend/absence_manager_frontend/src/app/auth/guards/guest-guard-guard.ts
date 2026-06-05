@@ -8,22 +8,15 @@ export const guestGuardGuard: CanActivateFn = async () => {
 
   try {
     await authService.bootstrap();
-
-    if (!authService.isLoggedIn()) {
-      return true;
-    }
-
-    const token = await authService.acquireApiToken();
-
-    if (token) {
-      return router.createUrlTree(['/desk-booking']);
-    }
-
-    await authService.clearSessionAfterAuthFailure();
-    return true;
   } catch (error) {
-    console.error('Guest guard failed.', error);
+    console.error('Guest guard bootstrap failed', error);
     await authService.clearSessionAfterAuthFailure();
     return true;
   }
+
+  if (authService.isLoggedIn()) {
+    return router.createUrlTree(['/desk-booking']);
+  }
+
+  return true;
 };
