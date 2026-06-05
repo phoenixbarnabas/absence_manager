@@ -1,52 +1,84 @@
-<aside class="sidebar d-flex flex-column">
-    <a class="sidebar-header mb-4 py-3" routerLink="/desk-booking" routerLinkActive="active">
+<aside class="sidebar" [class.sidebar--collapsed]="isCollapsed">
+    <div class="sidebar-toggle-row">
+        <button
+            type="button"
+            class="sidebar-toggle"
+            [attr.aria-label]="isCollapsed ? 'Menü kinyitása' : 'Menü összecsukása'"
+            [attr.aria-expanded]="!isCollapsed"
+            [attr.data-tooltip]="isCollapsed ? 'Menü kinyitása' : null"
+            (click)="toggleSidebar()"
+        >
+            <i class="bi" [class.bi-list]="isCollapsed" [class.bi-x-lg]="!isCollapsed"></i>
+        </button>
+    </div>
+
+    <a
+        class="sidebar-header"
+        routerLink="/desk-booking"
+        routerLinkActive="active"
+        data-tooltip="Helyfoglalás"
+    >
         <img src="/images/phoenix-logo.png" alt="" class="navbar-logo" />
     </a>
 
-    <nav class="sidebar-nav nav flex-column gap-1 px-3">
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/profile" routerLinkActive="active"
-            *ngIf="isLoggedIn">
-            <i class="bi bi-person"></i>
-            <span>Profil</span>
-        </a>
-
-
-
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/calendar" routerLinkActive="active"
-            *ngIf="isLoggedIn">
+    <nav class="sidebar-nav">
+        <a
+            class="nav-link"
+            routerLink="/calendar"
+            routerLinkActive="active"
+            data-tooltip="Naptár"
+            *ngIf="isLoggedIn"
+        >
             <i class="bi bi-calendar"></i>
-            <span>Naptár</span>
+            <span class="link-text">Naptár</span>
         </a>
 
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/my-absence-requests" routerLinkActive="active"
-            *ngIf="isLoggedIn">
+        <a
+            class="nav-link"
+            routerLink="/my-absence-requests"
+            routerLinkActive="active"
+            data-tooltip="Saját kérelmek"
+            *ngIf="isLoggedIn"
+        >
             <i class="bi bi-calendar-check"></i>
-            <span>Saját kérelmek</span>
+            <span class="link-text">Saját kérelmek</span>
         </a>
 
-        <a routerLink="/absence-approvals" routerLinkActive="active" class="nav-link">
+        <a
+            class="nav-link"
+            routerLink="/absence-approvals"
+            routerLinkActive="active"
+            data-tooltip="Jóváhagyások"
+        >
             <i class="bi bi-check2-square"></i>
-            <span> Jóváhagyások</span>
+            <span class="link-text">Jóváhagyások</span>
         </a>
 
-        <a class="nav-link d-flex align-items-center gap-2" routerLink="/desk-booking" routerLinkActive="active">
+        <a
+            class="nav-link"
+            routerLink="/desk-booking"
+            routerLinkActive="active"
+            data-tooltip="Helyfoglalás"
+        >
             <i class="bi bi-grid-3x2-gap"></i>
-            <span>Helyfoglalás</span>
+            <span class="link-text">Helyfoglalás</span>
         </a>
     </nav>
 
-    <div class="mt-auto"></div>
-
-    <div class="px-3 mb-3">
-        <div class="auth-transition pt-3 mt-3 border-top" *ngIf="isAuthTransition">
+    <div class="sidebar-footer">
+        <div class="auth-transition" *ngIf="isAuthTransition">
             <span class="auth-spinner"></span>
-            <span>{{ authTransitionLabel }}</span>
+            <span class="auth-label">{{ authTransitionLabel }}</span>
         </div>
 
         <ng-container *ngIf="!isAuthTransition">
-            <a class="sidebar-user pt-3 mt-3 mb-1 border-top text-decoration-none d-block" routerLink="/profile"
-                routerLinkActive="active" *ngIf="isLoggedIn && userProfile; else loggedOutBlock">
-                <div class="d-flex align-items-center gap-2">
+            <ng-container *ngIf="isLoggedIn && userProfile; else loggedOutBlock">
+                <a
+                    class="sidebar-user"
+                    routerLink="/profile"
+                    routerLinkActive="active"
+                    [attr.data-tooltip]="userProfile.displayName"
+                >
                     <div class="avatar">
                         {{ getInitials(userProfile.displayName) }}
                     </div>
@@ -57,16 +89,29 @@
                             {{ userProfile.department || userProfile.email || 'Bejelentkezett felhasználó' }}
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+
+                <button
+                    type="button"
+                    class="logout-button"
+                    data-tooltip="Kijelentkezés"
+                    (click)="logout()"
+                >
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="link-text">Kijelentkezés</span>
+                </button>
+            </ng-container>
         </ng-container>
     </div>
 
     <ng-template #loggedOutBlock>
-        <div class="pt-3 mt-3 border-top">
-            <a routerLink="/login" class="btn btn-primary w-100">
-                Bejelentkezés
-            </a>
-        </div>
+        <a
+            routerLink="/login"
+            class="login-button"
+            data-tooltip="Bejelentkezés"
+        >
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span class="link-text">Bejelentkezés</span>
+        </a>
     </ng-template>
 </aside>
