@@ -178,22 +178,28 @@
 
 .calendar-scroll
     width: 100%
-    overflow: visible
-    padding: 0
+    max-width: 100%
+    overflow-x: auto
+    overflow-y: hidden
+    padding: 0 0 .25rem
+    -webkit-overflow-scrolling: touch
 
 .calendar-row
-    width: 100%
-    display: grid
-    grid-template-columns: repeat(auto-fit, minmax(58px, 1fr))
+    width: max-content
+    min-width: 100%
+    display: flex
+    flex-wrap: nowrap
     gap: .65rem
 
 .calendar-day
-    width: 100%
-    min-width: 0
+    flex: 0 0 58px
+    width: 58px
+    min-width: 58px
     height: 78px
 
 .calendar-day
-    flex: 0 0 auto
+    flex: 0 0 58px
+    width: 58px
     min-width: 58px
     height: 78px
     display: flex
