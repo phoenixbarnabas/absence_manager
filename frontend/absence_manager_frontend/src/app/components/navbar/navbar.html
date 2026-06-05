@@ -3,9 +3,7 @@
         <button
             type="button"
             class="sidebar-toggle"
-            [attr.aria-label]="isCollapsed ? 'Menü kinyitása' : 'Menü összecsukása'"
             [attr.aria-expanded]="!isCollapsed"
-            [attr.data-tooltip]="isCollapsed ? 'Menü kinyitása' : null"
             (click)="toggleSidebar()"
         >
             <i class="bi" [class.bi-list]="isCollapsed" [class.bi-x-lg]="!isCollapsed"></i>
@@ -16,7 +14,6 @@
         class="sidebar-header"
         routerLink="/calendar"
         routerLinkActive="active"
-        data-tooltip="Helyfoglalás"
     >
         <img src="/images/phoenix-logo.png" alt="" class="navbar-logo" />
     </a>
@@ -26,7 +23,6 @@
             class="nav-link"
             routerLink="/calendar"
             routerLinkActive="active"
-            data-tooltip="Naptár"
             *ngIf="isLoggedIn"
         >
             <i class="bi bi-calendar"></i>
@@ -37,7 +33,6 @@
             class="nav-link"
             routerLink="/my-absence-requests"
             routerLinkActive="active"
-            data-tooltip="Saját kérelmek"
             *ngIf="isLoggedIn"
         >
             <i class="bi bi-calendar-check"></i>
@@ -48,7 +43,6 @@
             class="nav-link"
             routerLink="/absence-approvals"
             routerLinkActive="active"
-            data-tooltip="Jóváhagyások"
         >
             <i class="bi bi-check2-square"></i>
             <span class="link-text">Jóváhagyások</span>
@@ -58,7 +52,6 @@
             class="nav-link"
             routerLink="/desk-booking"
             routerLinkActive="active"
-            data-tooltip="Helyfoglalás"
         >
             <i class="bi bi-grid-3x2-gap"></i>
             <span class="link-text">Helyfoglalás</span>
@@ -94,7 +87,6 @@
                 <button
                     type="button"
                     class="logout-button"
-                    data-tooltip="Kijelentkezés"
                     (click)="logout()"
                 >
                     <i class="bi bi-box-arrow-right"></i>
