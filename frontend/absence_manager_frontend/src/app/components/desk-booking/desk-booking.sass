@@ -135,6 +135,9 @@
 
 .booking-card--calendar
     border-color: rgba(0, 146, 123, .16)
+    min-height: 112px
+    padding: 1.35rem 1.15rem 1.5rem
+    border-color: rgba(0, 146, 123, .16)
 
 .booking-card--filters
     background: linear-gradient(135deg, #fff, rgba(0, 146, 123, .035))
@@ -181,20 +184,20 @@
     max-width: 100%
     overflow-x: auto
     overflow-y: hidden
-    padding: 0 0 .25rem
+    padding: .35rem 0 .4rem
     -webkit-overflow-scrolling: touch
 
 .calendar-row
-    width: max-content
+    width: 100%
     min-width: 100%
     display: flex
     flex-wrap: nowrap
     gap: .65rem
+    padding: .15rem .05rem
 
 .calendar-day
-    flex: 0 0 58px
-    width: 58px
-    min-width: 58px
+    flex: 1 0 88px
+    min-width: 88px
     height: 78px
 
 .calendar-day
@@ -248,7 +251,7 @@
         color: #fff
 
 .calendar-day--weekend
-    background: rgba(83, 83, 83, .06)
+    background: rgba(70, 70, 70, 0.2)
 
 .calendar-day--holiday
     background: rgba(214, 69, 69, .1)
