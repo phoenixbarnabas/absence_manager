@@ -15,11 +15,11 @@ export type AuthProcessState =
 export class AuthService {
   private readonly accountSubject = new BehaviorSubject<AccountInfo | null>(null);
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
-
   private readonly authProcessStateSubject = new BehaviorSubject<AuthProcessState>('initializing');
 
   private initialized = false;
   private bootstrapPromise: Promise<void> | null = null;
+  private tokenRequestPromise: Promise<string | null> | null = null;
 
   readonly account$ = this.accountSubject.asObservable();
   readonly token$ = this.tokenSubject.asObservable();
@@ -54,34 +54,22 @@ export class AuthService {
   }
 
   async handleRedirect(): Promise<void> {
+    const msal = getMsalInstance();
+
     const authResult: AuthenticationResult | null =
-      await getMsalInstance().handleRedirectPromise();
+      await msal.handleRedirectPromise();
 
-    const accounts = getMsalInstance().getAllAccounts();
+    const account =
+      authResult?.account ??
+      msal.getActiveAccount() ??
+      msal.getAllAccounts()[0] ??
+      null;
 
-    if (authResult?.account) {
-      getMsalInstance().setActiveAccount(authResult.account);
-      this.accountSubject.next(authResult.account);
-      this.authProcessStateSubject.next('idle');
-      return;
+    if (account) {
+      msal.setActiveAccount(account);
     }
 
-    const activeAccount = getMsalInstance().getActiveAccount();
-
-    if (activeAccount) {
-      this.accountSubject.next(activeAccount);
-      this.authProcessStateSubject.next('idle');
-      return;
-    }
-
-    if (accounts.length > 0) {
-      getMsalInstance().setActiveAccount(accounts[0]);
-      this.accountSubject.next(accounts[0]);
-      this.authProcessStateSubject.next('idle');
-      return;
-    }
-
-    this.accountSubject.next(null);
+    this.accountSubject.next(account);
     this.tokenSubject.next(null);
     this.authProcessStateSubject.next('idle');
   }
@@ -91,6 +79,8 @@ export class AuthService {
 
     try {
       await this.initialize();
+
+      this.tokenSubject.next(null);
 
       await getMsalInstance().loginRedirect({
         scopes: ['openid', 'profile', 'email', getApiScope()]
@@ -108,9 +98,12 @@ export class AuthService {
       await this.initialize();
 
       this.tokenSubject.next(null);
+      this.accountSubject.next(null);
       this.bootstrapPromise = null;
+      this.tokenRequestPromise = null;
 
       await getMsalInstance().logoutRedirect({
+        account: this.getActiveAccount() ?? undefined,
         postLogoutRedirectUri: getPostLogoutRedirectUri()
       });
     } catch (error) {
@@ -122,14 +115,24 @@ export class AuthService {
   async acquireApiToken(): Promise<string | null> {
     await this.initialize();
 
-    const existingToken = this.tokenSubject.value;
-    if (existingToken) {
-      return existingToken;
+    if (this.tokenRequestPromise) {
+      return this.tokenRequestPromise;
     }
 
+    this.tokenRequestPromise = this.acquireApiTokenInternal()
+      .finally(() => {
+        this.tokenRequestPromise = null;
+      });
+
+    return this.tokenRequestPromise;
+  }
+
+  private async acquireApiTokenInternal(): Promise<string | null> {
     const account = this.getActiveAccount();
+
     if (!account) {
       this.tokenSubject.next(null);
+      this.accountSubject.next(null);
       return null;
     }
 
@@ -138,6 +141,13 @@ export class AuthService {
         account,
         scopes: [getApiScope()]
       });
+
+      if (result.account) {
+        getMsalInstance().setActiveAccount(result.account);
+        this.accountSubject.next(result.account);
+      } else {
+        this.accountSubject.next(account);
+      }
 
       this.tokenSubject.next(result.accessToken);
       return result.accessToken;
@@ -157,9 +167,18 @@ export class AuthService {
   }
 
   getActiveAccount(): AccountInfo | null {
-    return getMsalInstance().getActiveAccount()
-      ?? getMsalInstance().getAllAccounts()[0]
-      ?? null;
+    const msal = getMsalInstance();
+
+    const account =
+      msal.getActiveAccount() ??
+      msal.getAllAccounts()[0] ??
+      null;
+
+    if (account && !msal.getActiveAccount()) {
+      msal.setActiveAccount(account);
+    }
+
+    return account;
   }
 
   isLoggedIn(): boolean {
