@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
@@ -18,7 +16,6 @@ namespace Logic.Logic
     {
         private readonly AbsenceManagerDbContext _dbContext;
         private readonly IEmailSender _emailSender;
-        private readonly IAbsenceRequestActionTokenService _tokenService;
         private readonly EmailSettings _emailSettings;
         private readonly ILogger<AbsenceRequestEmailService> _logger;
         private readonly IHostEnvironment _environment;
@@ -26,15 +23,12 @@ namespace Logic.Logic
         public AbsenceRequestEmailService(
             AbsenceManagerDbContext dbContext,
             IEmailSender emailSender,
-            IAbsenceRequestActionTokenService tokenService,
             IOptions<EmailSettings> emailSettings,
             ILogger<AbsenceRequestEmailService> logger,
             IHostEnvironment environment)
-
         {
             _dbContext = dbContext;
             _emailSender = emailSender;
-            _tokenService = tokenService;
             _emailSettings = emailSettings.Value;
             _logger = logger;
             _environment = environment;
@@ -46,13 +40,15 @@ namespace Logic.Logic
         {
             try
             {
+                const string defaultSubject = "Új szabadságkérelem érkezett jóváhagyásra";
+
                 if (!_emailSettings.Enabled)
                 {
                     await CreateSkippedEmailLogAsync(
                         absenceRequestId,
                         recipientEmail: "(email-disabled)",
                         recipientName: null,
-                        subject: "Új szabadságkérelem érkezett jóváhagyásra",
+                        subject: defaultSubject,
                         reason: "Email sending is disabled in configuration.",
                         cancellationToken);
 
@@ -79,7 +75,7 @@ namespace Logic.Logic
                         absenceRequest.Id,
                         recipientEmail: "(not-pending)",
                         recipientName: null,
-                        subject: "Új szabadságkérelem érkezett jóváhagyásra",
+                        subject: defaultSubject,
                         reason: $"Email was skipped because absence request status is {absenceRequest.Status}.",
                         cancellationToken);
 
@@ -94,7 +90,7 @@ namespace Logic.Logic
                         absenceRequest.Id,
                         recipientEmail: "(missing-manager)",
                         recipientName: null,
-                        subject: "Új szabadságkérelem érkezett jóváhagyásra",
+                        subject: defaultSubject,
                         reason: "Email was skipped because the requester has no active manager relation.",
                         cancellationToken);
 
@@ -107,29 +103,21 @@ namespace Logic.Logic
                         absenceRequest.Id,
                         recipientEmail: "(missing-manager-email)",
                         recipientName: manager.DisplayName,
-                        subject: "Új szabadságkérelem érkezett jóváhagyásra",
+                        subject: defaultSubject,
                         reason: "Email was skipped because the active manager has no email address.",
                         cancellationToken);
 
                     return;
                 }
 
-                var actionTokens = await _tokenService.CreateTokensAsync(
-                    absenceRequest.Id,
-                    manager.Id,
-                    cancellationToken);
-
-                var approveUrl = BuildEmailActionUrl(actionTokens.ApproveToken);
-                var rejectUrl = BuildEmailActionUrl(actionTokens.RejectToken);
+                var approvalPageUrl = BuildApprovalPageUrl();
 
                 var subject = $"Új szabadságkérelem érkezett: {absenceRequest.User.DisplayName}";
 
                 var bodyHtml = BuildManagerApprovalEmailBody(
                     absenceRequest,
                     manager,
-                    approveUrl,
-                    rejectUrl,
-                    actionTokens.ExpiresAtUtc);
+                    approvalPageUrl);
 
                 var emailLog = new EmailLog
                 {
@@ -195,16 +183,20 @@ namespace Logic.Logic
             }
         }
 
-        private async Task<AppUser?> ResolveManagerForEmailAsync(AbsenceRequest absenceRequest,CancellationToken cancellationToken)
+        private async Task<AppUser?> ResolveManagerForEmailAsync(
+            AbsenceRequest absenceRequest,
+            CancellationToken cancellationToken)
         {
             if (_environment.IsDevelopment() &&
                 !string.IsNullOrWhiteSpace(_emailSettings.TestManagerOverrideEmail))
             {
+                var overrideEmail = _emailSettings.TestManagerOverrideEmail.Trim().ToLower();
+
                 var overrideManager = await _dbContext.AppUsers
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x =>
                         x.Email != null &&
-                        x.Email.ToLower() == _emailSettings.TestManagerOverrideEmail.ToLower(),
+                        x.Email.ToLower() == overrideEmail,
                         cancellationToken);
 
                 if (overrideManager == null)
@@ -265,19 +257,26 @@ namespace Logic.Logic
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        private string BuildEmailActionUrl(string token)
+        private string BuildApprovalPageUrl()
         {
             var baseUrl = (_emailSettings.FrontendBaseUrl ?? string.Empty).TrimEnd('/');
 
-            return $"{baseUrl}/absence-requests/email-action?token={WebUtility.UrlEncode(token)}";
+            var path = string.IsNullOrWhiteSpace(_emailSettings.ApprovalPagePath)
+                ? "/absence-approvals"
+                : _emailSettings.ApprovalPagePath.Trim();
+
+            if (!path.StartsWith('/'))
+            {
+                path = "/" + path;
+            }
+
+            return $"{baseUrl}{path}";
         }
 
         private static string BuildManagerApprovalEmailBody(
             AbsenceRequest absenceRequest,
             AppUser manager,
-            string approveUrl,
-            string rejectUrl,
-            DateTime expiresAtUtc)
+            string approvalPageUrl)
         {
             var employeeName = Html(absenceRequest.User.DisplayName);
             var employeeEmail = Html(absenceRequest.User.Email ?? "-");
@@ -288,8 +287,6 @@ namespace Logic.Logic
             var reason = Html(string.IsNullOrWhiteSpace(absenceRequest.Reason)
                 ? "-"
                 : absenceRequest.Reason);
-
-            var expiresAt = Html(expiresAtUtc.ToLocalTime().ToString("yyyy.MM.dd. HH:mm"));
 
             var builder = new StringBuilder();
 
@@ -310,15 +307,14 @@ namespace Logic.Logic
             AppendRow(builder, "Megjegyzés", reason);
             builder.AppendLine("</table>");
 
-            builder.AppendLine("<p>A kérelmet az alábbi gombokkal tudod elbírálni:</p>");
+            builder.AppendLine("<p>A kérelem elbírálásához nyisd meg a Távollétkezelő jóváhagyások oldalát:</p>");
 
             builder.AppendLine("<p style=\"margin: 24px 0;\">");
-            builder.AppendLine($"<a href=\"{HtmlAttribute(approveUrl)}\" style=\"display: inline-block; padding: 10px 16px; margin-right: 8px; background: #166534; color: #ffffff; text-decoration: none; border-radius: 6px;\">Elfogadás</a>");
-            builder.AppendLine($"<a href=\"{HtmlAttribute(rejectUrl)}\" style=\"display: inline-block; padding: 10px 16px; background: #991b1b; color: #ffffff; text-decoration: none; border-radius: 6px;\">Elutasítás</a>");
+            builder.AppendLine($"<a href=\"{HtmlAttribute(approvalPageUrl)}\" style=\"display: inline-block; padding: 10px 16px; background: #00927b; color: #ffffff; text-decoration: none; border-radius: 10%;\">Jóváhagyások megnyitása</a>");
             builder.AppendLine("</p>");
 
             builder.AppendLine("<p style=\"font-size: 13px; color: #6b7280;\">");
-            builder.AppendLine($"A linkek lejárati ideje: {expiresAt}.<br>");
+            builder.AppendLine("A döntést az alkalmazásban, a jóváhagyások oldalon tudod véglegesíteni.");
             builder.AppendLine("</p>");
 
             builder.AppendLine("<p>Üdvözlettel,<br>Távollétkezelő</p>");
