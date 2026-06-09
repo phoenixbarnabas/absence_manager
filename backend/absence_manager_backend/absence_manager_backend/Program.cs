@@ -1,4 +1,6 @@
 using Data;
+using Entities.Helpers;
+using Entities.Models;
 using Logic.Helper;
 using Logic.Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +28,8 @@ builder.Services.AddScoped<IMsGraphLogic, MsGraphLogic>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICurrentUserGraphSyncService, CurrentUserGraphSyncService>();
 builder.Services.AddScoped<IUserActivityLogger, UserActivityLogger>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
