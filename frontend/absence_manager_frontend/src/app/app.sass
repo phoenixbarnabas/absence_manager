@@ -8,25 +8,28 @@
     background: #f8faf9
 
 .app-sidebar
-    width: 280px
-    min-width: 280px
+    flex: 0 0 auto
+    width: auto
+    min-width: 0
     height: 100vh
     position: sticky
     top: 0
     align-self: flex-start
-    overflow: hidden
-    border-right: 1px solid #e8eeec
-    background: #ffffff
-    box-shadow: 10px 0 30px rgba(47, 47, 47, 0.04)
-    z-index: 10
+    overflow: visible
+    background: transparent
+    border-right: 0
+    box-shadow: none
+    z-index: 20
 
 .app-content
     flex: 1 1 auto
+    min-width: 0
     height: 100vh
     overflow-y: auto
     overflow-x: hidden
     padding: 1rem
     background: radial-gradient(circle at top right, rgba(0, 146, 123, 0.08), transparent 32rem), linear-gradient(180deg, #f8faf9 0%, #ffffff 100%)
+    transition: width .22s ease
 
 .app-shell.login-layout
     display: block
