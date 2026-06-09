@@ -14,6 +14,7 @@ namespace Data
         public DbSet<AppUserManagerRelation> AppUserManagerRelations => Set<AppUserManagerRelation>();
         public DbSet<UserActivityLog> UserActivityLogs => Set<UserActivityLog>();
         public DbSet<EmailLog> EmailLogs => Set<EmailLog>();
+        public DbSet<AbsenceRequestActionToken> AbsenceRequestActionTokens => Set<AbsenceRequestActionToken>();
 
         public AbsenceManagerDbContext(DbContextOptions<AbsenceManagerDbContext> options)
             : base(options)
@@ -280,6 +281,74 @@ namespace Data
 
                 entity.HasIndex(x => x.AbsenceRequestId)
                     .HasDatabaseName("IX_EmailLogs_AbsenceRequestId");
+            });
+
+            // -------------------------
+            // AbsenceRequestActionToken
+            // -------------------------
+            modelBuilder.Entity<AbsenceRequestActionToken>(entity =>
+            {
+                entity.ToTable("AbsenceRequestActionTokens");
+
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Id)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.AbsenceRequestId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.ManagerUserId)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.Action)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(x => x.TokenHash)
+                    .HasMaxLength(200)
+                    .IsRequired();
+
+                entity.Property(x => x.CreatedAtUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.ExpiresAtUtc)
+                    .IsRequired();
+
+                entity.Property(x => x.UsedAtUtc);
+
+                entity.Property(x => x.IsUsed)
+                    .IsRequired();
+
+                entity.HasOne(x => x.AbsenceRequest)
+                    .WithMany()
+                    .HasForeignKey(x => x.AbsenceRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.ManagerUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.ManagerUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => x.TokenHash)
+                    .IsUnique()
+                    .HasDatabaseName("UX_AbsenceRequestActionTokens_TokenHash");
+
+                entity.HasIndex(x => x.AbsenceRequestId)
+                    .HasDatabaseName("IX_AbsenceRequestActionTokens_AbsenceRequestId");
+
+                entity.HasIndex(x => x.ManagerUserId)
+                    .HasDatabaseName("IX_AbsenceRequestActionTokens_ManagerUserId");
+
+                entity.HasIndex(x => new { x.AbsenceRequestId, x.Action, x.IsUsed })
+                    .HasDatabaseName("IX_AbsenceRequestActionTokens_Request_Action_IsUsed");
+
+                entity.HasIndex(x => x.ExpiresAtUtc)
+                    .HasDatabaseName("IX_AbsenceRequestActionTokens_ExpiresAtUtc");
             });
 
             // -------------------------
