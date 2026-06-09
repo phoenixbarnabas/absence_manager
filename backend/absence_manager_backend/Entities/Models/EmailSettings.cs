@@ -18,6 +18,8 @@ namespace Entities.Models
 
         public string FrontendBaseUrl { get; set; } = "http://localhost:4200";
 
+        public string ApprovalPagePath { get; set; } = "/absence-approvals";
+
         public int ApprovalTokenExpirationHours { get; set; } = 72;
 
         public int MaxRetryCount { get; set; } = 3;
