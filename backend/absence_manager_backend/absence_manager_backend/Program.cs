@@ -30,6 +30,7 @@ builder.Services.AddScoped<ICurrentUserGraphSyncService, CurrentUserGraphSyncSer
 builder.Services.AddScoped<IUserActivityLogger, UserActivityLogger>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IAbsenceRequestActionTokenService, AbsenceRequestActionTokenService>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
