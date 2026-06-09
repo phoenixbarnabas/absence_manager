@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    [Migration("20260609082845_AddEmailLogs")]
+    [Migration("20260609090306_AddEmailLogs")]
     partial class AddEmailLogs
     {
         /// <inheritdoc />
