@@ -22,6 +22,10 @@ namespace Entities.Models
 
         public int MaxRetryCount { get; set; } = 3;
 
+        public string? TestManagerOverrideEmail { get; set; }
+
+        public bool AllowManagerRelationBypassForTesting { get; set; } = false;
+
         public SmtpEmailSettings Smtp { get; set; } = new();
     }
 
