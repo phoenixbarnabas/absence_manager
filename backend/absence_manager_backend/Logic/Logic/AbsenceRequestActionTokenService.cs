@@ -4,6 +4,7 @@ using Entities.Enums;
 using Entities.Models;
 using Logic.Helper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -18,13 +19,16 @@ namespace Logic.Logic
 
         private readonly AbsenceManagerDbContext _dbContext;
         private readonly EmailSettings _emailSettings;
+        private readonly IHostEnvironment _environment;
 
         public AbsenceRequestActionTokenService(
             AbsenceManagerDbContext dbContext,
-            IOptions<EmailSettings> emailSettings)
+            IOptions<EmailSettings> emailSettings,
+            IHostEnvironment environment)
         {
             _dbContext = dbContext;
             _emailSettings = emailSettings.Value;
+            _environment = environment;
         }
 
         public async Task<AbsenceRequestActionTokensDto> CreateTokensAsync(
@@ -60,7 +64,7 @@ namespace Logic.Logic
                     x.IsActive,
                     cancellationToken);
 
-            if (!isActiveManager)
+            if (!isActiveManager && !IsManagerRelationBypassAllowed())
             {
                 throw new UnauthorizedAccessException("The selected user is not an active manager for this absence request.");
             }
@@ -166,7 +170,7 @@ namespace Logic.Logic
                     x.IsActive,
                     cancellationToken);
 
-            if (!isActiveManager)
+            if (!isActiveManager && !IsManagerRelationBypassAllowed())
             {
                 throw new UnauthorizedAccessException("The manager relation is no longer active for this absence request.");
             }
@@ -215,6 +219,12 @@ namespace Logic.Logic
                 .TrimEnd('=')
                 .Replace('+', '-')
                 .Replace('/', '_');
+        }
+
+        private bool IsManagerRelationBypassAllowed()
+        {
+            return _environment.IsDevelopment() &&
+                   _emailSettings.AllowManagerRelationBypassForTesting;
         }
 
         private static string HashToken(string rawToken)

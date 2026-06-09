@@ -4,6 +4,7 @@ using Entities.Helpers;
 using Entities.Models;
 using Logic.Helper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -20,19 +21,23 @@ namespace Logic.Logic
         private readonly IAbsenceRequestActionTokenService _tokenService;
         private readonly EmailSettings _emailSettings;
         private readonly ILogger<AbsenceRequestEmailService> _logger;
+        private readonly IHostEnvironment _environment;
 
         public AbsenceRequestEmailService(
             AbsenceManagerDbContext dbContext,
             IEmailSender emailSender,
             IAbsenceRequestActionTokenService tokenService,
             IOptions<EmailSettings> emailSettings,
-            ILogger<AbsenceRequestEmailService> logger)
+            ILogger<AbsenceRequestEmailService> logger,
+            IHostEnvironment environment)
+
         {
             _dbContext = dbContext;
             _emailSender = emailSender;
             _tokenService = tokenService;
             _emailSettings = emailSettings.Value;
             _logger = logger;
+            _environment = environment;
         }
 
         public async Task SendManagerApprovalRequestEmailAsync(
@@ -81,16 +86,7 @@ namespace Logic.Logic
                     return;
                 }
 
-                var managerRelation = await _dbContext.AppUserManagerRelations
-                    .AsNoTracking()
-                    .Include(x => x.ManagerUser)
-                    .Where(x =>
-                        x.UserId == absenceRequest.UserId &&
-                        x.IsActive)
-                    .OrderByDescending(x => x.ValidFromUtc)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                var manager = managerRelation?.ManagerUser;
+                var manager = await ResolveManagerForEmailAsync(absenceRequest, cancellationToken);
 
                 if (manager == null)
                 {
@@ -199,6 +195,48 @@ namespace Logic.Logic
             }
         }
 
+        private async Task<AppUser?> ResolveManagerForEmailAsync(AbsenceRequest absenceRequest,CancellationToken cancellationToken)
+        {
+            if (_environment.IsDevelopment() &&
+                !string.IsNullOrWhiteSpace(_emailSettings.TestManagerOverrideEmail))
+            {
+                var overrideManager = await _dbContext.AppUsers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x =>
+                        x.Email != null &&
+                        x.Email.ToLower() == _emailSettings.TestManagerOverrideEmail.ToLower(),
+                        cancellationToken);
+
+                if (overrideManager == null)
+                {
+                    _logger.LogWarning(
+                        "Test manager override email is configured, but no AppUser was found with this email. Email={Email}",
+                        _emailSettings.TestManagerOverrideEmail);
+
+                    return null;
+                }
+
+                _logger.LogWarning(
+                    "Development manager email override is active. AbsenceRequestId={AbsenceRequestId}, OverrideManagerUserId={ManagerUserId}, OverrideEmail={Email}",
+                    absenceRequest.Id,
+                    overrideManager.Id,
+                    overrideManager.Email);
+
+                return overrideManager;
+            }
+
+            var managerRelation = await _dbContext.AppUserManagerRelations
+                .AsNoTracking()
+                .Include(x => x.ManagerUser)
+                .Where(x =>
+                    x.UserId == absenceRequest.UserId &&
+                    x.IsActive)
+                .OrderByDescending(x => x.ValidFromUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return managerRelation?.ManagerUser;
+        }
+
         private async Task CreateSkippedEmailLogAsync(
             string? absenceRequestId,
             string recipientEmail,
@@ -281,7 +319,6 @@ namespace Logic.Logic
 
             builder.AppendLine("<p style=\"font-size: 13px; color: #6b7280;\">");
             builder.AppendLine($"A linkek lejárati ideje: {expiresAt}.<br>");
-            builder.AppendLine("A gombok egy megerősítő oldalra vezetnek, a kérelem csak ott kerül ténylegesen elbírálásra.");
             builder.AppendLine("</p>");
 
             builder.AppendLine("<p>Üdvözlettel,<br>Távollétkezelő</p>");
