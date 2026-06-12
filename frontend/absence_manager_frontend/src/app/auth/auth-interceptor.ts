@@ -21,11 +21,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  const handleAuthFailure = (error: unknown) => {
+    return from(authService.clearSessionAfterAuthFailure()).pipe(
+      switchMap(() => {
+        router.navigate(['/welcome']);
+        return throwError(() => error);
+      })
+    );
+  };
+
   return from(authService.acquireApiToken()).pipe(
     switchMap(token => {
       if (!token) {
-        router.navigate(['/welcome']);
-        return throwError(() => new Error('Nincs hozzáférési token.'));
+        return handleAuthFailure(
+          new Error('Nincs érvényes hozzáférési token.')
+        );
       }
 
       const authReq = req.clone({
@@ -36,13 +46,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
       return next(authReq).pipe(
         catchError((error: HttpErrorResponse) => {
-          if (error.status === 401 || error.status === 403) {
+          if (error.status === 401) {
+            return handleAuthFailure(error);
+          }
+
+          if (error.status === 403) {
             router.navigate(['/welcome']);
           }
 
           return throwError(() => error);
         })
       );
-    })
+    }),
+    catchError(error => handleAuthFailure(error))
   );
 };

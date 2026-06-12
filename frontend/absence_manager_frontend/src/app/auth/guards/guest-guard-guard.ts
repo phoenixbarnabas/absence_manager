@@ -10,6 +10,8 @@ export const guestGuardGuard: CanActivateFn = async () => {
     await authService.bootstrap();
   } catch (error) {
     console.error('Guest guard bootstrap failed', error);
+    await authService.clearSessionAfterAuthFailure();
+    return true;
   }
 
   if (authService.isLoggedIn()) {
