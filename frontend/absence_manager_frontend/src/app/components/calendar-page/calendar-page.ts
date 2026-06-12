@@ -347,26 +347,42 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   openRequestModal(day: CalendarDayView): void {
-    this.clearMessages();
+  this.clearMessages();
 
-    this.requestModalDay = day;
-    this.requestModalOpen = true;
+  if (this.hasActiveAbsenceRequestOnDay(day)) {
+    this.selectedDateKey = day.dateKey;
+    this.selectedEvent = null;
+    this.warningMessage = 'Erre a napra már van kérelmed.';
 
-    this.requestForm = {
-      type: 'vacation',
-      dateFrom: day.dateKey,
-      dateTo: day.dateKey,
-      reason: ''
-    };
-
-    if (!day.isWorkingDay) {
-      this.warningMessage = day.holidayName
-        ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
-        : 'A kiválasztott nap hétvége vagy nem munkanap.';
-    }
+    this.calendarDays = this.calendarDays.map(calendarDay => ({
+      ...calendarDay,
+      isSelected: calendarDay.dateKey === day.dateKey
+    }));
 
     this.refreshView();
+    return;
   }
+
+  
+
+  this.requestModalDay = day;
+  this.requestModalOpen = true;
+
+  this.requestForm = {
+    type: 'vacation',
+    dateFrom: day.dateKey,
+    dateTo: day.dateKey,
+    reason: ''
+  };
+
+  if (!day.isWorkingDay) {
+    this.warningMessage = day.holidayName
+      ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
+      : 'A kiválasztott nap hétvége vagy nem munkanap.';
+  }
+
+  this.refreshView();
+}
 
   closeRequestModal(): void {
     if (this.saving) {
@@ -462,6 +478,20 @@ export class CalendarPage implements OnInit, OnDestroy {
     }
 
     return !!this.getRelatedRequestId(event);
+  }
+
+  private hasActiveAbsenceRequestOnDay(day: CalendarDayView): boolean {
+    if (this.scope !== 'mine') {
+      return false;
+    }
+
+    return day.events.some(event => {
+      const status = this.normalizeStatus(event.status);
+
+      return event.type !== 'deskBooking' &&
+        status !== 'cancelled' &&
+        status !== 'rejected';
+    });
   }
 
   openSelectedEvent(event?: CalendarEventDto | null): void {
