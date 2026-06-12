@@ -6,6 +6,7 @@ import { takeUntil } from 'rxjs/internal/operators/takeUntil';
 import { Subject } from 'rxjs/internal/Subject';
 import { AccountInfo } from '@azure/msal-browser';
 import { finalize } from 'rxjs/internal/operators/finalize';
+import { NotificationService } from '../../services/notification-service';
 
 @Component({
   selector: 'app-profile',
@@ -22,22 +23,20 @@ export class Profile implements OnInit, OnDestroy {
   loading = true;
   hierarchyLoading = true;
 
-  error: string | null = null;
-  hierarchyError: string | null = null;
-
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private userService: UserService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService,
   ) { }
 
   ngOnInit(): void {
     const account = this.authService.getAccount() ?? this.authService.getActiveAccount();
 
     if (!account) {
-      this.error = 'Nincs bejelentkezett felhasználó.';
+      this.notificationService.warning('Nincs bejelentkezett felhasználó.');
       this.loading = false;
       this.hierarchyLoading = false;
       return;
@@ -100,7 +99,6 @@ export class Profile implements OnInit, OnDestroy {
 
   private loadProfile(): void {
     this.loading = true;
-    this.error = null;
 
     this.userService.getMe()
       .pipe(
@@ -116,14 +114,19 @@ export class Profile implements OnInit, OnDestroy {
         },
         error: err => {
           console.error(err);
-          this.error = 'Hiba a profil betöltése közben.';
+
+          this.notificationService.error(
+            this.notificationService.getMessage(
+              err,
+              'Hiba a profil betöltése közben.'
+            )
+          );
         }
       });
   }
 
   private loadHierarchy(): void {
     this.hierarchyLoading = true;
-    this.hierarchyError = null;
 
     this.userService.getMyHierarchy()
       .pipe(
@@ -141,7 +144,13 @@ export class Profile implements OnInit, OnDestroy {
           console.error(err);
           this.manager = null;
           this.directReports = [];
-          this.hierarchyError = 'Hiba a vezetői kapcsolatok betöltése közben.';
+
+          this.notificationService.error(
+            this.notificationService.getMessage(
+              err,
+              'Hiba a vezetői kapcsolatok betöltése közben.'
+            )
+          );
         }
       });
   }
