@@ -300,7 +300,7 @@ export class DeskBooking implements OnInit {
     const dayNames = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
     const today = new Date();
 
-    this.calendarDays = Array.from({ length: 21 }, (_, index) => {
+    this.calendarDays = Array.from({ length: 14 }, (_, index) => {
       const date = new Date(today);
       date.setDate(today.getDate() + index);
 
@@ -358,7 +358,7 @@ export class DeskBooking implements OnInit {
   private generateCalendarDaysFrom(startDate: Date): void {
     const dayNames = ['V', 'H', 'K', 'Sze', 'Cs', 'P', 'Szo'];
 
-    this.calendarDays = Array.from({ length: 21 }, (_, index) => {
+    this.calendarDays = Array.from({ length: 14 }, (_, index) => {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + index);
 

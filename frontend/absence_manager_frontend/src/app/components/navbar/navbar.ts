@@ -1,8 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AccountInfo } from '@azure/msal-browser';
 import { combineLatest, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { AuthProcessState, AuthService } from '../../auth/auth-service';
 import { UserProfile } from '../../models/app-user-models';
+import { AuthProcessState, AuthService } from '../../auth/auth-service';
+import { UserService } from '../../services/user.service';
+import { AccountInfo } from '@azure/msal-browser';
 
 @Component({
   selector: 'app-navbar',
@@ -14,17 +15,13 @@ export class Navbar implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   loading = true;
   isLoggedIn = false;
-  isCollapsed = false;
   authProcessState: AuthProcessState = 'initializing';
 
-  private readonly sidebarStateStorageKey = 'absence-manager-sidebar-collapsed';
   private readonly destroy$ = new Subject<void>();
 
   constructor(public authService: AuthService) { }
 
   ngOnInit(): void {
-    this.restoreSidebarState();
-
     combineLatest([
       this.authService.account$.pipe(
         distinctUntilChanged((previous, current) =>
@@ -63,18 +60,12 @@ export class Navbar implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-    this.saveSidebarState();
-  }
-
   getInitials(displayName: string): string {
     return displayName
       .split(' ')
       .filter(Boolean)
       .map(name => name[0])
       .join('')
-      .slice(0, 2)
       .toUpperCase();
   }
 
@@ -89,22 +80,6 @@ export class Navbar implements OnInit, OnDestroy {
       department: '',
       jobTitle: ''
     };
-  }
-
-  private restoreSidebarState(): void {
-    try {
-      this.isCollapsed = localStorage.getItem(this.sidebarStateStorageKey) === 'true';
-    } catch {
-      this.isCollapsed = false;
-    }
-  }
-
-  private saveSidebarState(): void {
-    try {
-      localStorage.setItem(this.sidebarStateStorageKey, String(this.isCollapsed));
-    } catch {
-      // Ha a localStorage nem elérhető, attól még a navbar működjön.
-    }
   }
 
   get isInitializing(): boolean {

@@ -8,17 +8,12 @@ export const authGuard: CanActivateFn = async () => {
 
   try {
     await authService.bootstrap();
-
-    const token = await authService.acquireApiToken();
-
-    if (token) {
-      return true;
-    }
-
-    await authService.clearSessionAfterAuthFailure();
   } catch (error) {
-    console.error('Auth guard failed.', error);
-    await authService.clearSessionAfterAuthFailure();
+    console.error('Auth bootstrap failed', error);
+  }
+
+  if (authService.isLoggedIn()) {
+    return true;
   }
 
   return router.createUrlTree(['/welcome']);

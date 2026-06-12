@@ -40,7 +40,7 @@ export class App implements OnInit, OnDestroy {
           return;
         }
 
-        void this.startGraphSyncIfTokenAvailable();
+        this.startGraphSync();
       });
 
     this.updateRouteState();
@@ -61,25 +61,13 @@ export class App implements OnInit, OnDestroy {
   private async bootstrapAuth(): Promise<void> {
     try {
       await this.authService.bootstrap();
-      await this.startGraphSyncIfTokenAvailable();
+
+      if (this.authService.isLoggedIn()) {
+        this.startGraphSync();
+      }
     } catch (error) {
       console.error('Auth bootstrap failed in App.', error);
     }
-  }
-
-  private async startGraphSyncIfTokenAvailable(): Promise<void> {
-    if (this.graphSyncStarted) {
-      return;
-    }
-
-    const token = await this.authService.acquireApiToken();
-
-    if (!token) {
-      this.graphSyncStarted = false;
-      return;
-    }
-
-    this.startGraphSync();
   }
 
   private startGraphSync(): void {
@@ -94,7 +82,6 @@ export class App implements OnInit, OnDestroy {
       .subscribe({
         error: err => {
           console.warn('Graph szinkron sikertelen.', err);
-          this.graphSyncStarted = false;
         }
       });
   }
