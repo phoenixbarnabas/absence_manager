@@ -11,11 +11,13 @@ namespace Logic.Logic
     {
         private readonly AbsenceManagerDbContext _dbContext;
         private readonly IUserActivityLogger _activityLogger;
+        private readonly IAbsenceRequestEmailService _absenceRequestEmailService;
 
-        public AbsenceRequestLogic(AbsenceManagerDbContext dbContext, IUserActivityLogger activityLogger)
+        public AbsenceRequestLogic(AbsenceManagerDbContext dbContext,IUserActivityLogger activityLogger,IAbsenceRequestEmailService absenceRequestEmailService)
         {
             _dbContext = dbContext;
             _activityLogger = activityLogger;
+            _absenceRequestEmailService = absenceRequestEmailService;
         }
 
         public async Task<IReadOnlyList<AbsenceRequestApprovalDto>> GetReviewedApprovalsForManagerAsync(string managerUserId, CancellationToken cancellationToken = default)
@@ -189,6 +191,10 @@ namespace Logic.Logic
                     HasReason = !string.IsNullOrWhiteSpace(request.Reason)
                 },
                 cancellationToken: cancellationToken);
+
+            await _absenceRequestEmailService.SendManagerApprovalRequestEmailAsync(
+                request.Id,
+                cancellationToken);
 
             return ToViewDto(request);
         }
