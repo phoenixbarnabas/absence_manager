@@ -77,36 +77,6 @@
     </div>
   </section>
 
-  <div class="notification-stack" *ngIf="notification as currentNotification">
-    <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
-      <div class="page-notification__icon">
-        <i
-          class="bi"
-          [ngClass]="{
-            'bi-check-circle-fill': currentNotification.type === 'success',
-            'bi-exclamation-triangle-fill': currentNotification.type === 'error',
-            'bi-info-circle-fill': currentNotification.type === 'info',
-            'bi-exclamation-circle-fill': currentNotification.type === 'warning'
-          }"
-        ></i>
-      </div>
-
-      <div class="page-notification__body">
-        <strong>{{ currentNotification.title }}</strong>
-        <span>{{ currentNotification.message }}</span>
-      </div>
-
-      <button
-        type="button"
-        class="page-notification__close"
-        aria-label="Értesítés bezárása"
-        (click)="clearNotification()"
-      >
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-  </div>
-
   <section class="state-card" *ngIf="loading">
     <div class="spinner"></div>
 

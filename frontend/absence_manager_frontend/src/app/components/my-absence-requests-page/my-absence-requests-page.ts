@@ -1,21 +1,9 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, Subject, takeUntil, timeout } from 'rxjs';
-
-import {
-  AbsenceApprovalStatusValue,
-  AbsenceApprovalTypeValue,
-  AbsenceRequestViewDto
-} from '../../models/calendar-models';
+import { AbsenceApprovalStatusValue, AbsenceApprovalTypeValue, AbsenceRequestViewDto } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
-
-type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-interface PageNotification {
-  type: NotificationType;
-  title: string;
-  message: string;
-}
+import { NotificationService } from '../../services/notification-service';
 
 @Component({
   selector: 'app-my-absence-requests-page',
@@ -34,18 +22,19 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   loading = false;
   cancellingRequestId: string | null = null;
 
-  notification: PageNotification | null = null;
   requestToCancel: AbsenceRequestViewDto | null = null;
 
   archivedExpanded = false;
   highlightedRequestId: string | null = null;
 
   private readonly destroy$ = new Subject<void>();
+  private missingHighlightedRequestNotified = false;
 
   constructor(
     private calendarService: CalendarService,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService,
   ) { }
 
   ngOnInit(): void {
@@ -73,7 +62,6 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
 
   loadRequests(): void {
     this.loading = true;
-    this.notification = null;
 
     this.calendarService.getMyAbsenceRequests()
       .pipe(
@@ -88,24 +76,40 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
         next: requests => {
           this.requests = requests.map(request => this.normalizeRequest(request));
           this.applyRequestLists();
+
+          if (this.requests.length === 0) {
+            this.notificationService.info('Jelenleg nincs rögzített távolléti kérelmed.');
+          }
         },
         error: err => {
           console.error('My absence requests load failed', err);
 
-          this.showNotification(
-            'error',
-            'Betöltési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült betölteni a saját kérelmeidet.'
+          this.notificationService
+            .error(
+              this.notificationService.getMessage(
+                err,
+                'Nem sikerült betölteni a saját kérelmeidet.'
+              ),
+              {
+                actionLabel: 'Újrapróbálás',
+                durationMs: 8000
+              }
             )
-          );
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.loadRequests();
+            });
         }
       });
   }
 
   openCancelModal(request: AbsenceRequestViewDto): void {
-    if (!this.canCancel(request) || this.cancellingRequestId) {
+    if (this.cancellingRequestId) {
+      return;
+    }
+
+    if (!this.canCancel(request)) {
+      this.notificationService.warning('Ez a kérelem már nem vonható vissza.');
       return;
     }
 
@@ -127,11 +131,16 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
   confirmCancelRequest(): void {
     const request = this.requestToCancel;
 
-    if (!request || !this.canCancel(request) || this.cancellingRequestId) {
+    if (!request || this.cancellingRequestId) {
       return;
     }
 
-    this.notification = null;
+    if (!this.canCancel(request)) {
+      this.notificationService.warning('Ez a kérelem már nem vonható vissza.');
+      this.requestToCancel = null;
+      return;
+    }
+
     this.cancellingRequestId = request.id;
 
     this.calendarService.cancelAbsenceRequest(request.id)
@@ -158,31 +167,21 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
             };
           });
 
-          this.showNotification(
-            'success',
-            'Kérelem visszavonva',
-            'A kérelem visszavonása sikerült.'
-          );
+          this.notificationService.success('A kérelem visszavonása sikerült.');
 
           this.applyRequestLists();
         },
         error: err => {
           console.error('Absence request cancel failed', err);
 
-          this.showNotification(
-            'error',
-            'Visszavonási hiba',
-            this.getApiErrorMessage(
+          this.notificationService.error(
+            this.notificationService.getMessage(
               err,
               'Nem sikerült visszavonni a kérelmet.'
             )
           );
         }
       });
-  }
-
-  clearNotification(): void {
-    this.notification = null;
   }
 
   toggleArchivedRequests(): void {
@@ -296,18 +295,6 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
     return date.toLocaleDateString('hu-HU');
   }
 
-  private showNotification(
-    type: NotificationType,
-    title: string,
-    message: string
-  ): void {
-    this.notification = {
-      type,
-      title,
-      message
-    };
-  }
-
   private applyRequestLists(): void {
     const today = this.getTodayKey();
 
@@ -332,9 +319,11 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
 
     if (
       this.highlightedRequestId &&
-      this.archivedRequests.some(x => x.id === this.highlightedRequestId)
+      !this.missingHighlightedRequestNotified &&
+      !this.requests.some(x => x.id === this.highlightedRequestId)
     ) {
-      this.archivedExpanded = true;
+      this.missingHighlightedRequestNotified = true;
+      this.notificationService.warning('A kapcsolódó kérelem nem található a saját kérelmeid között.');
     }
 
     this.queueHighlightedRequestScroll();
@@ -433,29 +422,5 @@ export class MyAbsenceRequestsPage implements OnInit, OnDestroy {
     const day = String(now.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
-  }
-
-  private getApiErrorMessage(err: any, fallback: string): string {
-    if (err?.error?.message) {
-      return err.error.message;
-    }
-
-    if (err?.status === 0) {
-      return 'A backend nem érhető el. Ellenőrizd, hogy fut-e az API és jó-e az apiUrl.';
-    }
-
-    if (err?.status === 401) {
-      return 'A munkamenet lejárt vagy nincs jogosultságod. Jelentkezz be újra.';
-    }
-
-    if (err?.status === 403) {
-      return 'Ehhez a művelethez nincs megfelelő jogosultságod.';
-    }
-
-    if (err?.name === 'TimeoutError') {
-      return 'A backend nem válaszolt időben. Ellenőrizd, hogy fut-e az API.';
-    }
-
-    return fallback;
   }
 }
