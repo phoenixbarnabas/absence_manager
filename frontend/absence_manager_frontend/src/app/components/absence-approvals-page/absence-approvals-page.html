@@ -70,36 +70,6 @@
     </div>
   </section>
 
-  <div class="notification-stack" *ngIf="notification as currentNotification">
-    <div class="page-notification" [ngClass]="'page-notification--' + currentNotification.type">
-      <div class="page-notification__icon">
-        <i
-          class="bi"
-          [ngClass]="{
-            'bi-check-circle-fill': currentNotification.type === 'success',
-            'bi-exclamation-triangle-fill': currentNotification.type === 'error',
-            'bi-info-circle-fill': currentNotification.type === 'info',
-            'bi-exclamation-circle-fill': currentNotification.type === 'warning'
-          }"
-        ></i>
-      </div>
-
-      <div class="page-notification__body">
-        <strong>{{ currentNotification.title }}</strong>
-        <span>{{ currentNotification.message }}</span>
-      </div>
-
-      <button
-        type="button"
-        class="page-notification__close"
-        aria-label="Értesítés bezárása"
-        (click)="clearNotification()"
-      >
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-  </div>
-
   <section class="state-card" *ngIf="loading">
     <div class="spinner"></div>
 
@@ -121,14 +91,10 @@
   </section>
 
   <section class="approval-list" *ngIf="!loading && approvals.length > 0">
-    <article
-      class="approval-row"
-      *ngFor="let approval of approvals; trackBy: trackByApprovalId"
-      [ngClass]="[
+    <article class="approval-row" *ngFor="let approval of approvals; trackBy: trackByApprovalId" [ngClass]="[
         'approval-row--' + approval.type,
         'approval-row--' + approval.status
-      ]"
-    >
+      ]">
       <div class="approval-row__accent"></div>
 
       <div class="approval-row__content">
@@ -174,13 +140,8 @@
               Döntési megjegyzés
             </label>
 
-            <textarea
-              [id]="'decision-comment-' + approval.id"
-              rows="2"
-              [(ngModel)]="decisionComments[approval.id]"
-              [disabled]="savingRequestId === approval.id"
-              placeholder="Opcionális megjegyzés..."
-            ></textarea>
+            <textarea [id]="'decision-comment-' + approval.id" rows="2" [(ngModel)]="decisionComments[approval.id]"
+              [disabled]="savingRequestId === approval.id" placeholder="Opcionális megjegyzés..."></textarea>
           </div>
         </div>
 
@@ -190,22 +151,14 @@
           </span>
 
           <div class="approval-row__actions">
-            <button
-              type="button"
-              class="row-btn row-btn--danger"
-              (click)="reject(approval)"
-              [disabled]="!!savingRequestId"
-            >
+            <button type="button" class="row-btn row-btn--danger" (click)="reject(approval)"
+              [disabled]="!!savingRequestId">
               <i class="bi bi-x-circle"></i>
               <span>Elutasítás</span>
             </button>
 
-            <button
-              type="button"
-              class="row-btn row-btn--primary"
-              (click)="approve(approval)"
-              [disabled]="!!savingRequestId"
-            >
+            <button type="button" class="row-btn row-btn--primary" (click)="approve(approval)"
+              [disabled]="!!savingRequestId">
               <i class="bi bi-check-circle"></i>
               <span>{{ savingRequestId === approval.id ? 'Mentés...' : 'Jóváhagyás' }}</span>
             </button>
@@ -216,12 +169,8 @@
   </section>
 
   <section class="archive-section">
-    <button
-      type="button"
-      class="archive-toggle"
-      (click)="toggleReviewedApprovals()"
-      [attr.aria-expanded]="reviewedExpanded"
-    >
+    <button type="button" class="archive-toggle" (click)="toggleReviewedApprovals()"
+      [attr.aria-expanded]="reviewedExpanded">
       <div>
         <span class="archive-toggle__eyebrow">
           <i class="bi bi-clock-history"></i>
@@ -251,10 +200,8 @@
         </div>
       </section>
 
-      <section
-        class="state-card empty-card state-card--flat"
-        *ngIf="!reviewedLoading && reviewedApprovals.length === 0 && !reviewedNotification"
-      >
+      <section class="state-card empty-card state-card--flat"
+        *ngIf="!reviewedLoading && reviewedApprovals.length === 0">
         <div class="empty-icon">
           <i class="bi bi-archive"></i>
         </div>
@@ -266,14 +213,11 @@
       </section>
 
       <section class="approval-list" *ngIf="!reviewedLoading && reviewedApprovals.length > 0">
-        <article
-          class="approval-row approval-row--reviewed"
-          *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId"
-          [ngClass]="[
+        <article class="approval-row approval-row--reviewed"
+          *ngFor="let approval of reviewedApprovals; trackBy: trackByApprovalId" [ngClass]="[
             'approval-row--' + approval.type,
             'approval-row--' + approval.status
-          ]"
-        >
+          ]">
           <div class="approval-row__accent"></div>
 
           <div class="approval-row__content approval-row__content--reviewed">

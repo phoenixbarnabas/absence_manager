@@ -7,15 +7,9 @@ import {
   AbsenceRequestApprovalDto
 } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
+import { NotificationService } from '../../services/notification-service';
 
 type ApprovalAction = 'approve' | 'reject';
-type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-interface PageNotification {
-  type: NotificationType;
-  title: string;
-  message: string;
-}
 
 @Component({
   selector: 'app-absence-approvals-page',
@@ -29,20 +23,19 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
   loading = false;
   savingRequestId: string | null = null;
 
-  notification: PageNotification | null = null;
   decisionComments: Record<string, string> = {};
 
   reviewedApprovals: AbsenceRequestApprovalDto[] = [];
   reviewedLoading = false;
   reviewedExpanded = false;
   reviewedLoaded = false;
-  reviewedNotification: PageNotification | null = null;
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private calendarService: CalendarService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit(): void {
@@ -57,7 +50,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   loadPendingApprovals(): void {
     this.loading = true;
-    this.notification = null;
 
     this.calendarService.getPendingApprovals()
       .pipe(
@@ -83,14 +75,21 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Pending approvals load failed', err);
 
-          this.showNotification(
-            'error',
-            'Betöltési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült betölteni a jóváhagyásra váró kérelmeket.'
+          this.notificationService
+            .error(
+              this.notificationService.getMessage(
+                err,
+                'Nem sikerült betölteni a jóváhagyásra váró kérelmeket.'
+              ),
+              {
+                actionLabel: 'Újrapróbálás',
+                durationMs: 8000
+              }
             )
-          );
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.loadPendingApprovals();
+            });
         }
       });
   }
@@ -105,7 +104,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   loadReviewedApprovals(): void {
     this.reviewedLoading = true;
-    this.reviewedNotification = null;
 
     this.calendarService.getReviewedApprovals()
       .pipe(
@@ -124,14 +122,21 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Reviewed approvals load failed', err);
 
-          this.showReviewedNotification(
-            'error',
-            'Betöltési hiba',
-            this.getApiErrorMessage(
-              err,
-              'Nem sikerült betölteni az elbírált kérelmeket.'
+          this.notificationService
+            .error(
+              this.notificationService.getMessage(
+                err,
+                'Nem sikerült betölteni az elbírált kérelmeket.'
+              ),
+              {
+                actionLabel: 'Újrapróbálás',
+                durationMs: 8000
+              }
             )
-          );
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.loadReviewedApprovals();
+            });
         }
       });
   }
@@ -142,14 +147,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
 
   reject(request: AbsenceRequestApprovalDto): void {
     this.submitDecision(request, 'reject');
-  }
-
-  clearNotification(): void {
-    this.notification = null;
-  }
-
-  clearReviewedNotification(): void {
-    this.reviewedNotification = null;
   }
 
   trackByApprovalId(_: number, approval: AbsenceRequestApprovalDto): string {
@@ -249,7 +246,6 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.notification = null;
     this.savingRequestId = request.id;
 
     const comment = this.decisionComments[request.id]?.trim() || null;
@@ -272,9 +268,7 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
           this.approvals = this.approvals.filter(x => x.id !== request.id);
           delete this.decisionComments[request.id];
 
-          this.showNotification(
-            'success',
-            'Döntés mentve',
+          this.notificationService.success(
             action === 'approve'
               ? 'A kérelem jóváhagyása sikerült.'
               : 'A kérelem elutasítása sikerült.'
@@ -289,40 +283,14 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Approval decision failed', err);
 
-          this.showNotification(
-            'error',
-            'Mentési hiba',
-            this.getApiErrorMessage(
+          this.notificationService.error(
+            this.notificationService.getMessage(
               err,
               'Nem sikerült menteni a döntést.'
             )
           );
         }
       });
-  }
-
-  private showNotification(
-    type: NotificationType,
-    title: string,
-    message: string
-  ): void {
-    this.notification = {
-      type,
-      title,
-      message
-    };
-  }
-
-  private showReviewedNotification(
-    type: NotificationType,
-    title: string,
-    message: string
-  ): void {
-    this.reviewedNotification = {
-      type,
-      title,
-      message
-    };
   }
 
   private normalizeApproval(
@@ -381,29 +349,5 @@ export class AbsenceApprovalsPage implements OnInit, OnDestroy {
       default:
         return status;
     }
-  }
-
-  private getApiErrorMessage(err: any, fallback: string): string {
-    if (err?.error?.message) {
-      return err.error.message;
-    }
-
-    if (err?.status === 0) {
-      return 'A backend nem érhető el. Ellenőrizd, hogy fut-e az API és jó-e az apiUrl.';
-    }
-
-    if (err?.status === 401) {
-      return 'A munkamenet lejárt vagy nincs jogosultságod. Jelentkezz be újra.';
-    }
-
-    if (err?.status === 403) {
-      return 'Ehhez a művelethez nincs megfelelő jogosultságod.';
-    }
-
-    if (err?.name === 'TimeoutError') {
-      return 'A backend nem válaszolt időben. Ellenőrizd, hogy fut-e az API.';
-    }
-
-    return fallback;
   }
 }
