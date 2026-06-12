@@ -307,7 +307,18 @@
                 <span class="event-pill__marker"></span>
 
                 <span class="event-pill__content">
-                  <strong>{{ event.title }}</strong>
+                  <span class="event-pill__title-row">
+                    <strong>{{ event.title }}</strong>
+
+                    <span
+                      class="event-pill__status"
+                      [ngClass]="'event-pill__status--' + event.status"
+                      *ngIf="event.status === 'rejected' || event.status === 'cancelled'"
+                    >
+                      {{ getStatusLabel(event.status) }}
+                    </span>
+                  </span>
+
                   <small *ngIf="viewMode === 'week'">
                     {{ event.userName }} · {{ getStatusLabel(event.status) }}
                   </small>
@@ -448,7 +459,10 @@
             type="button"
             class="selected-day-event"
             *ngFor="let event of selectedDay.events; trackBy: trackByEvent"
-            [ngClass]="'selected-day-event--' + event.type"
+            [ngClass]="[
+              'selected-day-event--' + event.type,
+              'selected-day-event--' + event.status
+            ]"
             (click)="selectEvent(event)"
           >
             <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
@@ -456,6 +470,13 @@
             <span>
               <strong>{{ event.title }}</strong>
               <small>{{ event.userName }} · {{ getStatusLabel(event.status) }}</small>
+            </span>
+
+            <span
+              class="selected-day-event__status"
+              [ngClass]="'selected-day-event__status--' + event.status"
+            >
+              {{ getStatusLabel(event.status) }}
             </span>
           </button>
         </div>
@@ -619,7 +640,10 @@
           type="button"
           class="modal-existing-event"
           *ngFor="let event of requestModalDay?.events; trackBy: trackByEvent"
-          [ngClass]="'modal-existing-event--' + event.type"
+          [ngClass]="[
+            'modal-existing-event--' + event.type,
+            'modal-existing-event--' + event.status
+          ]"
           (click)="selectEvent(event); closeRequestModal()"
         >
           <i class="bi" [ngClass]="getEventTypeIcon(event.type)"></i>
@@ -627,6 +651,13 @@
           <span>
             <strong>{{ event.title }}</strong>
             <small>{{ event.userName }} · {{ getStatusLabel(event.status) }}</small>
+          </span>
+
+          <span
+            class="modal-existing-event__status"
+            [ngClass]="'modal-existing-event__status--' + event.status"
+          >
+            {{ getStatusLabel(event.status) }}
           </span>
         </button>
       </div>
