@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(AbsenceManagerDbContext))]
-    partial class AbsenceManagerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609090306_AddEmailLogs")]
+    partial class AddEmailLogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,65 +86,6 @@ namespace Data.Migrations
                         .HasDatabaseName("IX_AbsenceRequests_User_DateRange_Status");
 
                     b.ToTable("AbsenceRequests", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.AbsenceRequestActionToken", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("AbsenceRequestId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ManagerUserId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UsedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AbsenceRequestId")
-                        .HasDatabaseName("IX_AbsenceRequestActionTokens_AbsenceRequestId");
-
-                    b.HasIndex("ExpiresAtUtc")
-                        .HasDatabaseName("IX_AbsenceRequestActionTokens_ExpiresAtUtc");
-
-                    b.HasIndex("ManagerUserId")
-                        .HasDatabaseName("IX_AbsenceRequestActionTokens_ManagerUserId");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique()
-                        .HasDatabaseName("UX_AbsenceRequestActionTokens_TokenHash");
-
-                    b.HasIndex("AbsenceRequestId", "Action", "IsUsed")
-                        .HasDatabaseName("IX_AbsenceRequestActionTokens_Request_Action_IsUsed");
-
-                    b.ToTable("AbsenceRequestActionTokens", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.AppUser", b =>
@@ -710,25 +654,6 @@ namespace Data.Migrations
                     b.Navigation("ReviewedByUser");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Entities.Models.AbsenceRequestActionToken", b =>
-                {
-                    b.HasOne("Entities.Models.AbsenceRequest", "AbsenceRequest")
-                        .WithMany()
-                        .HasForeignKey("AbsenceRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.AppUser", "ManagerUser")
-                        .WithMany()
-                        .HasForeignKey("ManagerUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AbsenceRequest");
-
-                    b.Navigation("ManagerUser");
                 });
 
             modelBuilder.Entity("Entities.Models.AppUserManagerRelation", b =>

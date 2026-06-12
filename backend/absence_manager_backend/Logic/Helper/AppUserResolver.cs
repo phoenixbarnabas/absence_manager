@@ -146,7 +146,6 @@ public class AppUserResolver : IAppUserResolver
 
         try
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
             return user;
         }
         catch (DbUpdateException)
