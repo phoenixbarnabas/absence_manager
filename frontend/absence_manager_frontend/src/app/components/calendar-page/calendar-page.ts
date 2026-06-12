@@ -26,6 +26,7 @@ import {
   CreateAbsenceRequestDto
 } from '../../models/calendar-models';
 import { CalendarService } from '../../services/calendar-service';
+import { NotificationService } from '../../services/notification-service';
 
 type CalendarDisplayViewMode = CalendarViewMode | 'year';
 
@@ -152,7 +153,8 @@ export class CalendarPage implements OnInit, OnDestroy {
   constructor(
     private calendarService: CalendarService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService,
   ) { }
 
   ngOnInit(): void {
@@ -330,6 +332,11 @@ export class CalendarPage implements OnInit, OnDestroy {
   onEventTypeToggle(type: CalendarEventType, checked: boolean): void {
     this.eventTypeSelection[type] = checked;
     this.selectedEvent = null;
+
+    if (this.activeEventTypes.length === 0) {
+      this.showInfo('Nincs kiválasztva eseménytípus, ezért a naptár események nélkül jelenik meg.');
+    }
+
     this.loadCalendar();
   }
 
@@ -347,42 +354,56 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   openRequestModal(day: CalendarDayView): void {
-  this.clearMessages();
+    this.clearMessages();
 
-  if (this.hasActiveAbsenceRequestOnDay(day)) {
-    this.selectedDateKey = day.dateKey;
-    this.selectedEvent = null;
-    this.warningMessage = 'Erre a napra már van kérelmed.';
+    if (day.dateKey < this.formatDateForApi(new Date())) {
+      this.selectedDateKey = day.dateKey;
+      this.selectedEvent = null;
 
-    this.calendarDays = this.calendarDays.map(calendarDay => ({
-      ...calendarDay,
-      isSelected: calendarDay.dateKey === day.dateKey
-    }));
+      this.calendarDays = this.calendarDays.map(calendarDay => ({
+        ...calendarDay,
+        isSelected: calendarDay.dateKey === day.dateKey
+      }));
+
+      this.showWarning('Múltbeli napra nem lehet új igényt rögzíteni.');
+      this.refreshView();
+      return;
+    }
+
+    if (this.hasActiveAbsenceRequestOnDay(day)) {
+      this.selectedDateKey = day.dateKey;
+      this.selectedEvent = null;
+
+      this.calendarDays = this.calendarDays.map(calendarDay => ({
+        ...calendarDay,
+        isSelected: calendarDay.dateKey === day.dateKey
+      }));
+
+      this.showWarning('Erre a napra már van kérelmed.');
+      this.refreshView();
+      return;
+    }
+
+    this.requestModalDay = day;
+    this.requestModalOpen = true;
+
+    this.requestForm = {
+      type: 'vacation',
+      dateFrom: day.dateKey,
+      dateTo: day.dateKey,
+      reason: ''
+    };
+
+    if (!day.isWorkingDay) {
+      this.showWarning(
+        day.holidayName
+          ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
+          : 'A kiválasztott nap hétvége vagy nem munkanap.'
+      );
+    }
 
     this.refreshView();
-    return;
   }
-
-  
-
-  this.requestModalDay = day;
-  this.requestModalOpen = true;
-
-  this.requestForm = {
-    type: 'vacation',
-    dateFrom: day.dateKey,
-    dateTo: day.dateKey,
-    reason: ''
-  };
-
-  if (!day.isWorkingDay) {
-    this.warningMessage = day.holidayName
-      ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
-      : 'A kiválasztott nap hétvége vagy nem munkanap.';
-  }
-
-  this.refreshView();
-}
 
   closeRequestModal(): void {
     if (this.saving) {
@@ -395,8 +416,14 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   submitRequest(): void {
-    if (!this.canSubmitRequest) {
-      this.errorMessage = 'Ellenőrizd a dátumokat és az igény típusát.';
+    if (this.saving) {
+      return;
+    }
+
+    const validationMessage = this.getRequestValidationMessage();
+
+    if (validationMessage) {
+      this.showWarning(validationMessage);
       this.refreshView();
       return;
     }
@@ -418,11 +445,12 @@ export class CalendarPage implements OnInit, OnDestroy {
         finalize(() => {
           this.saving = false;
           this.refreshView();
-        })
+        }),
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: () => {
-          this.successMessage = 'Az igény mentése sikerült.';
+          this.showSuccess('Az igény mentése sikerült.');
           this.selectedDateKey = dto.dateFrom;
           this.requestModalOpen = false;
           this.requestModalDay = null;
@@ -430,7 +458,11 @@ export class CalendarPage implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Absence request save failed', err);
-          this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült menteni az igényt.');
+
+          this.showError(
+            this.getApiErrorMessage(err, 'Nem sikerült menteni az igényt.')
+          );
+
           this.refreshView();
         }
       });
@@ -481,17 +513,7 @@ export class CalendarPage implements OnInit, OnDestroy {
   }
 
   private hasActiveAbsenceRequestOnDay(day: CalendarDayView): boolean {
-    if (this.scope !== 'mine') {
-      return false;
-    }
-
-    return day.events.some(event => {
-      const status = this.normalizeStatus(event.status);
-
-      return event.type !== 'deskBooking' &&
-        status !== 'cancelled' &&
-        status !== 'rejected';
-    });
+    return this.hasActiveAbsenceRequestInRange(day.dateKey, day.dateKey);
   }
 
   openSelectedEvent(event?: CalendarEventDto | null): void {
@@ -514,7 +536,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     const requestId = this.getRelatedRequestId(targetEvent);
 
     if (!requestId) {
-      this.warningMessage = 'Ehhez az eseményhez nem található kapcsolódó kérelem azonosító.';
+      this.showWarning('Ehhez az eseményhez nem található kapcsolódó kérelem azonosító.');
       this.refreshView();
       return;
     }
@@ -575,7 +597,7 @@ export class CalendarPage implements OnInit, OnDestroy {
 
     if (!requestId) {
       this.cancelModalEvent = null;
-      this.warningMessage = 'Ehhez az eseményhez nem található visszavonható kérelem azonosító.';
+      this.showWarning('Ehhez az eseményhez nem található visszavonható kérelem azonosító.');
       this.refreshView();
       return;
     }
@@ -595,7 +617,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.successMessage = 'A kérelem visszavonása sikerült.';
+          this.showSuccess('A kérelem visszavonása sikerült.');
           this.selectedEvent = null;
           this.cancelModalEvent = null;
           this.loadCalendar();
@@ -603,9 +625,11 @@ export class CalendarPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Calendar absence request cancel failed', err);
 
-          this.errorMessage = this.getApiErrorMessage(
-            err,
-            'Nem sikerült visszavonni a kérelmet.'
+          this.showError(
+            this.getApiErrorMessage(
+              err,
+              'Nem sikerült visszavonni a kérelmet.'
+            )
           );
 
           this.refreshView();
@@ -736,7 +760,9 @@ export class CalendarPage implements OnInit, OnDestroy {
       timeout(30000),
       catchError(err => {
         console.error('Calendar day-infos load failed', err);
-        this.warningMessage = 'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.';
+        this.showWarning(
+          'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.'
+        );
         return of(this.generateFallbackDayInfos(range.from, range.to));
       })
     );
@@ -747,7 +773,9 @@ export class CalendarPage implements OnInit, OnDestroy {
         timeout(30000),
         catchError(err => {
           console.error('Calendar events load failed', err);
-          this.errorMessage = this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.');
+          this.showError(
+            this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.')
+          );
           return of([] as CalendarEventDto[]);
         })
       );
@@ -771,7 +799,7 @@ export class CalendarPage implements OnInit, OnDestroy {
         }
 
         console.error('Unexpected calendar load error', err);
-        this.errorMessage = 'Váratlan hiba történt a naptár betöltése közben.';
+        this.showRetryableError('Váratlan hiba történt a naptár betöltése közben.');
         this.dayInfos = this.generateFallbackDayInfos(range.from, range.to);
         this.events = [];
         this.rebuildView();
@@ -1178,5 +1206,76 @@ export class CalendarPage implements OnInit, OnDestroy {
   private getMondayBasedWeekdayIndex(date: Date): number {
     const day = date.getDay();
     return day === 0 ? 6 : day - 1;
+  }
+
+  private showSuccess(message: string): void {
+    this.notificationService.success(message);
+  }
+
+  private showWarning(message: string): void {
+    this.notificationService.warning(message);
+  }
+
+  private showError(message: string): void {
+    this.notificationService.error(message);
+  }
+
+  private showInfo(message: string): void {
+    this.notificationService.info(message);
+  }
+
+  private showRetryableError(message: string): void {
+    this.notificationService
+      .error(message, {
+        actionLabel: 'Újrapróbálás',
+        durationMs: 8000
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadCalendar();
+      });
+  }
+
+  private getRequestValidationMessage(): string | null {
+    if (!this.requestForm.type) {
+      return 'Válassz igénytípust.';
+    }
+
+    if (!this.requestForm.dateFrom || !this.requestForm.dateTo) {
+      return 'Add meg a kezdő és záró dátumot.';
+    }
+
+    if (this.requestForm.dateTo < this.requestForm.dateFrom) {
+      return 'A záró dátum nem lehet korábbi, mint a kezdő dátum.';
+    }
+
+    if (this.requestForm.dateFrom < this.formatDateForApi(new Date())) {
+      return 'Múltbeli napra nem lehet új igényt rögzíteni.';
+    }
+
+    if (this.hasActiveAbsenceRequestInRange(
+      this.requestForm.dateFrom,
+      this.requestForm.dateTo
+    )) {
+      return 'A megadott időszakban már van aktív kérelmed.';
+    }
+
+    return null;
+  }
+
+  private hasActiveAbsenceRequestInRange(dateFrom: string, dateTo: string): boolean {
+    if (this.scope !== 'mine') {
+      return false;
+    }
+
+    return this.events.some(event => {
+      const status = this.normalizeStatus(event.status);
+
+      return event.type !== 'deskBooking'
+        && status !== 'cancelled'
+        && status !== 'rejected'
+        && event.dateFrom <= dateTo
+        && event.dateTo >= dateFrom;
+    });
   }
 }
