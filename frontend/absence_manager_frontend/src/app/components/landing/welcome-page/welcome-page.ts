@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { MsalService } from '@azure/msal-angular';
 import { MeResponse, UserService } from '../../../services/user.service';
-import { AuthenticationResult } from '@azure/msal-browser';
 import { UserProfile } from '../../../models/app-user-models';
 import { AuthService } from '../../../auth/auth-service';
+import { NotificationService } from '../../../services/notification-service';
 
 @Component({
   selector: 'app-welcome-page',
@@ -14,33 +13,53 @@ import { AuthService } from '../../../auth/auth-service';
 export class WelcomePage implements OnInit {
   userProfile: UserProfile | null = null;
   loading = true;
-  error: string | null = null;
 
   me: MeResponse | null = null;
   claims: Array<{ type: string; value: string }> | null = null;
 
   entraLoading = false;
-  entraError: string | null = null;
 
   constructor(
     private userService: UserService,
-    public authService: AuthService
+    public authService: AuthService,
+    private notificationService: NotificationService,
   ) { }
 
   async ngOnInit(): Promise<void> {
   }
 
   async login(): Promise<void> {
-    await this.authService.login()
+    try {
+      await this.authService.login();
+    } catch (err) {
+      console.error('Login failed', err);
+
+      this.notificationService.error(
+        this.notificationService.getMessage(
+          err,
+          'Nem sikerült elindítani a bejelentkezést.'
+        )
+      );
+    }
   }
 
   async logout(): Promise<void> {
-    await this.authService.logout();
+    try {
+      await this.authService.logout();
+    } catch (err) {
+      console.error('Logout failed', err);
+
+      this.notificationService.error(
+        this.notificationService.getMessage(
+          err,
+          'Nem sikerült kijelentkezni.'
+        )
+      );
+    }
   }
 
   private loadEntraData(): void {
     this.entraLoading = true;
-    this.entraError = null;
 
     this.loadMe();
     this.loadClaims();
@@ -54,7 +73,14 @@ export class WelcomePage implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.entraError = 'Hiba az Entra adatok betöltése közben.';
+
+        this.notificationService.error(
+          this.notificationService.getMessage(
+            err,
+            'Hiba az Entra adatok betöltése közben.'
+          )
+        );
+
         this.finishEntraLoadingIfDone();
       }
     });
@@ -68,14 +94,21 @@ export class WelcomePage implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.entraError = 'Hiba a claim-ek betöltése közben.';
+
+        this.notificationService.error(
+          this.notificationService.getMessage(
+            err,
+            'Hiba a claim-ek betöltése közben.'
+          )
+        );
+
         this.finishEntraLoadingIfDone();
       }
     });
   }
 
   private finishEntraLoadingIfDone(): void {
-    if (this.me !== null || this.claims !== null || this.entraError !== null) {
+    if (this.me !== null || this.claims !== null) {
       this.entraLoading = false;
     }
   }
