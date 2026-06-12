@@ -74,4 +74,28 @@ export class NotificationService {
 
     return 4000;
   }
+
+  getMessage(err: any, fallback: string): string {
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+
+    if (err?.status === 0) {
+      return 'A backend nem érhető el. Ellenőrizd, hogy fut-e az API és jó-e az apiUrl.';
+    }
+
+    if (err?.status === 401) {
+      return 'A munkamenet lejárt vagy nincs jogosultságod. Jelentkezz be újra.';
+    }
+
+    if (err?.status === 403) {
+      return 'Ehhez a művelethez nincs megfelelő jogosultságod.';
+    }
+
+    if (err?.name === 'TimeoutError') {
+      return 'A backend nem válaszolt időben. Ellenőrizd, hogy fut-e az API.';
+    }
+
+    return fallback;
+  }
 }

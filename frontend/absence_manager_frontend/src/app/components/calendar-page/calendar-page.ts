@@ -334,7 +334,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.selectedEvent = null;
 
     if (this.activeEventTypes.length === 0) {
-      this.showInfo('Nincs kiválasztva eseménytípus, ezért a naptár események nélkül jelenik meg.');
+      this.notificationService.info('Nincs kiválasztva eseménytípus, ezért a naptár események nélkül jelenik meg.');
     }
 
     this.loadCalendar();
@@ -365,7 +365,7 @@ export class CalendarPage implements OnInit, OnDestroy {
         isSelected: calendarDay.dateKey === day.dateKey
       }));
 
-      this.showWarning('Múltbeli napra nem lehet új igényt rögzíteni.');
+      this.notificationService.warning('Múltbeli napra nem lehet új igényt rögzíteni.');
       this.refreshView();
       return;
     }
@@ -379,7 +379,7 @@ export class CalendarPage implements OnInit, OnDestroy {
         isSelected: calendarDay.dateKey === day.dateKey
       }));
 
-      this.showWarning('Erre a napra már van kérelmed.');
+      this.notificationService.warning('Erre a napra már van kérelmed.');
       this.refreshView();
       return;
     }
@@ -395,7 +395,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     };
 
     if (!day.isWorkingDay) {
-      this.showWarning(
+      this.notificationService.warning(
         day.holidayName
           ? `A kiválasztott nap ünnepnap: ${day.holidayName}.`
           : 'A kiválasztott nap hétvége vagy nem munkanap.'
@@ -423,7 +423,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     const validationMessage = this.getRequestValidationMessage();
 
     if (validationMessage) {
-      this.showWarning(validationMessage);
+      this.notificationService.warning(validationMessage);
       this.refreshView();
       return;
     }
@@ -450,7 +450,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.showSuccess('Az igény mentése sikerült.');
+          this.notificationService.success('Az igény mentése sikerült.');
           this.selectedDateKey = dto.dateFrom;
           this.requestModalOpen = false;
           this.requestModalDay = null;
@@ -459,8 +459,8 @@ export class CalendarPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Absence request save failed', err);
 
-          this.showError(
-            this.getApiErrorMessage(err, 'Nem sikerült menteni az igényt.')
+          this.notificationService.error(
+            this.notificationService.getMessage(err, 'Nem sikerült menteni az igényt.')
           );
 
           this.refreshView();
@@ -536,7 +536,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     const requestId = this.getRelatedRequestId(targetEvent);
 
     if (!requestId) {
-      this.showWarning('Ehhez az eseményhez nem található kapcsolódó kérelem azonosító.');
+      this.notificationService.warning('Ehhez az eseményhez nem található kapcsolódó kérelem azonosító.');
       this.refreshView();
       return;
     }
@@ -597,7 +597,7 @@ export class CalendarPage implements OnInit, OnDestroy {
 
     if (!requestId) {
       this.cancelModalEvent = null;
-      this.showWarning('Ehhez az eseményhez nem található visszavonható kérelem azonosító.');
+      this.notificationService.warning('Ehhez az eseményhez nem található visszavonható kérelem azonosító.');
       this.refreshView();
       return;
     }
@@ -617,7 +617,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.showSuccess('A kérelem visszavonása sikerült.');
+          this.notificationService.success('A kérelem visszavonása sikerült.');
           this.selectedEvent = null;
           this.cancelModalEvent = null;
           this.loadCalendar();
@@ -625,8 +625,8 @@ export class CalendarPage implements OnInit, OnDestroy {
         error: err => {
           console.error('Calendar absence request cancel failed', err);
 
-          this.showError(
-            this.getApiErrorMessage(
+          this.notificationService.error(
+            this.notificationService.getMessage(
               err,
               'Nem sikerült visszavonni a kérelmet.'
             )
@@ -760,7 +760,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       timeout(30000),
       catchError(err => {
         console.error('Calendar day-infos load failed', err);
-        this.showWarning(
+        this.notificationService.warning(
           'A munkanap/ünnepnap adatok nem töltődtek be időben, ezért ideiglenes helyi naptárlogikát használok.'
         );
         return of(this.generateFallbackDayInfos(range.from, range.to));
@@ -773,8 +773,8 @@ export class CalendarPage implements OnInit, OnDestroy {
         timeout(30000),
         catchError(err => {
           console.error('Calendar events load failed', err);
-          this.showError(
-            this.getApiErrorMessage(err, 'Nem sikerült betölteni a naptár eseményeit.')
+          this.notificationService.error(
+            this.notificationService.getMessage(err, 'Nem sikerült betölteni a naptár eseményeit.')
           );
           return of([] as CalendarEventDto[]);
         })
@@ -1128,30 +1128,6 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.successMessage = '';
   }
 
-  private getApiErrorMessage(err: any, fallback: string): string {
-    if (err?.error?.message) {
-      return err.error.message;
-    }
-
-    if (err?.status === 0) {
-      return 'A backend nem érhető el. Ellenőrizd, hogy fut-e az API és jó-e az apiUrl.';
-    }
-
-    if (err?.status === 401) {
-      return 'A munkamenet lejárt vagy nincs jogosultságod. Jelentkezz be újra.';
-    }
-
-    if (err?.status === 403) {
-      return 'Ehhez a művelethez nincs megfelelő jogosultságod.';
-    }
-
-    if (err?.name === 'TimeoutError') {
-      return 'A backend nem válaszolt időben. Ellenőrizd, hogy fut-e az API.';
-    }
-
-    return fallback;
-  }
-
   private refreshView(): void {
     this.cdr.markForCheck();
 
@@ -1206,22 +1182,6 @@ export class CalendarPage implements OnInit, OnDestroy {
   private getMondayBasedWeekdayIndex(date: Date): number {
     const day = date.getDay();
     return day === 0 ? 6 : day - 1;
-  }
-
-  private showSuccess(message: string): void {
-    this.notificationService.success(message);
-  }
-
-  private showWarning(message: string): void {
-    this.notificationService.warning(message);
-  }
-
-  private showError(message: string): void {
-    this.notificationService.error(message);
-  }
-
-  private showInfo(message: string): void {
-    this.notificationService.info(message);
   }
 
   private showRetryableError(message: string): void {
