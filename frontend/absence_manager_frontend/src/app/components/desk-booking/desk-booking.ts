@@ -70,7 +70,7 @@ export class DeskBooking implements OnInit {
     private locationService: LocationService,
     private officeService: OfficeService,
     private bookingService: BookingService,
-    private http: HttpClient,
+    private http: HttpClient
   ) { }
 
   ngOnInit(): void {

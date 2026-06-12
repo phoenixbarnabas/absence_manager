@@ -17,6 +17,8 @@ import { ConfigService } from './services/config-service';
 import { CalendarPage } from './components/calendar-page/calendar-page';
 import { AbsenceApprovalsPage } from './components/absence-approvals-page/absence-approvals-page';
 import { MyAbsenceRequestsPage } from './components/my-absence-requests-page/my-absence-requests-page';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -34,6 +36,8 @@ import { MyAbsenceRequestsPage } from './components/my-absence-requests-page/my-
     FormsModule,
     BrowserModule,
     AppRoutingModule,
+    BrowserAnimationsModule,
+    MatSnackBarModule,
   ],
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
