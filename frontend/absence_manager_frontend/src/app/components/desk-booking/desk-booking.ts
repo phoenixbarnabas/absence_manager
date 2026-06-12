@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { BehaviorSubject, catchError, combineLatest, distinctUntilChanged, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, distinctUntilChanged, finalize, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Location, Office, Workstation } from '../../models/entity-models';
 import { LocationService } from '../../services/location-service';
 import { OfficeService } from '../../services/office-service';
 import { BookingService } from '../../services/booking-service';
 import { OfficeDayAvailabilityDto } from '../../models/availability-models';
 import { HttpClient } from '@angular/common/http';
+import { NotificationService } from '../../services/notification-service';
 
 type CalendarDay = {
   date: Date;
@@ -47,8 +48,6 @@ export class DeskBooking implements OnInit {
   selectedDate: Date = new Date();
 
   isSubmittingBooking = false;
-  errorMessage = '';
-  successMessage = '';
   currentBookingId: string | null = null;
 
   private availabilityRefreshSubject = new BehaviorSubject<number>(0);
@@ -70,7 +69,8 @@ export class DeskBooking implements OnInit {
     private locationService: LocationService,
     private officeService: OfficeService,
     private bookingService: BookingService,
-    private http: HttpClient
+    private http: HttpClient,
+    private notificationService: NotificationService,
   ) { }
 
   ngOnInit(): void {
@@ -81,7 +81,14 @@ export class DeskBooking implements OnInit {
     this.locations$ = this.locationService.loadAll().pipe(
       catchError(err => {
         console.error(err);
-        this.errorMessage = 'Nem sikerült betölteni a telephelyeket.';
+
+        this.notificationService.error(
+          this.notificationService.getMessage(
+            err,
+            'Nem sikerült betölteni a telephelyeket.'
+          )
+        );
+
         return of([]);
       }),
       shareReplay(1)
@@ -97,7 +104,12 @@ export class DeskBooking implements OnInit {
         return this.officeService.loadAllByLocationId(locationId).pipe(
           catchError(err => {
             console.error(err);
-            this.errorMessage = 'Nem sikerült betölteni az irodákat.';
+            this.notificationService.error(
+              this.notificationService.getMessage(
+                err,
+                'Nem sikerült betölteni az irodákat.'
+              )
+            );
             return of([]);
           })
         );
@@ -132,9 +144,6 @@ export class DeskBooking implements OnInit {
           return of(null);
         }
 
-        this.errorMessage = '';
-        this.successMessage = '';
-
         return this.bookingService.getAvailability(officeId, date).pipe(
           tap(availability => {
             if (
@@ -156,7 +165,12 @@ export class DeskBooking implements OnInit {
           catchError(err => {
             console.error(err);
             this.currentBookingId = null;
-            this.errorMessage = 'Nem sikerült betölteni az elérhetőségi adatokat.';
+            this.notificationService.error(
+              this.notificationService.getMessage(
+                err,
+                'Nem sikerült betölteni az elérhetőségi adatokat.'
+              )
+            );
             return of(null);
           })
         );
@@ -174,8 +188,6 @@ export class DeskBooking implements OnInit {
     this.selectedOfficeId = '';
     this.selectedWorkstationId = '';
     this.currentBookingId = null;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.selectedLocationIdSubject.next(locationId);
     this.selectedOfficeIdSubject.next('');
@@ -186,8 +198,6 @@ export class DeskBooking implements OnInit {
     this.selectedOfficeId = officeId;
     this.selectedWorkstationId = '';
     this.currentBookingId = null;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.selectedOfficeIdSubject.next(officeId);
     this.saveState();
@@ -195,6 +205,7 @@ export class DeskBooking implements OnInit {
 
   onWorkstationSelected(workstationId: string, availability: OfficeDayAvailabilityDto | null): void {
     if (availability?.currentUserHasBooking && this.selectedWorkstationId !== workstationId) {
+      this.notificationService.warning('Erre a napra már van foglalásod.');
       return;
     }
 
@@ -219,16 +230,22 @@ export class DeskBooking implements OnInit {
   }
 
   submitBooking(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+    if (this.isSubmittingBooking) {
+      return;
+    }
 
     if (!this.selectedOfficeId) {
-      this.errorMessage = 'Előbb válassz irodát.';
+      this.notificationService.warning('Előbb válassz irodát.');
       return;
     }
 
     if (!this.selectedWorkstationId) {
-      this.errorMessage = 'Válassz egy munkaállomást.';
+      this.notificationService.warning('Válassz egy munkaállomást.');
+      return;
+    }
+
+    if (this.currentBookingId) {
+      this.notificationService.warning('Erre a napra már van foglalásod.');
       return;
     }
 
@@ -237,51 +254,70 @@ export class DeskBooking implements OnInit {
     this.bookingService.createBooking(
       this.selectedWorkstationId,
       this.selectedDateString
-    ).subscribe({
-      next: () => {
-        this.successMessage = 'A foglalás sikeresen létrejött.';
-        this.isSubmittingBooking = false;
+    )
+      .pipe(
+        finalize(() => {
+          this.isSubmittingBooking = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.notificationService.success('A foglalás sikeresen létrejött.');
 
-        this.availabilityRefreshSubject.next(Date.now());
-        this.selectedOfficeIdSubject.next(this.selectedOfficeId);
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage =
-          err?.error?.message ?? 'Nem sikerült létrehozni a foglalást.';
-        this.isSubmittingBooking = false;
-      }
-    });
+          this.availabilityRefreshSubject.next(Date.now());
+          this.selectedOfficeIdSubject.next(this.selectedOfficeId);
+        },
+        error: err => {
+          console.error(err);
+
+          this.notificationService.error(
+            this.notificationService.getMessage(
+              err,
+              'Nem sikerült létrehozni a foglalást.'
+            )
+          );
+        }
+      });
   }
 
   cancelBooking(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
+    if (this.isSubmittingBooking) {
+      return;
+    }
 
     if (!this.currentBookingId) {
-      this.errorMessage = 'Nincs lemondható foglalás.';
+      this.notificationService.warning('Nincs lemondható foglalás.');
       return;
     }
 
     this.isSubmittingBooking = true;
 
-    this.bookingService.cancelBooking(this.currentBookingId).subscribe({
-      next: () => {
-        this.successMessage = 'A foglalás sikeresen lemondva.';
-        this.isSubmittingBooking = false;
-        this.currentBookingId = null;
-        this.selectedWorkstationId = '';
-        this.availabilityRefreshSubject.next(Date.now());
+    this.bookingService.cancelBooking(this.currentBookingId)
+      .pipe(
+        finalize(() => {
+          this.isSubmittingBooking = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.notificationService.success('A foglalás sikeresen lemondva.');
 
-        this.selectedOfficeIdSubject.next(this.selectedOfficeId);
-      },
-      error: err => {
-        console.error(err);
-        this.errorMessage =
-          err?.error?.message ?? 'Nem sikerült lemondani a foglalást.';
-        this.isSubmittingBooking = false;
-      }
-    });
+          this.currentBookingId = null;
+          this.selectedWorkstationId = '';
+          this.availabilityRefreshSubject.next(Date.now());
+          this.selectedOfficeIdSubject.next(this.selectedOfficeId);
+        },
+        error: err => {
+          console.error(err);
+
+          this.notificationService.error(
+            this.notificationService.getMessage(
+              err,
+              'Nem sikerült lemondani a foglalást.'
+            )
+          );
+        }
+      });
   }
 
   get selectedDateString(): string {
@@ -393,6 +429,7 @@ export class DeskBooking implements OnInit {
           },
           error: err => {
             console.error('Ünnepnapok betöltése sikertelen', err);
+            this.notificationService.warning('Az ünnepnap adatok betöltése sikertelen, ezért előfordulhat, hogy néhány nem munkanap nincs külön jelölve.');
           }
         });
     });
