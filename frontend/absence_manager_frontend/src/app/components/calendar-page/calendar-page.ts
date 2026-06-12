@@ -349,6 +349,19 @@ export class CalendarPage implements OnInit, OnDestroy {
   openRequestModal(day: CalendarDayView): void {
     this.clearMessages();
 
+    if (this.hasActiveAbsenceRequestOnDay(day)) {
+      this.selectedDateKey = day.dateKey;
+      this.selectedEvent = null;
+      this.warningMessage = 'Erre a napra már van kérelmed.';
+
+      this.calendarDays = this.calendarDays.map(calendarDay => ({
+        ...calendarDay,
+        isSelected: calendarDay.dateKey === day.dateKey
+      }));
+
+      this.refreshView();
+      return;
+    }
     this.requestModalDay = day;
     this.requestModalOpen = true;
 
@@ -366,6 +379,20 @@ export class CalendarPage implements OnInit, OnDestroy {
     }
 
     this.refreshView();
+  }
+
+  private hasActiveAbsenceRequestOnDay(day: CalendarDayView): boolean {
+    if (this.scope !== 'mine') {
+      return false;
+    }
+
+    return day.events.some(event => {
+      const status = this.normalizeStatus(event.status);
+
+      return event.type !== 'deskBooking' &&
+        status !== 'cancelled' &&
+        status !== 'rejected';
+    });
   }
 
   closeRequestModal(): void {
