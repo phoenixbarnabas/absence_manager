@@ -653,69 +653,47 @@ textarea.form-control
     max-width: 240px
 
 .app-snackbar
-  --mdc-snackbar-container-color: var(--phx-surface)
-  --mdc-snackbar-supporting-text-color: var(--phx-text)
-  --mat-snack-bar-button-color: var(--phx-green)
+  --mdc-snackbar-container-color: #ffffff
+  --mdc-snackbar-supporting-text-color: #263238
+
+  margin: 0 1rem 1rem 0
 
   .mdc-snackbar__surface
-    min-width: 340px
-    max-width: 520px
-    border-radius: 18px !important
-    background: var(--phx-surface) !important
-    border: 1px solid var(--phx-border)
-    box-shadow: 0 16px 36px rgba(47, 47, 47, .14) !important
+    min-width: unset !important
+    max-width: unset !important
+    padding: 0 !important
+    border-radius: 12px !important
+    background: #ffffff !important
+    border: 1px solid rgba(38, 50, 56, .12)
+    box-shadow: 0 10px 28px rgba(38, 50, 56, .14) !important
     overflow: hidden
 
   .mat-mdc-snack-bar-label
-    color: var(--phx-text)
-    font-size: .92rem
-    font-weight: 500
-    line-height: 1.4
-    padding-top: 16px
-    padding-bottom: 16px
+    padding: 0 !important
 
-  .mat-mdc-snack-bar-action
-    color: var(--phx-green) !important
-    font-weight: 600
+.mat-mdc-snack-bar-container.app-snackbar
+  transform: translateY(-1.2rem) !important
 
-    &:hover
-      background: rgba(0, 146, 123, .08)
+@media (max-width: 576px)
+  .mat-mdc-snack-bar-container.app-snackbar
+    transform: translateY(-1.1rem) !important
 
 .app-snackbar--success
   .mdc-snackbar__surface
-    border-left: 6px solid #2E9E6F
-    background: linear-gradient(90deg, rgba(46, 158, 111, .08), #ffffff 34%) !important
-
-  .mat-mdc-snack-bar-action
-    color: #247C57 !important
+    border-left: 4px solid #2E9E6F
 
 .app-snackbar--error
   .mdc-snackbar__surface
-    border-left: 6px solid #D64545
-    background: linear-gradient(90deg, rgba(214, 69, 69, .08), #ffffff 34%) !important
-
-  .mat-mdc-snack-bar-action
-    color: #B93636 !important
+    border-left: 4px solid #D64545
 
 .app-snackbar--warning
   .mdc-snackbar__surface
-    border-left: 6px solid #E39A1C
-    background: linear-gradient(90deg, rgba(227, 154, 28, .12), #ffffff 34%) !important
-
-  .mat-mdc-snack-bar-action
-    color: #B97812 !important
+    border-left: 4px solid #f8fc2f
 
 .app-snackbar--info
   .mdc-snackbar__surface
-    border-left: 6px solid #2C8CC9
-    background: linear-gradient(90deg, rgba(44, 140, 201, .09), #ffffff 34%) !important
-
-  .mat-mdc-snack-bar-action
-    color: #1F6EA2 !important
+    border-left: 4px solid #2C8CC9
 
 @media (max-width: 576px)
   .app-snackbar
-    .mdc-snackbar__surface
-      min-width: unset
-      max-width: calc(100vw - 24px)
-      border-radius: 16px !important
+    margin: 0 .75rem .75rem .75rem

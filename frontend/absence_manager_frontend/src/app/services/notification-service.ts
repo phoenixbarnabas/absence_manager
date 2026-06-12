@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs/internal/Observable';
+import { AppSnackbar } from '../components/app-snackbar/app-snackbar';
+import { Subject } from 'rxjs/internal/Subject';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -37,23 +39,27 @@ export class NotificationService {
     message: string,
     options: NotificationOptions
   ): Observable<void> {
+    const actionSubject = new Subject<void>();
+
     const config: MatSnackBarConfig = {
       duration: options.durationMs ?? this.getDefaultDuration(type, options.actionLabel),
       horizontalPosition: 'right',
-      verticalPosition: 'top',
+      verticalPosition: 'bottom',
       panelClass: [
         'app-snackbar',
         `app-snackbar--${type}`
-      ]
+      ],
+      data: {
+        type,
+        message,
+        actionLabel: options.actionLabel,
+        actionSubject
+      }
     };
 
-    const ref = this.snackBar.open(
-      message,
-      options.actionLabel ?? 'Bezárás',
-      config
-    );
+    this.snackBar.openFromComponent(AppSnackbar, config);
 
-    return ref.onAction();
+    return actionSubject.asObservable();
   }
 
   private getDefaultDuration(

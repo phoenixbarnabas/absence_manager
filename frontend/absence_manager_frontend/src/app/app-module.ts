@@ -19,6 +19,7 @@ import { AbsenceApprovalsPage } from './components/absence-approvals-page/absenc
 import { MyAbsenceRequestsPage } from './components/my-absence-requests-page/my-absence-requests-page';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { AppSnackbar } from './components/app-snackbar/app-snackbar';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     CalendarPage,
     AbsenceApprovalsPage,
     MyAbsenceRequestsPage,
+    AppSnackbar,
   ],
   imports: [
     FormsModule,

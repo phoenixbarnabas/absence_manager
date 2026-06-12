@@ -1,0 +1,17 @@
+<div class="app-snackbar-content">
+    <div class="app-snackbar-content__icon">
+        <i class="bi" [ngClass]="getIcon()"></i>
+    </div>
+
+    <div class="app-snackbar-content__message">
+        {{ data.message }}
+    </div>
+
+    <button *ngIf="data.actionLabel" type="button" class="app-snackbar-content__action" (click)="runAction()">
+        {{ data.actionLabel }}
+    </button>
+
+    <button type="button" class="app-snackbar-content__close" aria-label="Értesítés bezárása" (click)="close()">
+        <i class="bi bi-x-lg"></i>
+    </button>
+</div>

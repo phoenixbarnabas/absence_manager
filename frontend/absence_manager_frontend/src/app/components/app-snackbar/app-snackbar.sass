@@ -1,0 +1,53 @@
+.app-snackbar-content
+    display: flex
+    align-items: center
+    gap: .7rem
+    min-width: 320px
+    max-width: 460px
+    padding: .85rem .9rem .85rem 1rem
+
+.app-snackbar-content__icon
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    flex: 0 0 auto
+    font-size: 1.05rem
+    color: #4f5f5a
+
+.app-snackbar-content__message
+    flex: 1
+    min-width: 0
+    color: #263238
+    font-size: .9rem
+    font-weight: 500
+    line-height: 1.4
+
+.app-snackbar-content__action
+    border: 0
+    background: transparent
+    color: #2f6f61
+    font-size: .85rem
+    font-weight: 700
+    padding: .35rem .45rem
+    border-radius: 999px
+    white-space: nowrap
+
+    &:hover
+        background: rgba(47, 111, 97, .08)
+
+.app-snackbar-content__close
+    width: 32px
+    height: 32px
+    border: 0
+    border-radius: 999px
+    background: transparent
+    color: #66736f
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    flex: 0 0 auto
+    padding: 0
+
+    &:hover
+        background: rgba(38, 50, 56, .07)
+        color: #263238
