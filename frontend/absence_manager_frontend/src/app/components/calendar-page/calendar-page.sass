@@ -180,6 +180,134 @@
   color: $danger-600
   font-size: .78rem
 
+  .event-pill--pending
+  border-color: rgba(227, 154, 28, .26)
+
+.event-pill--approved
+  border-color: rgba(0, 146, 123, .18)
+
+.event-pill--rejected,
+.event-pill--cancelled
+  border-color: rgba(83, 83, 83, .22)
+  background: rgba(83, 83, 83, .08)
+  color: $dark-700
+  opacity: .78
+
+  .event-pill__content strong
+    text-decoration: line-through
+
+.event-pill--rejected
+  border-style: dashed
+
+.event-pill__title-row
+  min-width: 0
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: .5rem
+
+.event-pill__status
+  flex: 0 0 auto
+  display: inline-flex
+  align-items: center
+  padding: .1rem .4rem
+  border-radius: 999px
+  background: rgba(83, 83, 83, .12)
+  color: $dark-700
+  font-size: .64rem
+  font-weight: 600
+  line-height: 1.25
+  white-space: nowrap
+
+.event-pill__status--rejected
+  background: rgba(214, 75, 69, .12)
+  color: $danger-600
+
+.event-pill__status--cancelled
+  background: rgba(83, 83, 83, .12)
+  color: $dark-700
+
+.status-badge
+  display: inline-flex
+  align-items: center
+  padding: .28rem .6rem
+  border-radius: 999px
+  font-size: .78rem
+  font-weight: 600
+
+.status-badge--approved
+  background: rgba(0, 146, 123, .1)
+  color: $primary-500
+
+.status-badge--pending
+  background: rgba(227, 154, 28, .14)
+  color: $warning-600
+
+.status-badge--rejected
+  background: rgba(214, 75, 69, .12)
+  color: $danger-600
+
+.status-badge--cancelled,
+.status-badge--info
+  background: rgba(83, 83, 83, .1)
+  color: $dark-700
+
+.selected-day-event--pending,
+.modal-existing-event--pending
+  border-color: rgba(227, 154, 28, .26)
+
+.selected-day-event--approved,
+.modal-existing-event--approved
+  border-color: rgba(0, 146, 123, .22)
+
+.selected-day-event--rejected,
+.selected-day-event--cancelled,
+.modal-existing-event--rejected,
+.modal-existing-event--cancelled
+  border-color: rgba(83, 83, 83, .22)
+  background: rgba(83, 83, 83, .06)
+  color: $dark-700
+  opacity: .78
+
+  strong
+    text-decoration: line-through
+
+.selected-day-event__status,
+.modal-existing-event__status
+  margin-left: auto
+  flex: 0 0 auto
+  display: inline-flex
+  align-items: center
+  padding: .16rem .48rem
+  border-radius: 999px
+  background: rgba(83, 83, 83, .1)
+  color: $dark-700
+  font-size: .7rem
+  font-weight: 600
+  white-space: nowrap
+
+.selected-day-event__status--approved,
+.modal-existing-event__status--approved
+  background: rgba(0, 146, 123, .1)
+  color: $primary-500
+
+.selected-day-event__status--pending,
+.modal-existing-event__status--pending
+  background: rgba(227, 154, 28, .14)
+  color: $warning-600
+
+.selected-day-event__status--rejected,
+.modal-existing-event__status--rejected
+  background: rgba(214, 75, 69, .12)
+  color: $danger-600
+
+.selected-day-event__status--cancelled,
+.modal-existing-event__status--cancelled,
+.selected-day-event__status--info,
+.modal-existing-event__status--info
+  background: rgba(83, 83, 83, .1)
+  color: $dark-700
+
 .event-actions
   display: flex
   flex-direction: column
@@ -410,11 +538,12 @@
     background: $danger-600
     color: #fff
 
-@media (max-width: 1200px)
+@media (max-width: 1500px)
   .calendar-layout
     grid-template-columns: 1fr
 
   .side-panel
+    width: 100%
     position: static
 
 @media (max-width: 768px)
